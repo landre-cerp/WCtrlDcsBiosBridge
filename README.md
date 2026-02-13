@@ -138,7 +138,7 @@ Report issues [here](https://github.com/landre-cerp/WWCduDcsBiosBridge/issues), 
 
 - **Aircraft switching:** Requires application restart
 - **Cursor behavior:** May appear erratic during waypoint entry (reflects DCS-BIOS data)
-- **CH-47F support:** Requires DCS-BIOS nightly build (later than 0.11.0 )
+- **CH-47F support:** Requires DCS-BIOS nightly build (0.11.0 or later)
 - **Brightness sync:** May not perfectly match aircraft state
 
 ## Development
