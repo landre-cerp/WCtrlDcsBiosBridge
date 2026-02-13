@@ -104,7 +104,7 @@ if no config.json is found, it will create a default one and show you a dialog b
 **"Connection failed" or CDU not responding**
 - Ensure your WinCtrl CDU is properly connected
 - Try unplugging and reconnecting the device
-- Check that no other applications are using the MCDU
+- Check that no other applications are using the CDU
 
 **"No data appearing on CDU"**
 - Start your aircraft in DCS (data appears after aircraft systems are powered)
