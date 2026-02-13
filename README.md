@@ -7,35 +7,35 @@
 
 # WWCduDCSBiosBridge
 
-This console application bridges DCS World with the Winwing MCDU hardware, enabling real-time data exchange between the simulator and the physical device.
+This console application bridges DCS World with some of the WinCtrl hardware, enabling real-time data exchange between the simulator and the physical device.
 
-**Data Flow:** DCS <-> DCS-BIOS <-> This App <-> Winwing MCDU
+**Data Flow:** DCS <-> DCS-BIOS <-> This App <-> WinCtrl CDUs (and FCU)
 
 ## Quick Start
 
 1. **Install DCS-BIOS** (see detailed instructions below)
 2. **Download and extract** this application to your preferred folder
-5. **Connect** your Winwing MCDU ( before starting bridge )
+5. **Connect** your WinCtrl CDU ( before starting bridge )
 6. **run** the application
 7. **Launch DCS** and select your aircraft from the MCDU menu
 
 ## Requirements
 
 - DCS World
-- DCS-BIOS (v0.8.4 or later, nightly build required for CH-47F)
+- DCS-BIOS [v0.11.0](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.0) or later
 - .NET 8.0 runtime
 
 At least one of these devices.
-- Winwing CDU hardware (MCDU / PFP3N / PFP7 / PFP4)
-- Winwing FCU and EFIS ( tested with Left Efis )
-- Winwing PAP3 (or PAP3Mag )
+- WinCtrl CDU hardware (MCDU / PFP3N / PFP7 / PFP4)
+- WinCtrl FCU and EFIS ( tested with Left Efis )
+- WinCtrl PAP3 (or PAP3Mag )
 
 
 ## Supported Aircraft
 
 | Aircraft | Support Level | Features |
 |----------|---------------|----------|
-| **A10C** | Full | Complete MCDU functionality, LED indicators, brightness control , FCU display (VS , Alt, Speed, HDG , Qnh on Efis ) |
+| **A10C** | Full | Complete CDU functionality, LED indicators, brightness control , FCU display (VS , Alt, Speed, HDG , Qnh on Efis ) |
 | **AH-64D** | Basic | UFD information, keyboard display |
 | **FA-18C** | Basic | UFC fields display |
 | **CH-47F** | Basic | Pilot or CoPilot CDU (requires DCS-BIOS nightly build) |
@@ -61,9 +61,8 @@ At least one of these devices.
 
 ### DCS-BIOS Setup
 
-1. **Download** the latest DCS-BIOS release:
+1. **Download** the latest DCS-BIOS release (min v0.11.0):
    - Standard: https://github.com/DCS-Skunkworks/dcs-bios/releases
-   - For CH-47F: Download nightly build (or later than 0.8.4)
 
 2. **Extract** the DCS-BIOS folder to your DCS saved games Scripts directory:
    ```
@@ -80,7 +79,7 @@ At least one of these devices.
 ### Application Setup
 
 1. **Extract** the application files to your chosen directory
-2. **Run** `WWCduDcsBiosBridge.exe`
+2. **Run** `WctrlDcsBiosBridge.exe`
 if no config.json is found, it will create a default one and show you a dialog box to edit it.
 
 <img width="441" height="368" alt="image" src="https://github.com/user-attachments/assets/dca3d830-970d-4741-aeb5-7358658f82f0" />
@@ -91,7 +90,7 @@ if no config.json is found, it will create a default one and show you a dialog b
 
 ### Controls
 
-- **MCDU Keys:** Map them in DCS.
+- **CDU Keys:** Map them in DCS.
 - **Aircraft Selection:** Use line select keys on startup screen
 
 ## Troubleshooting
@@ -100,16 +99,16 @@ if no config.json is found, it will create a default one and show you a dialog b
 
 **"PLT_CDU_LINE1" does not exist (CH-47 Chinook)**
 - Wrong dcsbios version installed.
-- You need a version later than 0.8.4 (not including 0.8.4 itself)
+- You need a version later than 0.11.0
   
-**"Connection failed" or MCDU not responding**
-- Ensure your Winwing MCDU is properly connected
+**"Connection failed" or CDU not responding**
+- Ensure your WinCtrl CDU is properly connected
 - Try unplugging and reconnecting the device
 - Check that no other applications are using the MCDU
 
-**"No data appearing on MCDU"**
+**"No data appearing on CDU"**
 - Start your aircraft in DCS (data appears after aircraft systems are powered)
-- Check that DCS-BIOS is working (look for network traffic)
+- Check that DCS-BIOS is working (look for network traffic) - you can use Bort tools from DCSSkunkworks to verify DCS-BIOS is sending data
 - Verify Export.lua is configured correctly
 
 **Aircraft change not working**
@@ -117,9 +116,6 @@ if no config.json is found, it will create a default one and show you a dialog b
 - Each aircraft requires a separate application instance
 
 **Start bridge is greyed**
-- You are using PFP4 not yet supported?
-
-Otherwise, 
 - You probably launched the app before plugging your devices.
 - Exit application, plug all the cdus you plan to use and launch the app again 
 
@@ -142,14 +138,14 @@ Report issues [here](https://github.com/landre-cerp/WWCduDcsBiosBridge/issues), 
 
 - **Aircraft switching:** Requires application restart
 - **Cursor behavior:** May appear erratic during waypoint entry (reflects DCS-BIOS data)
-- **CH-47F support:** Requires DCS-BIOS nightly build (later than 0.8.4 )
+- **CH-47F support:** Requires DCS-BIOS nightly build (later than 0.11.0 )
 - **Brightness sync:** May not perfectly match aircraft state
 
 ## Development
 
 This project is written in C# and targets .NET 8.0. It uses:
 - **DCS-BIOS** for DCS communication
-- **ww-devices-dotnet** for Winwing hardware interface
+- **ww-devices-dotnet** for WinCtrl hardware interface
 - **NLog** for logging
 - **System.CommandLine** for command-line parsing
 
