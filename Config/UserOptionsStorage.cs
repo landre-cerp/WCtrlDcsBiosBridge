@@ -19,7 +19,9 @@ public static class UserOptionsStorage
             DisableLightingManagement = false,
             Ch47CduSwitchWithSeat = false,
             AutoStart = false,
-            MinimizeOnStart = false
+            MinimizeOnStart = false,
+            NextPageKey = "NextPage",
+            PrevPageKey = "PrevPage"
         };
     }
 
@@ -51,7 +53,7 @@ public static class UserOptionsStorage
 
             var json = File.ReadAllText(ConfigFilePath);
             var options = JsonSerializer.Deserialize<UserOptions>(json);
-            
+
             if (options is null)
                 return Result<UserOptions>.Success(GetDefaultOptions());
 
@@ -78,16 +80,16 @@ public static class UserOptionsStorage
     {
         try
         {
-            if (options is null) 
+            if (options is null)
                 return Result<Unit>.Success(Unit.Value);
-            
+
             var dir = Path.GetDirectoryName(ConfigFilePath);
             if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
 
             var json = JsonSerializer.Serialize(options, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(ConfigFilePath, json);
-            
+
             return Result<Unit>.Success(Unit.Value);
         }
         catch (Exception ex)
