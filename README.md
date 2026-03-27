@@ -83,7 +83,7 @@ At least one of these devices.
 2. **Run** `WWCduDcsBiosBridge.exe`
 if no config.json is found, it will create a default one and show you a dialog box to edit it.
 3. Select the **File locations** at `DCS-BIOS` JSON folder. It should be located inside the `Scripts/DCS-BIOS/doc/json` folder.
-   * Example: `C:/Users/<user>/Saved Games/DCS.openbeta/Scripts/DCS-BIOS/doc/json`
+   * Example: `<Saved Games/DCS>/Scripts/DCS-BIOS/doc/json`
 
 <img width="441" height="368" alt="image" src="https://github.com/user-attachments/assets/dca3d830-970d-4741-aeb5-7358658f82f0" />
 
