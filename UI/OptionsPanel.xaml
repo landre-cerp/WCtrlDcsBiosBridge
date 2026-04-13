@@ -37,6 +37,28 @@
                      Checked="CheckBox_Changed"
                      Unchecked="CheckBox_Changed"
                      Margin="0,2"/>
+
+            <TextBlock Text="F/A-18C Options:" FontWeight="Bold" Margin="0,10,0,5"/>
+            
+            <TextBlock Text="IFEI Page Navigation Keys (use LSK buttons):" 
+                      Margin="0,0,0,3"
+                      TextWrapping="Wrap"/>
+            
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <TextBlock Text="Show IFEI Key:" VerticalAlignment="Center" Width="120"/>
+                <ComboBox x:Name="NextPageKeyComboBox"
+                         SelectedValue="{Binding NextPageKey, Mode=TwoWay}"
+                         SelectionChanged="ComboBox_Changed"
+                         Width="150"/>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <TextBlock Text="Show UFC Key:" VerticalAlignment="Center" Width="120"/>
+                <ComboBox x:Name="PrevPageKeyComboBox"
+                         SelectedValue="{Binding PrevPageKey, Mode=TwoWay}"
+                         SelectionChanged="ComboBox_Changed"
+                         Width="150"/>
+            </StackPanel>
         </StackPanel>
     </GroupBox>
 </UserControl>

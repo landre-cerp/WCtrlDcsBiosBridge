@@ -54,6 +54,7 @@ internal class FA18C_Listener : AircraftListener
         else if (e.Key == _prevPageKey)
         {
             _currentPage = DEFAULT_PAGE;
+            _ufcPage.Render(GetCompositor(DEFAULT_PAGE));
         }
     }
 
