@@ -46,4 +46,22 @@ public class UserOptions
     /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "PrevPage", "LineSelectLeft1").
     /// </summary>
     public string PrevPageKey { get; set; } = "PrevPage";
+
+    /// <summary>
+    /// Gets or sets the MCDU key used to show the F-16C DED display.
+    /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "PrevPage", "LeftArrow").
+    /// </summary>
+    public string F16CPrevDisplayKey { get; set; } = "PrevPage";
+
+    /// <summary>
+    /// Gets or sets the MCDU key used to show the F-16C NAV display.
+    /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "NextPage", "RightArrow").
+    /// </summary>
+    public string F16CNextDisplayKey { get; set; } = "NextPage";
+
+    /// <summary>
+    /// Gets or sets the MCDU key used to show the F-16C RWR display.
+    /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "F1").
+    /// </summary>
+    public string F16CRwrDisplayKey { get; set; } = "LineSelectRight1";
 }

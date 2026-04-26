@@ -67,7 +67,8 @@ internal class AircraftSelectionMenu : IDisposable
         }
         
         output.LeftLabel(5, SupportedAircrafts.M2000C_Name)
-            .BottomLine().WriteLine($"v{version}");
+              .RightLabel(5, SupportedAircrafts.F16C_Name)
+              .BottomLine().WriteLine($"v{version}");
         mcdu.RefreshDisplay();
     }
 
@@ -84,7 +85,8 @@ internal class AircraftSelectionMenu : IDisposable
             Key.LineSelectRight3 => new AircraftSelection(SupportedAircrafts.CH47, true),
             Key.LineSelectLeft4 => new AircraftSelection(SupportedAircrafts.F15E, true),
             Key.LineSelectRight4 => new AircraftSelection(SupportedAircrafts.CH47, false),
-            Key.LineSelectLeft5 => new AircraftSelection(SupportedAircrafts.M2000C, true),
+            Key.LineSelectLeft5  => new AircraftSelection(SupportedAircrafts.M2000C, true),
+            Key.LineSelectRight5 => new AircraftSelection(SupportedAircrafts.F16C,   true),
             _ => null
         };
 
