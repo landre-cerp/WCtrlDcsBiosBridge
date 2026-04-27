@@ -31,6 +31,21 @@ public partial class OptionsPanel : UserControl
         {
             prevPageCombo.ItemsSource = keyNames;
         }
+
+        if (FindName("F16CNextDisplayKeyComboBox") is ComboBox f16cNextCombo)
+        {
+            f16cNextCombo.ItemsSource = keyNames;
+        }
+
+        if (FindName("F16CPrevDisplayKeyComboBox") is ComboBox f16cPrevCombo)
+        {
+            f16cPrevCombo.ItemsSource = keyNames;
+        }
+
+        if (FindName("F16CRwrDisplayKeyComboBox") is ComboBox f16cRwrCombo)
+        {
+            f16cRwrCombo.ItemsSource = keyNames;
+        }
     }
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)

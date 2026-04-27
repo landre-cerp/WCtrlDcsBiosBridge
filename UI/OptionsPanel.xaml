@@ -59,6 +59,36 @@
                          SelectionChanged="ComboBox_Changed"
                          Width="150"/>
             </StackPanel>
+
+            <TextBlock Text="F-16C Options:" FontWeight="Bold" Margin="0,10,0,5"/>
+
+            <TextBlock Text="DED / NAV / RWR Page Keys:"
+                      Margin="0,0,0,3"
+                      TextWrapping="Wrap"/>
+
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <TextBlock Text="Show DED Key:" VerticalAlignment="Center" Width="120"/>
+                <ComboBox x:Name="F16CPrevDisplayKeyComboBox"
+                         SelectedValue="{Binding F16CPrevDisplayKey, Mode=TwoWay}"
+                         SelectionChanged="ComboBox_Changed"
+                         Width="150"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <TextBlock Text="Show NAV Key:" VerticalAlignment="Center" Width="120"/>
+                <ComboBox x:Name="F16CNextDisplayKeyComboBox"
+                         SelectedValue="{Binding F16CNextDisplayKey, Mode=TwoWay}"
+                         SelectionChanged="ComboBox_Changed"
+                         Width="150"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <TextBlock Text="Show RWR Key:" VerticalAlignment="Center" Width="120"/>
+                <ComboBox x:Name="F16CRwrDisplayKeyComboBox"
+                         SelectedValue="{Binding F16CRwrDisplayKey, Mode=TwoWay}"
+                         SelectionChanged="ComboBox_Changed"
+                         Width="150"/>
+            </StackPanel>
         </StackPanel>
     </GroupBox>
 </UserControl>
