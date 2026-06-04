@@ -11,6 +11,8 @@ internal class OH58D_Listener : AircraftListener
     private DCSBIOSOutput? _MPD_NG_DISPLAY_FULL;
     private DCSBIOSOutput? _MPD_DISPLAY_L;
     private DCSBIOSOutput? _MPD_DISPLAY_R;
+    private DCSBIOSOutput? _MPD_LABEL_L;
+    private DCSBIOSOutput? _MPD_LABEL_R;
     private DCSBIOSOutput? _TGT_DISPLAY;
     private DCSBIOSOutput? _TRQ_DISPLAY;
     private DCSBIOSOutput? _CMWS_LINE_1;
@@ -20,6 +22,8 @@ internal class OH58D_Listener : AircraftListener
     private DCSBIOSOutput? _MPD_WARN;
 
     private string _mpdNg = "---";
+    private string _mpdLeftLabel = "LEFT";
+    private string _mpdRightLabel = "RIGHT";
     private string _mpdLeft = "---";
     private string _mpdRight = "---";
     private string _tgt = "---";
@@ -40,6 +44,8 @@ internal class OH58D_Listener : AircraftListener
         _MPD_NG_DISPLAY_FULL = DCSBIOSControlLocator.GetStringDCSBIOSOutput("MPD_NG_DISPLAY_FULL");
         _MPD_DISPLAY_L = DCSBIOSControlLocator.GetStringDCSBIOSOutput("MPD_DISPLAY_L");
         _MPD_DISPLAY_R = DCSBIOSControlLocator.GetStringDCSBIOSOutput("MPD_DISPLAY_R");
+        _MPD_LABEL_L = GetFirstAvailableStringOutput("MPD_LABEL_L", "MPD_PARAM_LABEL_L", "MPD_DISPLAY_LABEL_L", "MPD_LEFT_PARAM_LABEL");
+        _MPD_LABEL_R = GetFirstAvailableStringOutput("MPD_LABEL_R", "MPD_PARAM_LABEL_R", "MPD_DISPLAY_LABEL_R", "MPD_RIGHT_PARAM_LABEL");
         _TGT_DISPLAY = DCSBIOSControlLocator.GetStringDCSBIOSOutput("TGT_DISPLAY");
         _TRQ_DISPLAY = DCSBIOSControlLocator.GetStringDCSBIOSOutput("TRQ_DISPLAY");
         _CMWS_LINE_1 = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CMWS_LINE_1");
@@ -87,6 +93,8 @@ internal class OH58D_Listener : AircraftListener
             var hasChanges = false;
 
             hasChanges |= UpdateCachedValue(_MPD_NG_DISPLAY_FULL, e, v => _mpdNg = v);
+            hasChanges |= UpdateCachedValue(_MPD_LABEL_L, e, v => _mpdLeftLabel = v);
+            hasChanges |= UpdateCachedValue(_MPD_LABEL_R, e, v => _mpdRightLabel = v);
             hasChanges |= UpdateCachedValue(_MPD_DISPLAY_L, e, v => _mpdLeft = v);
             hasChanges |= UpdateCachedValue(_MPD_DISPLAY_R, e, v => _mpdRight = v);
             hasChanges |= UpdateCachedValue(_TGT_DISPLAY, e, v => _tgt = v);
@@ -118,16 +126,33 @@ internal class OH58D_Listener : AircraftListener
             .Green()
             .Line(0).Centered("OH-58D KIOWA")
             .Line(2).WriteLine($"NG  {FormatValue(_mpdNg, 5, "---")}")
-            .Line(3).WriteLine($"MPD L {FormatValue(_mpdLeft, 3, "---")}  R {FormatValue(_mpdRight, 3, "---")}")
+            .Line(3).WriteLine($"{FormatLabel(_mpdLeftLabel, 7, "LEFT")} {FormatValue(_mpdLeft, 3, "---")}  {FormatLabel(_mpdRightLabel, 7, "RIGHT")} {FormatValue(_mpdRight, 3, "---")}")
             .Line(5).WriteLine($"TGT {FormatValue(_tgt, 3, "---")}   TRQ {FormatValue(_trq, 3, "---")}")
             .Line(10).Amber().WriteLine("CMWS")
             .Line(11).Green().WriteLine($"1 {FormatValue(_cmwsLine1, 4, "----")}")
             .Line(12).Green().WriteLine($"2 {FormatValue(_cmwsLine2, 4, "----")}");
     }
 
+    private static DCSBIOSOutput? GetFirstAvailableStringOutput(params string[] outputNames)
+    {
+        foreach (var outputName in outputNames)
+        {
+            var output = DCSBIOSControlLocator.GetStringDCSBIOSOutput(outputName);
+            if (output != null) return output;
+        }
+
+        return null;
+    }
+
     private static string FormatValue(string value, int width, string fallback)
     {
         var normalized = string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
         return normalized.Length <= width ? normalized.PadLeft(width) : normalized[..width];
+    }
+
+    private static string FormatLabel(string value, int width, string fallback)
+    {
+        var normalized = string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+        return normalized.Length <= width ? normalized.PadRight(width) : normalized[..width];
     }
 }
