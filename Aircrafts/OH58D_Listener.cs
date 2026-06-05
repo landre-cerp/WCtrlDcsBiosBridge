@@ -104,11 +104,7 @@ internal class OH58D_Listener : AircraftListener
     private uint _rfi5SelectCopilot = 0;
     private uint _rfi5SelectPilot = 0;
 
-    private uint _sel1 = 0;
-    private uint _sel2 = 0;
-    private uint _sel3 = 0;
-    private uint _sel4 = 0;
-    private uint _sel5 = 0;
+    private uint _mpd_selected= 0;
 
     // Mapping of selector position to (LeftLabel, RightLabel)
     // Based on OH-58D MPD panel layout (from bottom to top)
@@ -186,6 +182,8 @@ internal class OH58D_Listener : AircraftListener
         _MPD_SEL_5 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("MPD_SEL_5");
 
         _RFI_BRIGHTNESS = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("RFI_BRIGHTNESS");
+
+        InitializeDisplay();
     }
 
     public override void DcsBiosDataReceived(object sender, DCSBIOSDataEventArgs e)
@@ -196,8 +194,6 @@ internal class OH58D_Listener : AircraftListener
 
             if (mcdu == null) return;
 
-            var needsRefresh = false;
-
             if (!options.DisableLightingManagement && _RFI_BRIGHTNESS != null && e.Address == _RFI_BRIGHTNESS.Address)
             {
                 var brightness = (int)(_RFI_BRIGHTNESS.GetUIntValue(e.Data) * 100 / _RFI_BRIGHTNESS.MaxValue);
@@ -207,90 +203,137 @@ internal class OH58D_Listener : AircraftListener
                 mcdu.RefreshBrightnesses();
             }
 
-            // Track selector positions
-            if (_MPD_SEL_1 != null && e.Address == _MPD_SEL_1.Address)
+
+            if (e.Address == _MPD_SEL_1!.Address)
             {
-                _sel1 = _MPD_SEL_1.GetUIntValue(e.Data);
-                needsRefresh = true;
+                if  (_MPD_SEL_1.GetUIntValue(e.Data) != 0)
+                {
+                    _mpd_selected = 1;
+                }
             }
-            if (_MPD_SEL_2 != null && e.Address == _MPD_SEL_2.Address)
+            if (e.Address == _MPD_SEL_2!.Address)
             {
-                _sel2 = _MPD_SEL_2.GetUIntValue(e.Data);
-                needsRefresh = true;
+                if  (_MPD_SEL_2.GetUIntValue(e.Data) != 0)
+                {
+                    _mpd_selected = 2;
+                }
             }
-            if (_MPD_SEL_3 != null && e.Address == _MPD_SEL_3.Address)
+            if (e.Address == _MPD_SEL_3!.Address)
             {
-                _sel3 = _MPD_SEL_3.GetUIntValue(e.Data);
-                needsRefresh = true;
+                if  (_MPD_SEL_3.GetUIntValue(e.Data) != 0)
+                {
+                    _mpd_selected = 3;
+                }
             }
-            if (_MPD_SEL_4 != null && e.Address == _MPD_SEL_4.Address)
+            if (e.Address == _MPD_SEL_4!.Address)
             {
-                _sel4 = _MPD_SEL_4.GetUIntValue(e.Data);
-                needsRefresh = true;
+                if  (_MPD_SEL_4.GetUIntValue(e.Data) != 0)
+                {
+                    _mpd_selected = 4;
+                }
             }
-            if (_MPD_SEL_5 != null && e.Address == _MPD_SEL_5.Address)
+            if (e.Address == _MPD_SEL_5!.Address)
             {
-                _sel5 = _MPD_SEL_5.GetUIntValue(e.Data);
-                needsRefresh = true;
+                if  (_MPD_SEL_5.GetUIntValue(e.Data) != 0)
+                {
+                    _mpd_selected = 5;
+                }
             }
 
-            // Track RFI selection indicators
-            if (_RFI_LINE_1_SELECT_COPILOT != null && e.Address == _RFI_LINE_1_SELECT_COPILOT.Address)
+            UpdateMPDLabelsLine();
+
+            // Track RFI selection indicators (will be rendered when RFI string data updates)
+            if (e.Address == _RFI_LINE_1_SELECT_COPILOT!.Address)
             {
-                _rfi1SelectCopilot = _RFI_LINE_1_SELECT_COPILOT.GetUIntValue(e.Data);
-                needsRefresh = true;
+                var newValue = _RFI_LINE_1_SELECT_COPILOT.GetUIntValue(e.Data);
+                if (_rfi1SelectCopilot != newValue)
+                {
+                    _rfi1SelectCopilot = newValue;
+                    UpdateRFILine(8, _rfi1SelectCopilot, _rfi1Channel, _rfi1Cipher, _rfi1Number, _rfi1Frequency, _rfi1SelectPilot);
+                }
             }
-            if (_RFI_LINE_1_SELECT_PILOT != null && e.Address == _RFI_LINE_1_SELECT_PILOT.Address)
+            if (e.Address == _RFI_LINE_1_SELECT_PILOT!.Address)
             {
-                _rfi1SelectPilot = _RFI_LINE_1_SELECT_PILOT.GetUIntValue(e.Data);
-                needsRefresh = true;
+                var newValue = _RFI_LINE_1_SELECT_PILOT.GetUIntValue(e.Data);
+                if (_rfi1SelectPilot != newValue)
+                {
+                    _rfi1SelectPilot = newValue;
+                    UpdateRFILine(8, _rfi1SelectCopilot, _rfi1Channel, _rfi1Cipher, _rfi1Number, _rfi1Frequency, _rfi1SelectPilot);
+                }
             }
-            if (_RFI_LINE_2_SELECT_COPILOT != null && e.Address == _RFI_LINE_2_SELECT_COPILOT.Address)
+            if (e.Address == _RFI_LINE_2_SELECT_COPILOT!.Address)
             {
-                _rfi2SelectCopilot = _RFI_LINE_2_SELECT_COPILOT.GetUIntValue(e.Data);
-                needsRefresh = true;
+                var newValue = _RFI_LINE_2_SELECT_COPILOT.GetUIntValue(e.Data);
+                if (_rfi2SelectCopilot != newValue)
+                {
+                    _rfi2SelectCopilot = newValue;
+                    UpdateRFILine(9, _rfi2SelectCopilot, _rfi2Channel, _rfi2Cipher, _rfi2Number, _rfi2Frequency, _rfi2SelectPilot);
+                }
             }
-            if (_RFI_LINE_2_SELECT_PILOT != null && e.Address == _RFI_LINE_2_SELECT_PILOT.Address)
+            if (e.Address == _RFI_LINE_2_SELECT_PILOT!.Address)
             {
-                _rfi2SelectPilot = _RFI_LINE_2_SELECT_PILOT.GetUIntValue(e.Data);
-                needsRefresh = true;
+                var newValue = _RFI_LINE_2_SELECT_PILOT.GetUIntValue(e.Data);
+                if (_rfi2SelectPilot != newValue)
+                {
+                    _rfi2SelectPilot = newValue;
+                    UpdateRFILine(9, _rfi2SelectCopilot, _rfi2Channel, _rfi2Cipher, _rfi2Number, _rfi2Frequency, _rfi2SelectPilot);
+                }
             }
-            if (_RFI_LINE_3_SELECT_COPILOT != null && e.Address == _RFI_LINE_3_SELECT_COPILOT.Address)
+            if (e.Address == _RFI_LINE_3_SELECT_COPILOT!.Address)
             {
-                _rfi3SelectCopilot = _RFI_LINE_3_SELECT_COPILOT.GetUIntValue(e.Data);
-                needsRefresh = true;
+                var newValue = _RFI_LINE_3_SELECT_COPILOT.GetUIntValue(e.Data);
+                if (_rfi3SelectCopilot != newValue)
+                {
+                    _rfi3SelectCopilot = newValue;
+                    UpdateRFILine(10, _rfi3SelectCopilot, _rfi3Channel, _rfi3Cipher, _rfi3Number, _rfi3Frequency, _rfi3SelectPilot);
+                }
             }
-            if (_RFI_LINE_3_SELECT_PILOT != null && e.Address == _RFI_LINE_3_SELECT_PILOT.Address)
+            if (e.Address == _RFI_LINE_3_SELECT_PILOT!.Address)
             {
-                _rfi3SelectPilot = _RFI_LINE_3_SELECT_PILOT.GetUIntValue(e.Data);
-                needsRefresh = true;
+                var newValue = _RFI_LINE_3_SELECT_PILOT.GetUIntValue(e.Data);
+                if (_rfi3SelectPilot != newValue)
+                {
+                    _rfi3SelectPilot = newValue;
+                    UpdateRFILine(10, _rfi3SelectCopilot, _rfi3Channel, _rfi3Cipher, _rfi3Number, _rfi3Frequency, _rfi3SelectPilot);
+                }
             }
-            if (_RFI_LINE_4_SELECT_COPILOT != null && e.Address == _RFI_LINE_4_SELECT_COPILOT.Address)
+            if (e.Address == _RFI_LINE_4_SELECT_COPILOT!.Address)
             {
-                _rfi4SelectCopilot = _RFI_LINE_4_SELECT_COPILOT.GetUIntValue(e.Data);
-                needsRefresh = true;
+                var newValue = _RFI_LINE_4_SELECT_COPILOT.GetUIntValue(e.Data);
+                if (_rfi4SelectCopilot != newValue)
+                {
+                    _rfi4SelectCopilot = newValue;
+                    UpdateRFILine(11, _rfi4SelectCopilot, _rfi4Channel, _rfi4Cipher, _rfi4Number, _rfi4Frequency, _rfi4SelectPilot);
+                }
             }
-            if (_RFI_LINE_4_SELECT_PILOT != null && e.Address == _RFI_LINE_4_SELECT_PILOT.Address)
+            if (e.Address == _RFI_LINE_4_SELECT_PILOT!.Address)
             {
-                _rfi4SelectPilot = _RFI_LINE_4_SELECT_PILOT.GetUIntValue(e.Data);
-                needsRefresh = true;
+                var newValue = _RFI_LINE_4_SELECT_PILOT.GetUIntValue(e.Data);
+                if (_rfi4SelectPilot != newValue)
+                {
+                    _rfi4SelectPilot = newValue;
+                    UpdateRFILine(11, _rfi4SelectCopilot, _rfi4Channel, _rfi4Cipher, _rfi4Number, _rfi4Frequency, _rfi4SelectPilot);
+                }
             }
-            if (_RFI_LINE_5_SELECT_COPILOT != null && e.Address == _RFI_LINE_5_SELECT_COPILOT.Address)
+            if (e.Address == _RFI_LINE_5_SELECT_COPILOT!.Address)
             {
-                _rfi5SelectCopilot = _RFI_LINE_5_SELECT_COPILOT.GetUIntValue(e.Data);
-                needsRefresh = true;
+                var newValue = _RFI_LINE_5_SELECT_COPILOT.GetUIntValue(e.Data);
+                if (_rfi5SelectCopilot != newValue)
+                {
+                    _rfi5SelectCopilot = newValue;
+                    UpdateRFILine(12, _rfi5SelectCopilot, _rfi5Channel, _rfi5Cipher, _rfi5Number, _rfi5Frequency, _rfi5SelectPilot);
+                }
             }
-            if (_RFI_LINE_5_SELECT_PILOT != null && e.Address == _RFI_LINE_5_SELECT_PILOT.Address)
+            if (e.Address == _RFI_LINE_5_SELECT_PILOT!.Address)
             {
-                _rfi5SelectPilot = _RFI_LINE_5_SELECT_PILOT.GetUIntValue(e.Data);
-                needsRefresh = true;
+                var newValue = _RFI_LINE_5_SELECT_PILOT.GetUIntValue(e.Data);
+                if (_rfi5SelectPilot != newValue)
+                {
+                    _rfi5SelectPilot = newValue;
+                    UpdateRFILine(12, _rfi5SelectCopilot, _rfi5Channel, _rfi5Cipher, _rfi5Number, _rfi5Frequency, _rfi5SelectPilot);
+                }
             }
 
-            if (needsRefresh)
-            {
-                RenderDisplay(GetCompositor(DEFAULT_PAGE));
-                mcdu.RefreshDisplay();
-            }
         }
         catch (Exception ex)
         {
@@ -304,50 +347,76 @@ internal class OH58D_Listener : AircraftListener
 
         try
         {
-            var hasChanges = false;
+            var output = GetCompositor(DEFAULT_PAGE);
 
-            hasChanges |= UpdateCachedValue(_MPD_NG_DISPLAY_FULL, e, v => _mpdNg = v);
-            hasChanges |= UpdateCachedValue(_MPD_DISPLAY_L, e, v => _mpdLeft = v);
-            hasChanges |= UpdateCachedValue(_MPD_DISPLAY_R, e, v => _mpdRight = v);
-            hasChanges |= UpdateCachedValue(_TGT_DISPLAY, e, v => _tgt = v);
-            hasChanges |= UpdateCachedValue(_TRQ_DISPLAY, e, v => _trq = v);
-            hasChanges |= UpdateCachedValue(_CMWS_LINE_1, e, v => _cmwsLine1 = v);
-            hasChanges |= UpdateCachedValue(_CMWS_LINE_2, e, v => _cmwsLine2 = v);
+            // MPD displays
+            if (UpdateCachedValue(_MPD_NG_DISPLAY_FULL, e, v => _mpdNg = v))
+            {
+                output.Line(2).White().Write("NG  ").Green().WriteLine(FormatValue(_mpdNg, 5, "---"));
+            }
+            else if (UpdateCachedValue(_MPD_DISPLAY_L, e, v => _mpdLeft = v) || UpdateCachedValue(_MPD_DISPLAY_R, e, v => _mpdRight = v))
+            {
+                UpdateMPDLabelsLine();
+            }
+            else if (UpdateCachedValue(_TGT_DISPLAY, e, v => _tgt = v) || UpdateCachedValue(_TRQ_DISPLAY, e, v => _trq = v))
+            {
+                output.Line(5).White().Write("TGT ").Green().Write($"{FormatValue(_tgt, 3, "---")}   ").White().Write("TRQ ").Green().WriteLine(FormatValue(_trq, 3, "---"));
+            }
+
+            // CMWS displays
+            else if (UpdateCachedValue(_CMWS_LINE_1, e, v => _cmwsLine1 = v))
+            {
+                output.Line(8).Green().WriteLine($"1 {FormatValue(_cmwsLine1, 4, "----")}");
+            }
+            else if (UpdateCachedValue(_CMWS_LINE_2, e, v => _cmwsLine2 = v))
+            {
+                output.Line(9).Green().WriteLine($"2 {FormatValue(_cmwsLine2, 4, "----")}");
+            }
 
             // RFI Line 1
-            hasChanges |= UpdateCachedValue(_RFI_LINE_1_CHANNEL, e, v => _rfi1Channel = v);
-            hasChanges |= UpdateCachedValue(_RFI_LINE_1_CIPHER, e, v => _rfi1Cipher = v);
-            hasChanges |= UpdateCachedValue(_RFI_LINE_1_NUMBER, e, v => _rfi1Number = v);
-            hasChanges |= UpdateCachedValue(_RFI_LINE_1_FREQUENCY, e, v => _rfi1Frequency = v);
+            else if (UpdateCachedValue(_RFI_LINE_1_CHANNEL, e, v => _rfi1Channel = v) ||
+                     UpdateCachedValue(_RFI_LINE_1_CIPHER, e, v => _rfi1Cipher = v) ||
+                     UpdateCachedValue(_RFI_LINE_1_NUMBER, e, v => _rfi1Number = v) ||
+                     UpdateCachedValue(_RFI_LINE_1_FREQUENCY, e, v => _rfi1Frequency = v))
+            {
+                UpdateRFILine(8, _rfi1SelectCopilot, _rfi1Channel, _rfi1Cipher, _rfi1Number, _rfi1Frequency, _rfi1SelectPilot);
+            }
 
             // RFI Line 2
-            hasChanges |= UpdateCachedValue(_RFI_LINE_2_CHANNEL, e, v => _rfi2Channel = v);
-            hasChanges |= UpdateCachedValue(_RFI_LINE_2_CIPHER, e, v => _rfi2Cipher = v);
-            hasChanges |= UpdateCachedValue(_RFI_LINE_2_NUMBER, e, v => _rfi2Number = v);
-            hasChanges |= UpdateCachedValue(_RFI_LINE_2_FREQUENCY, e, v => _rfi2Frequency = v);
+            else if (UpdateCachedValue(_RFI_LINE_2_CHANNEL, e, v => _rfi2Channel = v) ||
+                     UpdateCachedValue(_RFI_LINE_2_CIPHER, e, v => _rfi2Cipher = v) ||
+                     UpdateCachedValue(_RFI_LINE_2_NUMBER, e, v => _rfi2Number = v) ||
+                     UpdateCachedValue(_RFI_LINE_2_FREQUENCY, e, v => _rfi2Frequency = v))
+            {
+                UpdateRFILine(9, _rfi2SelectCopilot, _rfi2Channel, _rfi2Cipher, _rfi2Number, _rfi2Frequency, _rfi2SelectPilot);
+            }
 
             // RFI Line 3
-            hasChanges |= UpdateCachedValue(_RFI_LINE_3_CHANNEL, e, v => _rfi3Channel = v);
-            hasChanges |= UpdateCachedValue(_RFI_LINE_3_CIPHER, e, v => _rfi3Cipher = v);
-            hasChanges |= UpdateCachedValue(_RFI_LINE_3_NUMBER, e, v => _rfi3Number = v);
-            hasChanges |= UpdateCachedValue(_RFI_LINE_3_FREQUENCY, e, v => _rfi3Frequency = v);
+            else if (UpdateCachedValue(_RFI_LINE_3_CHANNEL, e, v => _rfi3Channel = v) ||
+                     UpdateCachedValue(_RFI_LINE_3_CIPHER, e, v => _rfi3Cipher = v) ||
+                     UpdateCachedValue(_RFI_LINE_3_NUMBER, e, v => _rfi3Number = v) ||
+                     UpdateCachedValue(_RFI_LINE_3_FREQUENCY, e, v => _rfi3Frequency = v))
+            {
+                UpdateRFILine(10, _rfi3SelectCopilot, _rfi3Channel, _rfi3Cipher, _rfi3Number, _rfi3Frequency, _rfi3SelectPilot);
+            }
 
             // RFI Line 4
-            hasChanges |= UpdateCachedValue(_RFI_LINE_4_CHANNEL, e, v => _rfi4Channel = v);
-            hasChanges |= UpdateCachedValue(_RFI_LINE_4_CIPHER, e, v => _rfi4Cipher = v);
-            hasChanges |= UpdateCachedValue(_RFI_LINE_4_NUMBER, e, v => _rfi4Number = v);
-            hasChanges |= UpdateCachedValue(_RFI_LINE_4_FREQUENCY, e, v => _rfi4Frequency = v);
+            else if (UpdateCachedValue(_RFI_LINE_4_CHANNEL, e, v => _rfi4Channel = v) ||
+                     UpdateCachedValue(_RFI_LINE_4_CIPHER, e, v => _rfi4Cipher = v) ||
+                     UpdateCachedValue(_RFI_LINE_4_NUMBER, e, v => _rfi4Number = v) ||
+                     UpdateCachedValue(_RFI_LINE_4_FREQUENCY, e, v => _rfi4Frequency = v))
+            {
+                UpdateRFILine(11, _rfi4SelectCopilot, _rfi4Channel, _rfi4Cipher, _rfi4Number, _rfi4Frequency, _rfi4SelectPilot);
+            }
 
             // RFI Line 5
-            hasChanges |= UpdateCachedValue(_RFI_LINE_5_CHANNEL, e, v => _rfi5Channel = v);
-            hasChanges |= UpdateCachedValue(_RFI_LINE_5_CIPHER, e, v => _rfi5Cipher = v);
-            hasChanges |= UpdateCachedValue(_RFI_LINE_5_NUMBER, e, v => _rfi5Number = v);
-            hasChanges |= UpdateCachedValue(_RFI_LINE_5_FREQUENCY, e, v => _rfi5Frequency = v);
-
-            if (!hasChanges) return;
-
-            RenderDisplay(GetCompositor(DEFAULT_PAGE));
-            mcdu.RefreshDisplay();
+            else if (UpdateCachedValue(_RFI_LINE_5_CHANNEL, e, v => _rfi5Channel = v) ||
+                     UpdateCachedValue(_RFI_LINE_5_CIPHER, e, v => _rfi5Cipher = v) ||
+                     UpdateCachedValue(_RFI_LINE_5_NUMBER, e, v => _rfi5Number = v) ||
+                     UpdateCachedValue(_RFI_LINE_5_FREQUENCY, e, v => _rfi5Frequency = v))
+            {
+                UpdateRFILine(12, _rfi5SelectCopilot, _rfi5Channel, _rfi5Cipher, _rfi5Number, _rfi5Frequency, _rfi5SelectPilot);
+            }
         }
         catch (Exception ex)
         {
@@ -362,41 +431,67 @@ internal class OH58D_Listener : AircraftListener
         return true;
     }
 
-    private void RenderDisplay(Compositor output)
+    private void UpdateMPDLabelsLine()
     {
-        // Determine which selector is active and get corresponding labels
+        if (mcdu == null) return;
         var (leftLabel, rightLabel) = GetActiveLabels();
+        var output = GetCompositor(DEFAULT_PAGE);
+        output.Line(3).White().Write($"{leftLabel}").Green().Write($"{FormatValue(_mpdLeft, 3, "---")} ").Write(FormatValue(_mpdRight, 3, "---")).White().WriteLine($" {rightLabel}");
+    }
 
+    private void UpdateRFILine(int line, uint selectCopilot, string channel, string cipher, string number, string frequency, uint selectPilot)
+    {
+        if (mcdu == null) return;
+        var output = GetCompositor(DEFAULT_PAGE);
+        output.Line(line).Column(11)
+            .White().Write(number)
+            .Green().Write(GetRFILeftArrow(selectCopilot))
+            .Green().Write(cipher)
+            .White().Write(channel)
+            .Green().Write(" ").Write(frequency)
+            .WriteLine(GetRFIRightArrow(selectPilot));
+    }
+
+    private void InitializeDisplay()
+    {
+        if (mcdu == null) return;
+
+        // Render static parts of the display once
+        var output = GetCompositor(DEFAULT_PAGE);
         output.Clear()
             .Green()
-            .Line(0).Centered("OH-58D KIOWA")
-            .Line(2).White().Write("NG  ").Green().WriteLine(FormatValue(_mpdNg, 5, "---"))
-            .Line(3).White().Write($"{leftLabel}").Green().Write($"{FormatValue(_mpdLeft, 3, "---")} ").Write(FormatValue(_mpdRight, 3, "---")).White().WriteLine($" {rightLabel}")
-            .Line(5).White().Write("TGT ").Green().Write($"{FormatValue(_tgt, 3, "---")}   ").White().Write("TRQ ").Green().WriteLine(FormatValue(_trq, 3, "---"));
+            .Line(0).Centered("OH-58D KIOWA");
 
-        // CMWS section (left side, lines 8-9)
-        output.Line(7).Amber().WriteLine("CMWS");
+        // Line 1 is blank
+
+        // MPD Section (lines 2-5)
+        output.Line(2).White().Write("NG  ").Green().WriteLine(FormatValue(_mpdNg, 5, "---"));
+        UpdateMPDLabelsLine();
+        // Line 4 is blank
+        output.Line(5).White().Write("TGT ").Green().Write($"{FormatValue(_tgt, 3, "---")}   ").White().Write("TRQ ").Green().WriteLine(FormatValue(_trq, 3, "---"));
+
+        // Line 6 is blank
+
+        // CMWS and RFI headers (line 7)
+        output.Line(7).Amber().Write("CMWS").Column(12).WriteLine("RFI");
+
+        // CMWS section (lines 8-9)
         output.Line(8).Green().WriteLine($"1 {FormatValue(_cmwsLine1, 4, "----")}");
         output.Line(9).Green().WriteLine($"2 {FormatValue(_cmwsLine2, 4, "----")}");
 
-        // RFI (Radio Frequency Indicator) section - right side
-        // Format: <arrow> CHANNEL CIPHER NUMBER FREQUENCY <arrow>
-        output.Line(7).Column(12).Amber().WriteLine("RFI");
-        output.Line(8).Column(12).Green().Write(GetRFIArrow(_rfi1SelectCopilot)).White().Write(_rfi1Channel).Green().Write(_rfi1Cipher).White().Write(_rfi1Number).Green().Write(" ").Write(_rfi1Frequency).WriteLine(GetRFIArrow(_rfi1SelectPilot));
-        output.Line(9).Column(12).Green().Write(GetRFIArrow(_rfi2SelectCopilot)).White().Write(_rfi2Channel).Green().Write(_rfi2Cipher).White().Write(_rfi2Number).Green().Write(" ").Write(_rfi2Frequency).WriteLine(GetRFIArrow(_rfi2SelectPilot));
-        output.Line(10).Column(12).Green().Write(GetRFIArrow(_rfi3SelectCopilot)).White().Write(_rfi3Channel).Green().Write(_rfi3Cipher).White().Write(_rfi3Number).Green().Write(" ").Write(_rfi3Frequency).WriteLine(GetRFIArrow(_rfi3SelectPilot));
-        output.Line(11).Column(12).Green().Write(GetRFIArrow(_rfi4SelectCopilot)).White().Write(_rfi4Channel).Green().Write(_rfi4Cipher).White().Write(_rfi4Number).Green().Write(" ").Write(_rfi4Frequency).WriteLine(GetRFIArrow(_rfi4SelectPilot));
-        output.Line(12).Column(12).Green().Write(GetRFIArrow(_rfi5SelectCopilot)).White().Write(_rfi5Channel).Green().Write(_rfi5Cipher).White().Write(_rfi5Number).Green().Write(" ").Write(_rfi5Frequency).WriteLine(GetRFIArrow(_rfi5SelectPilot));
+        // RFI lines (lines 8-12) - right side
+        UpdateRFILine(8, _rfi1SelectCopilot, _rfi1Channel, _rfi1Cipher, _rfi1Number, _rfi1Frequency, _rfi1SelectPilot);
+        UpdateRFILine(9, _rfi2SelectCopilot, _rfi2Channel, _rfi2Cipher, _rfi2Number, _rfi2Frequency, _rfi2SelectPilot);
+        UpdateRFILine(10, _rfi3SelectCopilot, _rfi3Channel, _rfi3Cipher, _rfi3Number, _rfi3Frequency, _rfi3SelectPilot);
+        UpdateRFILine(11, _rfi4SelectCopilot, _rfi4Channel, _rfi4Cipher, _rfi4Number, _rfi4Frequency, _rfi4SelectPilot);
+        UpdateRFILine(12, _rfi5SelectCopilot, _rfi5Channel, _rfi5Cipher, _rfi5Number, _rfi5Frequency, _rfi5SelectPilot);
+
+        mcdu.RefreshDisplay();
     }
 
     private (string Left, string Right) GetActiveLabels()
     {
-        // Check which selector is active (value == 65535)
-        if (_sel1 == 65535 && SelectorLabels.TryGetValue(1, out var labels1)) return labels1;
-        if (_sel2 == 65535 && SelectorLabels.TryGetValue(2, out var labels2)) return labels2;
-        if (_sel3 == 65535 && SelectorLabels.TryGetValue(3, out var labels3)) return labels3;
-        if (_sel4 == 65535 && SelectorLabels.TryGetValue(4, out var labels4)) return labels4;
-        if (_sel5 == 65535 && SelectorLabels.TryGetValue(5, out var labels5)) return labels5;
+        if (SelectorLabels.TryGetValue((int)_mpd_selected, out var labels)) return labels;
 
         // Default labels if no selector is active
         return ("", "");
@@ -408,9 +503,15 @@ internal class OH58D_Listener : AircraftListener
         return normalized.Length <= width ? normalized.PadLeft(width) : normalized[..width];
     }
 
-    private static string GetRFIArrow(uint value)
+    private static string GetRFILeftArrow(uint value)
     {
-        // Return arrow character if selection is active (value == 1)
+        // Return left arrow character if copilot selection is active (value == 1)
+        return value == 1 ? "<" : " ";
+    }
+
+    private static string GetRFIRightArrow(uint value)
+    {
+        // Return right arrow character if pilot selection is active (value == 1)
         return value == 1 ? ">" : " ";
     }
 }
