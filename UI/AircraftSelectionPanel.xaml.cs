@@ -62,7 +62,6 @@ public partial class AircraftSelectionPanel : UserControl, INotifyPropertyChange
             "CH47_CPLT" => new AircraftSelection(SupportedAircrafts.CH47, false),
             "F15E" => new AircraftSelection(SupportedAircrafts.F15E, true),
             "M2000C" => new AircraftSelection(SupportedAircrafts.M2000C, true),
-            "OH58D" => new AircraftSelection(SupportedAircrafts.OH58D, true),
             _ => null
         };
 
@@ -75,7 +74,6 @@ public partial class AircraftSelectionPanel : UserControl, INotifyPropertyChange
             "CH47_CPLT" => "CH-47F (CPLT)",
             "F15E" => "F-15E",
             "M2000C" => "M-2000C",
-            "OH58D" => "OH-58D",
             _ => tag
         };
 

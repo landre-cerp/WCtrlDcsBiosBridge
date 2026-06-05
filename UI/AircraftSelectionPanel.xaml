@@ -67,12 +67,6 @@
                         Command="{Binding SelectAircraftCommand}"
                         CommandParameter="M2000C"
                         IsEnabled="{Binding ButtonsEnabled}"/>
-
-                <Button Content="OH-58D" Grid.Row="1" Grid.Column="3"
-                        Margin="3" Padding="8,4"
-                        Command="{Binding SelectAircraftCommand}"
-                        CommandParameter="OH58D"
-                        IsEnabled="{Binding ButtonsEnabled}"/>
             </Grid>
         </StackPanel>
     </GroupBox>
