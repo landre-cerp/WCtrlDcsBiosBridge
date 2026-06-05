@@ -39,6 +39,7 @@ At least one of these devices.
 | **AH-64D** | Basic | UFD information, keyboard display |
 | **FA-18C** | Basic | UFC fields display |
 | **CH-47F** | Basic | Pilot or CoPilot CDU (requires DCS-BIOS nightly build) |
+| **OH-58D** | Basic | MPD/TGT/TRQ/CMWS CDU display support |
 | **F15E** | Basic | UFC Lines 1-6 by smreki |
 | **M2K** | Basic | see documentation in docs/ |
 

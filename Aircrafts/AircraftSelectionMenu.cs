@@ -46,28 +46,29 @@ internal class AircraftSelectionMenu : IDisposable
             .Line(0).Centered("DCSbios/WW Bridge")
             .NewLine().Large().Yellow().Centered("by Cerppo")
             .White()
-            .LeftLabel(2, SupportedAircrafts.A10C_Name)
-            .RightLabel(2, SupportedAircrafts.AH64D_Name)
-            .LeftLabel(3, SupportedAircrafts.FA18C_Name);
+            .LeftLabel(1, SupportedAircrafts.A10C_Name)
+            .RightLabel(1, SupportedAircrafts.AH64D_Name)
+            .LeftLabel(2, SupportedAircrafts.FA18C_Name);
 
         if (showSingleCh47Option)
         {
-            output.RightLabel(3, SupportedAircrafts.CH47_Name);
+            output.RightLabel(2, SupportedAircrafts.CH47_Name);
         }
         else
         {
-            output.RightLabel(3, $"{SupportedAircrafts.CH47_Name} (PLT)");
+            output.RightLabel(2, $"{SupportedAircrafts.CH47_Name} (PLT)");
         }
 
-        output.LeftLabel(4, SupportedAircrafts.F15E_Name);
+        output.LeftLabel(3, SupportedAircrafts.F15E_Name);
         
         if (!showSingleCh47Option)
         {
-            output.RightLabel(4, $"{SupportedAircrafts.CH47_Name} (CPLT)");
+            output.RightLabel(3, $"{SupportedAircrafts.CH47_Name} (CPLT)");
         }
         
-        output.LeftLabel(5, SupportedAircrafts.M2000C_Name)
-              .RightLabel(5, SupportedAircrafts.F16C_Name)
+        output.LeftLabel(4, SupportedAircrafts.M2000C_Name)
+              .RightLabel(4, SupportedAircrafts.F16C_Name)
+              .LeftLabel(5, SupportedAircrafts.OH58D_Name)
               .BottomLine().WriteLine($"v{version}");
         mcdu.RefreshDisplay();
     }
@@ -79,14 +80,15 @@ internal class AircraftSelectionMenu : IDisposable
     {
         var selection = e.Key switch
         {
-            Key.LineSelectLeft2 => new AircraftSelection(SupportedAircrafts.A10C, true),
-            Key.LineSelectRight2 => new AircraftSelection(SupportedAircrafts.AH64D, true),
-            Key.LineSelectLeft3 => new AircraftSelection(SupportedAircrafts.FA18C, true),
-            Key.LineSelectRight3 => new AircraftSelection(SupportedAircrafts.CH47, true),
-            Key.LineSelectLeft4 => new AircraftSelection(SupportedAircrafts.F15E, true),
-            Key.LineSelectRight4 => new AircraftSelection(SupportedAircrafts.CH47, false),
-            Key.LineSelectLeft5  => new AircraftSelection(SupportedAircrafts.M2000C, true),
-            Key.LineSelectRight5 => new AircraftSelection(SupportedAircrafts.F16C,   true),
+            Key.LineSelectLeft1 => new AircraftSelection(SupportedAircrafts.A10C, true),
+            Key.LineSelectRight1 => new AircraftSelection(SupportedAircrafts.AH64D, true),
+            Key.LineSelectLeft2 => new AircraftSelection(SupportedAircrafts.FA18C, true),
+            Key.LineSelectRight2 => new AircraftSelection(SupportedAircrafts.CH47, true),
+            Key.LineSelectLeft3 => new AircraftSelection(SupportedAircrafts.F15E, true),
+            Key.LineSelectRight3 => new AircraftSelection(SupportedAircrafts.CH47, false),
+            Key.LineSelectLeft4  => new AircraftSelection(SupportedAircrafts.M2000C, true),
+            Key.LineSelectRight4 => new AircraftSelection(SupportedAircrafts.F16C,   true),
+            Key.LineSelectLeft5  => new AircraftSelection(SupportedAircrafts.OH58D,  true),
             _ => null
         };
 
