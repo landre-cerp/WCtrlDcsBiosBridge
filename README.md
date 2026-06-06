@@ -22,7 +22,7 @@ This console application bridges DCS World with some of the WinCtrl hardware, en
 ## Requirements
 
 - DCS World
-- DCS-BIOS [v0.11.0](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.0) or later
+- DCS-BIOS [v0.11.0](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.0) or later (0.11.4 recommended as it updates the ch47 cdu pages)
 - .NET 8.0 runtime
 
 At least one of these devices.
