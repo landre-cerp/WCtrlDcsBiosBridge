@@ -58,9 +58,8 @@ internal class A10C_Listener : AircraftListener
         Dispose(false);
     }
 
-    protected override void InitializeDcsBiosControls()
+    protected override void InitializeDcsBiosOutputs()
     {
-
         for (int i = 0; i < 10; i++)
         {
             cduLines[i] = DCSBIOSControlLocator.GetStringDCSBIOSOutput($"CDU_LINE{i}");
@@ -89,106 +88,47 @@ internal class A10C_Listener : AircraftListener
         _ALT_PRESSURE1 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE1");
         _ALT_PRESSURE2 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE2");
         _ALT_PRESSURE3 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE3");
-
-        RegisterControls();
     }
 
-    // Le dispatch est fait en O(1) par adresse dans la classe de base.
-    private void RegisterControls()
+    protected override void RegisterLightingControls()
     {
-        // --- Lighting ---
-        Register(_CONSOLE_BRT, v =>
+        if (mcdu != null)
         {
-            if (options.DisableLightingManagement) return;
-
-            if (mcdu != null)
+            Register(_CONSOLE_BRT, v =>
             {
                 mcdu.BacklightBrightnessPercent = (int)(v * 100 / _CONSOLE_BRT!.MaxValue);
                 mcdu.RefreshBrightnesses();
-            }
-
-            if (frontpanelHub.HasFrontpanels)
+            });
+            Register(_CDU_BRT, v =>
             {
-                // Convert to byte range (0-255) directly, not percentage
-                var brightness = (byte)(v * 255 / _CONSOLE_BRT!.MaxValue);
-                frontpanelHub.SetBrightness(brightness, brightness, brightness);
-            }
-        });
-
-        Register(_CDU_BRT, v =>
-        {
-            if (mcdu == null || options.DisableLightingManagement) return;
-            if (v == 0)
-                mcdu.DisplayBrightnessPercent = Math.Min(100, mcdu.DisplayBrightnessPercent - BRT_STEP);
-            else if (v == 2)
-                mcdu.DisplayBrightnessPercent = Math.Min(100, mcdu.DisplayBrightnessPercent + BRT_STEP);
-            mcdu.RefreshBrightnesses();
-        });
-
-        // --- MCDU LEDs ---
-        Register(_CANOPY_LED, v => SetLed(l => l.Fm2 = v == 1));
-        Register(_NOSE_SW_GREENLIGHT, v => SetLed(l => l.Ind = v == 1));
-        Register(_GUN_READY, v => SetLed(l => l.Fm1 = v == 1));
-        Register(_MASTER_CAUTION, v => SetLed(l => l.Fail = v == 1));
-
-        // --- Frontpanel : heading ---
-        Register(_HEADING, v =>
-        {
-            if (frontpanelState == null || !frontpanelHub.Capabilities.HasHeadingDisplay) return;
-            heading = (int)v;
-            frontpanelState.Heading = heading;
-        });
-
-        // --- Frontpanel : vertical speed ---
-        Register(_VS, v =>
-        {
-            if (frontpanelState == null || !frontpanelHub.Capabilities.HasVerticalSpeedDisplay) return;
-            verticalSpeed = ConvertVviToVerticalSpeed((int)v);
-            frontpanelState.VerticalSpeed = verticalSpeed;
-        });
-
-        // --- Frontpanel : barometric pressure drums (FCU/EFIS only) ---
-        var pressureDrums = new[] { _ALT_PRESSURE0, _ALT_PRESSURE1, _ALT_PRESSURE2, _ALT_PRESSURE3 };
-        for (int i = 0; i < pressureDrums.Length; i++)
-        {
-            int digitIndex = i;
-            var drum = pressureDrums[i];
-            Register(drum, v =>
-            {
-                if (frontpanelState == null || !frontpanelHub.Capabilities.CanDisplayBarometricPressure) return;
-                pressureDigits[digitIndex] = ConvertDrumPositionToDigit(v, drum!.MaxValue);
-                if (frontpanelState is FcuEfisState fcuState)
-                {
-                    UpdateBaroPressure();
-                    fcuState.LeftBaroPressure = baroPressure;
-                }
+                if (v == 0)
+                    mcdu.DisplayBrightnessPercent = Math.Min(100, mcdu.DisplayBrightnessPercent - BRT_STEP);
+                else if (v == 2)
+                    mcdu.DisplayBrightnessPercent = Math.Min(100, mcdu.DisplayBrightnessPercent + BRT_STEP);
+                mcdu.RefreshBrightnesses();
             });
         }
 
-        // --- Frontpanel : altitude drums ---
-        Register(_ALTITUDE_10000ft, v =>
+        if (frontpanelHub.HasFrontpanels)
         {
-            if (frontpanelState == null || !frontpanelHub.Capabilities.HasAltitudeDisplay) return;
-            altitudeDigits[2] = ConvertDrumPositionToDigit(v, _ALTITUDE_10000ft!.MaxValue);
-            UpdateAltitude();
-            frontpanelState.Altitude = altitude;
-        });
-        Register(_ALTITUDE_1000ft, v =>
-        {
-            if (frontpanelState == null || !frontpanelHub.Capabilities.HasAltitudeDisplay) return;
-            altitudeDigits[1] = ConvertDrumPositionToDigit(v, _ALTITUDE_1000ft!.MaxValue);
-            UpdateAltitude();
-            frontpanelState.Altitude = altitude;
-        });
-        Register(_ALTITUDE_100ft, v =>
-        {
-            if (frontpanelState == null || !frontpanelHub.Capabilities.HasAltitudeDisplay) return;
-            altitudeDigits[0] = ConvertDrumPositionToAltitude100ft(v, _ALTITUDE_100ft!.MaxValue);
-            UpdateAltitude();
-            frontpanelState.Altitude = altitude;
-        });
+            Register(_CONSOLE_BRT, v =>
+            {
+                // Convert to byte range (0-255) directly, not percentage
+                var b = (byte)(v * 255 / _CONSOLE_BRT!.MaxValue);
+                frontpanelHub.SetBrightness(b, b, b);
+            });
+        }
+    }
 
-        // --- CDU display lines (line index fixé selon DisplayBottomAligned) ---
+    protected override void RegisterMcduControls()
+    {
+        // --- LEDs ---
+        Register(_CANOPY_LED,         v => { mcdu!.Leds.Fm2  = v == 1; mcdu!.RefreshLeds(); });
+        Register(_NOSE_SW_GREENLIGHT, v => { mcdu!.Leds.Ind  = v == 1; mcdu!.RefreshLeds(); });
+        Register(_GUN_READY,          v => { mcdu!.Leds.Fm1  = v == 1; mcdu!.RefreshLeds(); });
+        Register(_MASTER_CAUTION,     v => { mcdu!.Leds.Fail = v == 1; mcdu!.RefreshLeds(); });
+
+        // --- CDU display lines ---
         bool bottomAligned = options.DisplayBottomAligned;
         for (int i = 0; i < cduLines.Length; i++)
         {
@@ -196,7 +136,6 @@ internal class A10C_Listener : AircraftListener
             RegisterString(cduLines[i], s => WriteCduLine(line, s));
         }
 
-        // --- CMSP (uniquement si l'affichage CMS est activé) ---
         if (options.DisplayCMS)
         {
             int cmsp1Line = bottomAligned ? 0 : 12;
@@ -204,28 +143,73 @@ internal class A10C_Listener : AircraftListener
             RegisterString(_CMSP1, s => WriteCduLine(cmsp1Line, s));
             RegisterString(_CMSP2, s => WriteCduLine(cmsp2Line, s));
         }
+    }
 
-        // --- Frontpanel : indicated airspeed ---
-        RegisterString(_IAS, s =>
+    protected override void RegisterFrontpanelControls()
+    {
+        var cap = frontpanelHub.Capabilities;
+
+        if (cap.HasHeadingDisplay)
+            Register(_HEADING, v => { heading = (int)v; frontpanelState!.Heading = heading; });
+
+        if (cap.HasVerticalSpeedDisplay)
+            Register(_VS, v =>
+            {
+                verticalSpeed = ConvertVviToVerticalSpeed((int)v);
+                frontpanelState!.VerticalSpeed = verticalSpeed;
+            });
+
+        if (cap.HasAltitudeDisplay)
         {
-            if (!frontpanelHub.Capabilities.HasSpeedDisplay) return;
-            // there's a bug? in DCS-BIOS A-10C module where IAS is 2 knots below the actual value
-            var trimmedSpeed = s.Trim();
-            speed = trimmedSpeed == "" ? 0 : int.Parse(trimmedSpeed) + 2;
+            Register(_ALTITUDE_10000ft, v =>
+            {
+                altitudeDigits[2] = ConvertDrumPositionToDigit(v, _ALTITUDE_10000ft!.MaxValue);
+                UpdateAltitude();
+                frontpanelState!.Altitude = altitude;
+            });
+            Register(_ALTITUDE_1000ft, v =>
+            {
+                altitudeDigits[1] = ConvertDrumPositionToDigit(v, _ALTITUDE_1000ft!.MaxValue);
+                UpdateAltitude();
+                frontpanelState!.Altitude = altitude;
+            });
+            Register(_ALTITUDE_100ft, v =>
+            {
+                altitudeDigits[0] = ConvertDrumPositionToAltitude100ft(v, _ALTITUDE_100ft!.MaxValue);
+                UpdateAltitude();
+                frontpanelState!.Altitude = altitude;
+            });
+        }
 
-            if (frontpanelState != null)
-                frontpanelState.Speed = speed;
-        });
+        if (cap.CanDisplayBarometricPressure)
+        {
+            var pressureDrums = new[] { _ALT_PRESSURE0, _ALT_PRESSURE1, _ALT_PRESSURE2, _ALT_PRESSURE3 };
+            for (int i = 0; i < pressureDrums.Length; i++)
+            {
+                int digitIndex = i;
+                var drum = pressureDrums[i];
+                Register(drum, v =>
+                {
+                    pressureDigits[digitIndex] = ConvertDrumPositionToDigit(v, drum!.MaxValue);
+                    if (frontpanelState is FcuEfisState fcuState)
+                    {
+                        UpdateBaroPressure();
+                        fcuState.LeftBaroPressure = baroPressure;
+                    }
+                });
+            }
+        }
+
+        if (cap.HasSpeedDisplay)
+            RegisterString(_IAS, s =>
+            {
+                // there's a bug? in DCS-BIOS A-10C module where IAS is 2 knots below the actual value
+                var trimmed = s.Trim();
+                speed = trimmed == "" ? 0 : int.Parse(trimmed) + 2;
+                frontpanelState!.Speed = speed;
+            });
     }
     
-    // Applique une mutation sur les LEDs du MCDU puis pousse l'état vers le device.
-    private void SetLed(Action<Leds> apply)
-    {
-        if (mcdu == null) return;
-        apply(mcdu.Leds);
-        mcdu.RefreshLeds();
-    }
-
     private static string ReplaceSpecialChars(string data) =>
         data.Replace("»", "→")
             .Replace("«", "←")

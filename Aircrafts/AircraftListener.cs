@@ -195,8 +195,11 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
 
     public void Start()
     {
-        InitializeDcsBiosControls();
-        
+        InitializeDcsBiosOutputs();
+
+        if (!options.DisableLightingManagement) RegisterLightingControls();
+        if (mcdu != null)            RegisterMcduControls();
+        if (frontpanelState != null) RegisterFrontpanelControls();
 
         if (mcdu != null)
         {
@@ -280,7 +283,10 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
             .Line(7).Centered(GetAircraftName());
     }
 
-    protected abstract void InitializeDcsBiosControls();
+    protected abstract void InitializeDcsBiosOutputs();
+    protected abstract void RegisterLightingControls();
+    protected abstract void RegisterMcduControls();
+    protected abstract void RegisterFrontpanelControls();
 
     public void DcsBiosConnectionActive(object sender, DCSBIOSConnectionEventArgs e)
     {
