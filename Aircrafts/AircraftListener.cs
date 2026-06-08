@@ -33,6 +33,60 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     protected const string DEFAULT_PAGE = "default";
     protected string _currentPage = DEFAULT_PAGE;
 
+    // adresse DCS-BIOS -> handlers
+    private readonly Dictionary<uint, List<Action<uint>>> _dataHandlers = new();
+    private readonly Dictionary<uint, List<Action<string>>> _stringHandlers = new();
+
+    // Enregistre un handler pour un output entier
+    protected void Register(DCSBIOSOutput? output, Action<uint> handler)
+    {
+        if (output is null) return;
+        if (!_dataHandlers.TryGetValue(output.Address, out var list))
+            _dataHandlers[output.Address] = list = new();
+        // capture l'output pour décoder la valeur correctement
+        list.Add(data => handler(output.GetUIntValue(data)));
+    }
+
+    // Enregistre un handler pour un output string
+    protected void RegisterString(DCSBIOSOutput? output, Action<string> handler)
+    {
+        if (output is null) return;
+        if (!_stringHandlers.TryGetValue(output.Address, out var list))
+            _stringHandlers[output.Address] = list = new();
+        list.Add(handler);
+    }
+
+    // Dispatch unique, plus de if-chains dans les classes filles.
+    // virtual : les aircrafts non encore migrés vers Register continuent à override.
+    public virtual void DcsBiosDataReceived(object sender, DCSBIOSDataEventArgs e)
+    {
+        try
+        {
+            UpdateCounter(e.Address, e.Data);
+            if (_dataHandlers.TryGetValue(e.Address, out var handlers))
+                foreach (var h in handlers) h(e.Data);
+        }
+        catch (Exception ex)
+        {
+            App.Logger.Error(ex, "Failed to process DCS-BIOS data");
+        }
+    }
+
+    // DCSBIOSStringReceived : idem avec _stringHandlers
+    public virtual void DCSBIOSStringReceived(object sender, DCSBIOSStringDataEventArgs e)
+    {
+        try
+        {
+            if (_stringHandlers.TryGetValue(e.Address, out var handlers))
+                foreach (var h in handlers) h(e.StringData);
+        }
+        catch (Exception ex)
+        {
+            App.Logger.Error(ex, "Failed to process DCS-BIOS string data");
+        }
+    }
+
+
     protected Dictionary<string, Screen> pages = new()
         {
               {DEFAULT_PAGE, new Screen() }
@@ -250,9 +304,6 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
 
         return pages[pageName];
     }
-
-    public abstract void DcsBiosDataReceived(object sender, DCSBIOSDataEventArgs e);
-    public abstract void DCSBIOSStringReceived(object sender, DCSBIOSStringDataEventArgs e);
 
     public void Dispose()
     {
