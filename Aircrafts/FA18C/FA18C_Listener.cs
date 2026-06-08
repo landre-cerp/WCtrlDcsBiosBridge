@@ -58,7 +58,6 @@ internal class FA18C_Listener : AircraftListener
         }
     }
 
-    protected override void RegisterLightingControls() { }
     protected override void RegisterMcduControls() { }
     protected override void RegisterFrontpanelControls() { }
 

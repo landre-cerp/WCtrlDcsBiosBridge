@@ -387,7 +387,6 @@ internal class F16C_Listener : AircraftListener
     // =========================================================================
     // Initialization
     // =========================================================================
-    protected override void RegisterLightingControls() { }
     protected override void RegisterMcduControls() { }
     protected override void RegisterFrontpanelControls() { }
 

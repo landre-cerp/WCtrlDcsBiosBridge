@@ -23,7 +23,6 @@ internal class F15E_Listener : AircraftListener
     {
     }
 
-    protected override void RegisterLightingControls() { }
     protected override void RegisterMcduControls() { }
     protected override void RegisterFrontpanelControls() { }
 
