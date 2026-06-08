@@ -62,11 +62,17 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     protected Func<bool> WhenMcdu()
         => () => mcdu != null;
 
-    // Vrai si au moins un frontpanel est connecté (et que la capacité demandée est disponible).
+    // Vrai si au moins un frontpanel est connecté — utilisé pour les commandes qui
+    // s'appliquent à tous les devices (ex: luminosité), même sans état d'affichage (PDC-3N).
+    protected Func<bool> WhenAnyFrontpanel()
+        => () => frontpanelHub.HasFrontpanels;
+
+    // Vrai si un frontpanel avec état d'affichage est connecté (et que la capacité demandée est disponible).
+    // Note : HasFrontpanels peut être vrai sans frontpanelState (ex: PDC-3N brightness-only).
     protected Func<bool> WhenFrontpanel(Func<IFrontpanelCapabilities, bool>? cap = null)
         => cap is null
-            ? () => frontpanelHub.HasFrontpanels
-            : () => frontpanelHub.HasFrontpanels && cap(frontpanelHub.Capabilities);
+            ? () => frontpanelState != null
+            : () => frontpanelState != null && cap(frontpanelHub.Capabilities);
 
     // Surcharges avec guard : le handler ne s'exécute que si when() retourne true.
     protected void Register(DCSBIOSOutput? output, Func<bool> when, Action<uint> handler)

@@ -104,7 +104,7 @@ internal class A10C_Listener : AircraftListener
                 mcdu!.BacklightBrightnessPercent = (int)(v * 100 / _CONSOLE_BRT!.MaxValue);
                 mcdu!.RefreshBrightnesses();
             });
-            Register(_CONSOLE_BRT, WhenFrontpanel(), v =>
+            Register(_CONSOLE_BRT, WhenAnyFrontpanel(), v =>
             {
                 // Convert to byte range (0-255) directly, not percentage
                 var b = (byte)(v * 255 / _CONSOLE_BRT!.MaxValue);
