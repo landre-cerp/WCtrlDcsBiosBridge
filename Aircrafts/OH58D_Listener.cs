@@ -69,7 +69,11 @@ internal class OH58D_Listener : AircraftListener
     {
     }
 
-    protected override void InitializeDcsBiosControls()
+    protected override void RegisterLightingControls() { }
+    protected override void RegisterMcduControls() { }
+    protected override void RegisterFrontpanelControls() { }
+
+    protected override void InitializeDcsBiosOutputs()
     {
         _MPD_NG_DISPLAY_FULL = DCSBIOSControlLocator.GetStringDCSBIOSOutput("MPD_NG_DISPLAY_FULL");
         _MPD_DISPLAY_L = DCSBIOSControlLocator.GetStringDCSBIOSOutput("MPD_DISPLAY_L");

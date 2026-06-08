@@ -387,7 +387,11 @@ internal class F16C_Listener : AircraftListener
     // =========================================================================
     // Initialization
     // =========================================================================
-    protected override void InitializeDcsBiosControls()
+    protected override void RegisterLightingControls() { }
+    protected override void RegisterMcduControls() { }
+    protected override void RegisterFrontpanelControls() { }
+
+    protected override void InitializeDcsBiosOutputs()
     {
         // --- Console / Shared ---
         _PRI_CONSOLES_BRT     = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("PRI_CONSOLES_BRT_KNB"); // 0x440E

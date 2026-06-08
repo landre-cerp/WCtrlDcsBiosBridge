@@ -58,7 +58,11 @@ internal class FA18C_Listener : AircraftListener
         }
     }
 
-    protected override void InitializeDcsBiosControls()
+    protected override void RegisterLightingControls() { }
+    protected override void RegisterMcduControls() { }
+    protected override void RegisterFrontpanelControls() { }
+
+    protected override void InitializeDcsBiosOutputs()
     {
         MASTER_CAUTION_LT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("MASTER_CAUTION_LT");
         _cockpitLightModeSw = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("COCKKPIT_LIGHT_MODE_SW");

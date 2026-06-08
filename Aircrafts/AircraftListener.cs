@@ -56,31 +56,6 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         list.Add(handler);
     }
 
-    // --- Guards : évalués au moment du dispatch, pas à l'enregistrement ---
-
-    // Vrai si un MCDU physique est connecté.
-    protected Func<bool> WhenMcdu()
-        => () => mcdu != null;
-
-    // Vrai si au moins un frontpanel est connecté — utilisé pour les commandes qui
-    // s'appliquent à tous les devices (ex: luminosité), même sans état d'affichage (PDC-3N).
-    protected Func<bool> WhenAnyFrontpanel()
-        => () => frontpanelHub.HasFrontpanels;
-
-    // Vrai si un frontpanel avec état d'affichage est connecté (et que la capacité demandée est disponible).
-    // Note : HasFrontpanels peut être vrai sans frontpanelState (ex: PDC-3N brightness-only).
-    protected Func<bool> WhenFrontpanel(Func<IFrontpanelCapabilities, bool>? cap = null)
-        => cap is null
-            ? () => frontpanelState != null
-            : () => frontpanelState != null && cap(frontpanelHub.Capabilities);
-
-    // Surcharges avec guard : le handler ne s'exécute que si when() retourne true.
-    protected void Register(DCSBIOSOutput? output, Func<bool> when, Action<uint> handler)
-        => Register(output, v => { if (when()) handler(v); });
-
-    protected void RegisterString(DCSBIOSOutput? output, Func<bool> when, Action<string> handler)
-        => RegisterString(output, s => { if (when()) handler(s); });
-
     // Dispatch unique, plus de if-chains dans les classes filles.
     // virtual : les aircrafts non encore migrés vers Register continuent à override.
     public virtual void DcsBiosDataReceived(object sender, DCSBIOSDataEventArgs e)
@@ -220,8 +195,11 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
 
     public void Start()
     {
-        InitializeDcsBiosControls();
-        
+        InitializeDcsBiosOutputs();
+
+        if (!options.DisableLightingManagement) RegisterLightingControls();
+        if (mcdu != null)            RegisterMcduControls();
+        if (frontpanelState != null) RegisterFrontpanelControls();
 
         if (mcdu != null)
         {
@@ -305,7 +283,10 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
             .Line(7).Centered(GetAircraftName());
     }
 
-    protected abstract void InitializeDcsBiosControls();
+    protected abstract void InitializeDcsBiosOutputs();
+    protected abstract void RegisterLightingControls();
+    protected abstract void RegisterMcduControls();
+    protected abstract void RegisterFrontpanelControls();
 
     public void DcsBiosConnectionActive(object sender, DCSBIOSConnectionEventArgs e)
     {

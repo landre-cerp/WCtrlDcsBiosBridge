@@ -82,7 +82,11 @@ internal class CH47F_Listener : AircraftListener
         }
     }
 
-    protected override void InitializeDcsBiosControls()
+    protected override void RegisterLightingControls() { }
+    protected override void RegisterMcduControls() { }
+    protected override void RegisterFrontpanelControls() { }
+
+    protected override void InitializeDcsBiosOutputs()
     {
         // we need to instantiate both PLT and CPLT CDUs to switch between them
         // even if we are only interested in one of them with 2 CDU connected

@@ -23,7 +23,11 @@ internal class F15E_Listener : AircraftListener
     {
     }
 
-    protected override void InitializeDcsBiosControls()
+    protected override void RegisterLightingControls() { }
+    protected override void RegisterMcduControls() { }
+    protected override void RegisterFrontpanelControls() { }
+
+    protected override void InitializeDcsBiosOutputs()
     {
         F_UFC_LINE1_DISPLAY = DCSBIOSControlLocator.GetStringDCSBIOSOutput("F_UFC_LINE1_DISPLAY");
         F_UFC_LINE2_DISPLAY = DCSBIOSControlLocator.GetStringDCSBIOSOutput("F_UFC_LINE2_DISPLAY");

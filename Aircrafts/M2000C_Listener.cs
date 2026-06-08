@@ -126,7 +126,11 @@ internal class M2000C_Listener : AircraftListener
     {
     }
 
-    protected override void InitializeDcsBiosControls()
+    protected override void RegisterLightingControls() { }
+    protected override void RegisterMcduControls() { }
+    protected override void RegisterFrontpanelControls() { }
+
+    protected override void InitializeDcsBiosOutputs()
     {
         PCN_DISP_L = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_L");
         PCN_DISP_R = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_R");
