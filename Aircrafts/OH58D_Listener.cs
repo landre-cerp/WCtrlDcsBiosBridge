@@ -105,7 +105,7 @@ internal class OH58D_Listener : AircraftListener
 
     protected override void RegisterMcduControls() {
 
-        if (!options.DisableLightingManagement) {
+        if (!options.DisableLightingManagement && mcdu != null) {
             Register(_RFI_BRIGHTNESS, v =>
             {
                 var brightness = (int)(_RFI_BRIGHTNESS!.GetUIntValue(v) * 100 / _RFI_BRIGHTNESS.MaxValue);

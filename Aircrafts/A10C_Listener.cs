@@ -93,19 +93,19 @@ internal class A10C_Listener : AircraftListener
 
     protected override void RegisterMcduControls()
     {
-        if (!options.DisableLightingManagement) { 
+        if (!options.DisableLightingManagement && mcdu != null) { 
             Register(_CONSOLE_BRT, v =>
             {
-                mcdu.BacklightBrightnessPercent = (int)(v * 100 / _CONSOLE_BRT!.MaxValue);
-                mcdu.RefreshBrightnesses();
+                mcdu!.BacklightBrightnessPercent = (int)(v * 100 / _CONSOLE_BRT!.MaxValue);
+                mcdu!.RefreshBrightnesses();
             });
             Register(_CDU_BRT, v =>
             {
                 if (v == 0)
-                    mcdu.DisplayBrightnessPercent = Math.Min(100, mcdu.DisplayBrightnessPercent - BRT_STEP);
+                    mcdu!.DisplayBrightnessPercent = Math.Min(100, mcdu!.DisplayBrightnessPercent - BRT_STEP);
                 else if (v == 2)
-                    mcdu.DisplayBrightnessPercent = Math.Min(100, mcdu.DisplayBrightnessPercent + BRT_STEP);
-                mcdu.RefreshBrightnesses();
+                    mcdu!.DisplayBrightnessPercent = Math.Min(100, mcdu!.DisplayBrightnessPercent + BRT_STEP);
+                mcdu!.RefreshBrightnesses();
             }); 
         }
 
