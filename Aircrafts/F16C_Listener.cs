@@ -293,7 +293,7 @@ internal class F16C_Listener : AircraftListener
     private bool _cmdsRdy, _cmdsGo, _cmdsDisp;
     private string _cmdsCh = "---", _cmdsFl = "---";
     private string _cmdsO1 = "---", _cmdsO2 = "---";
-    private bool _rwrLaunchBlink;
+    //private bool _rwrLaunchBlink;
 
     // =========================================================================
     // Constructor / destructor
@@ -387,7 +387,6 @@ internal class F16C_Listener : AircraftListener
     // =========================================================================
     // Initialization
     // =========================================================================
-    protected override void RegisterLightingControls() { }
     protected override void RegisterMcduControls() { }
     protected override void RegisterFrontpanelControls() { }
 
@@ -608,17 +607,17 @@ internal class F16C_Listener : AircraftListener
 
                 if (e.Address == _FUEL_TOT_10K!.Address || e.Address == _FUEL_TOT_1K!.Address || e.Address == _FUEL_TOT_100!.Address)
                 {
-                    _fuelTotalLb = (int)Math.Round(_FUEL_TOT_10K.GetUIntValue(e.Data) * 9.0 / 65535.0) * 1000
-                                 + (int)Math.Round(_FUEL_TOT_1K.GetUIntValue(e.Data)  * 9.0 / 65535.0) * 100
-                                 + (int)Math.Round(_FUEL_TOT_100.GetUIntValue(e.Data) * 9.0 / 65535.0) * 10;
+                    _fuelTotalLb = (int)Math.Round(_FUEL_TOT_10K!.GetUIntValue(e.Data) * 9.0 / 65535.0) * 1000
+                                 + (int)Math.Round(_FUEL_TOT_1K!.GetUIntValue(e.Data)  * 9.0 / 65535.0) * 100
+                                 + (int)Math.Round(_FUEL_TOT_100!.GetUIntValue(e.Data) * 9.0 / 65535.0) * 10;
                     refreshDisplay = true;
                 }
 
                 if (e.Address == _FUEL_FF_10K!.Address || e.Address == _FUEL_FF_1K!.Address || e.Address == _FUEL_FF_100!.Address)
                 {
-                    _fuelFlowPph = (int)Math.Round(_FUEL_FF_10K.GetUIntValue(e.Data) * 9.0 / 65535.0) * 1000
-                                 + (int)Math.Round(_FUEL_FF_1K.GetUIntValue(e.Data)  * 9.0 / 65535.0) * 100
-                                 + (int)Math.Round(_FUEL_FF_100.GetUIntValue(e.Data) * 9.0 / 65535.0) * 10;
+                    _fuelFlowPph = (int)Math.Round(_FUEL_FF_10K!.GetUIntValue(e.Data) * 9.0 / 65535.0) * 1000
+                                 + (int)Math.Round(_FUEL_FF_1K!.GetUIntValue(e.Data)  * 9.0 / 65535.0) * 100
+                                 + (int)Math.Round(_FUEL_FF_100!.GetUIntValue(e.Data) * 9.0 / 65535.0) * 10;
                     refreshDisplay = true;
                 }
 

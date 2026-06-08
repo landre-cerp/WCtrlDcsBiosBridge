@@ -48,8 +48,6 @@ internal class AH64D_Listener : AircraftListener
         Dispose(false);
     }
 
-
-    protected override void RegisterLightingControls() { }
     protected override void RegisterMcduControls() { }
     protected override void RegisterFrontpanelControls() { }
 

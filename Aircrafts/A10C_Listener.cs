@@ -90,38 +90,25 @@ internal class A10C_Listener : AircraftListener
         _ALT_PRESSURE3 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE3");
     }
 
-    protected override void RegisterLightingControls()
+
+    protected override void RegisterMcduControls()
     {
-        if (mcdu != null)
-        {
+        if (!options.DisableLightingManagement && mcdu != null) { 
             Register(_CONSOLE_BRT, v =>
             {
-                mcdu.BacklightBrightnessPercent = (int)(v * 100 / _CONSOLE_BRT!.MaxValue);
-                mcdu.RefreshBrightnesses();
+                mcdu!.BacklightBrightnessPercent = (int)(v * 100 / _CONSOLE_BRT!.MaxValue);
+                mcdu!.RefreshBrightnesses();
             });
             Register(_CDU_BRT, v =>
             {
                 if (v == 0)
-                    mcdu.DisplayBrightnessPercent = Math.Min(100, mcdu.DisplayBrightnessPercent - BRT_STEP);
+                    mcdu!.DisplayBrightnessPercent = Math.Min(100, mcdu!.DisplayBrightnessPercent - BRT_STEP);
                 else if (v == 2)
-                    mcdu.DisplayBrightnessPercent = Math.Min(100, mcdu.DisplayBrightnessPercent + BRT_STEP);
-                mcdu.RefreshBrightnesses();
-            });
+                    mcdu!.DisplayBrightnessPercent = Math.Min(100, mcdu!.DisplayBrightnessPercent + BRT_STEP);
+                mcdu!.RefreshBrightnesses();
+            }); 
         }
 
-        if (frontpanelHub.HasFrontpanels)
-        {
-            Register(_CONSOLE_BRT, v =>
-            {
-                // Convert to byte range (0-255) directly, not percentage
-                var b = (byte)(v * 255 / _CONSOLE_BRT!.MaxValue);
-                frontpanelHub.SetBrightness(b, b, b);
-            });
-        }
-    }
-
-    protected override void RegisterMcduControls()
-    {
         // --- LEDs ---
         Register(_CANOPY_LED,         v => { mcdu!.Leds.Fm2  = v == 1; mcdu!.RefreshLeds(); });
         Register(_NOSE_SW_GREENLIGHT, v => { mcdu!.Leds.Ind  = v == 1; mcdu!.RefreshLeds(); });
@@ -147,6 +134,16 @@ internal class A10C_Listener : AircraftListener
 
     protected override void RegisterFrontpanelControls()
     {
+        if (frontpanelHub.HasFrontpanels)
+        {
+            Register(_CONSOLE_BRT, v =>
+            {
+                // Convert to byte range (0-255) directly, not percentage
+                var b = (byte)(v * 255 / _CONSOLE_BRT!.MaxValue);
+                frontpanelHub.SetBrightness(b, b, b);
+            });
+        }
+
         var cap = frontpanelHub.Capabilities;
 
         if (cap.HasHeadingDisplay)

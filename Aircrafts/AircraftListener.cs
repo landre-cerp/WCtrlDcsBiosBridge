@@ -72,7 +72,6 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         }
     }
 
-    // DCSBIOSStringReceived : idem avec _stringHandlers
     public virtual void DCSBIOSStringReceived(object sender, DCSBIOSStringDataEventArgs e)
     {
         try
@@ -197,12 +196,11 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     {
         InitializeDcsBiosOutputs();
 
-        if (!options.DisableLightingManagement) RegisterLightingControls();
-        if (mcdu != null)            RegisterMcduControls();
         if (frontpanelState != null) RegisterFrontpanelControls();
 
         if (mcdu != null)
         {
+            RegisterMcduControls();
             // Load the correct font for this aircraft
             var fontFile = GetFontFile();
             try
@@ -271,20 +269,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
 
     protected abstract string GetFontFile();
     protected abstract string GetAircraftName();
-
-    private void ShowStartupMessage()
-    {
-        if (mcdu == null) return;
-
-        var output = GetCompositor(DEFAULT_PAGE);
-        output.Clear()
-            .Green()
-            .Line(6).Centered("INITIALIZING...")
-            .Line(7).Centered(GetAircraftName());
-    }
-
     protected abstract void InitializeDcsBiosOutputs();
-    protected abstract void RegisterLightingControls();
     protected abstract void RegisterMcduControls();
     protected abstract void RegisterFrontpanelControls();
 
