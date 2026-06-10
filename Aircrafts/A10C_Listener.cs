@@ -2,6 +2,7 @@ using DCS_BIOS.ControlLocator;
 using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
+using WwDevicesDotNet.Winctrl.Agp32;
 using WwDevicesDotNet.Winctrl.FcuAndEfis;
 using WwDevicesDotNet.Winctrl.Pap3;
 using WWCduDcsBiosBridge.Frontpanels;
@@ -35,6 +36,12 @@ internal class A10C_Listener : AircraftListener
     private DCSBIOSOutput? _ALTITUDE_10000ft;
     private DCSBIOSOutput? _ALTITUDE_1000ft;
     private DCSBIOSOutput? _ALTITUDE_100ft;
+
+    private DCSBIOSOutput? _GEAR_L_SAFE;
+    private DCSBIOSOutput? _GEAR_R_SAFE;
+    private DCSBIOSOutput? _GEAR_N_SAFE;
+
+    private DCSBIOSOutput? _HANDLE_GEAR_WARNING;
 
     private int speed = 0;
     private int heading = 0;
@@ -88,6 +95,12 @@ internal class A10C_Listener : AircraftListener
         _ALT_PRESSURE1 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE1");
         _ALT_PRESSURE2 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE2");
         _ALT_PRESSURE3 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE3");
+
+        _GEAR_L_SAFE = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("GEAR_L_SAFE");
+        _GEAR_R_SAFE = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("GEAR_R_SAFE");
+        _GEAR_N_SAFE = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("GEAR_N_SAFE");
+
+        _HANDLE_GEAR_WARNING = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("HANDLE_GEAR_WARNING");
     }
 
 
@@ -134,14 +147,35 @@ internal class A10C_Listener : AircraftListener
 
     protected override void RegisterFrontpanelControls()
     {
+        var hasOnlyAgp32 = frontpanelHub.HasFrontpanels;
+        if (hasOnlyAgp32)
+        {
+            foreach (var adapter in frontpanelHub.Adapters)
+            {
+                if (adapter is not Agp32Adapter)
+                {
+                    hasOnlyAgp32 = false;
+                    break;
+                }
+            }
+        }
+
         if (frontpanelHub.HasFrontpanels)
         {
-            Register(_CONSOLE_BRT, v =>
+            if (hasOnlyAgp32)
             {
-                // Convert to byte range (0-255) directly, not percentage
-                var b = (byte)(v * 255 / _CONSOLE_BRT!.MaxValue);
-                frontpanelHub.SetBrightness(b, b, b);
-            });
+                // Keep AGP32 visible even when cockpit console brightness is at zero.
+                frontpanelHub.SetBrightness(255, 255, 255);
+            }
+            else
+            {
+                Register(_CONSOLE_BRT, v =>
+                {
+                    // Convert to byte range (0-255) directly, not percentage
+                    var b = (byte)(v * 255 / _CONSOLE_BRT!.MaxValue);
+                    frontpanelHub.SetBrightness(b, b, b);
+                });
+            }
         }
 
         var cap = frontpanelHub.Capabilities;
@@ -205,6 +239,36 @@ internal class A10C_Listener : AircraftListener
                 speed = trimmed == "" ? 0 : int.Parse(trimmed) + 2;
                 frontpanelState!.Speed = speed;
             });
+
+        if (frontpanelLeds is Agp32State.Agp32Leds agp32Leds)
+        {
+            Register(_GEAR_L_SAFE, v =>
+            {
+                var isDown = v == 1;
+                agp32Leds.Set(Agp32State.Agp32Led.Gear1Down, isDown);
+                
+            });
+
+            Register(_GEAR_N_SAFE, v =>
+            {
+                var isDown = v == 1;
+                agp32Leds.Set(Agp32State.Agp32Led.Gear2Down, isDown);
+                
+            });
+
+            Register(_GEAR_R_SAFE, v =>
+            {
+                var isDown = v == 1;
+                agp32Leds.Set(Agp32State.Agp32Led.Gear3Down, isDown);
+                
+            });
+
+            Register(_HANDLE_GEAR_WARNING, v =>
+            {
+                var isOn = v == 1;
+                agp32Leds.Set(Agp32State.Agp32Led.GearDownRed, isOn);
+            });
+        }
     }
     
     private static string ReplaceSpecialChars(string data) =>

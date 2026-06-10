@@ -23,6 +23,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private bool _disposed = false;
     private BridgeManager? bridgeManager;
     private CancellationTokenSource? _detectCts;
+    private AircraftSelection? _selectedAircraft;
 
     private const string GitHubOwner = "landre-cerp";
     private const string GitHubRepo = "WWCduDcsBiosBridge";
@@ -68,6 +69,8 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
     private void OnGlobalAircraftSelected(AircraftSelection selection)
     {
+        _selectedAircraft = selection;
+
         // Forward the selection to the bridge manager
         bridgeManager?.SetGlobalAircraftSelection(selection);
         Logger.Info($"Global aircraft selected: {selection.AircraftId}, IsPilot: {selection.IsPilot}");
@@ -139,7 +142,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             if (cduCount == 0)
             {
                 AircraftPanel.Visibility = Visibility.Visible;
-                ShowStatus("No CDU detected. Start the bridge to select aircraft.", false);
+                ShowStatus("No CDU detected. Select aircraft before starting bridge.", false);
                 UpdateAircraftButtonState();
             }
             else
@@ -288,10 +291,16 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             var hasCdu = devices.Any(d => d.Cdu != null);
             if (!hasCdu)
             {
-                AircraftPanel.ButtonsEnabled = true;
-                ShowStatus("Please select an aircraft to continue...", false);
+                if (_selectedAircraft == null)
+                {
+                    ShowStatus("Please select an aircraft before starting the bridge.", true);
+                    ResetStartButton();
+                    return;
+                }
+
+                bridgeManager.SetGlobalAircraftSelection(_selectedAircraft);
             }
-            
+
             await bridgeManager.StartAsync(devices, userOptions, config);
 
             ShowStatus($"Bridge started successfully with {bridgeManager.Contexts?.Count ?? 0} device(s)!", false);
@@ -328,6 +337,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
     private void ResetAircraftSelection()
     {
+        _selectedAircraft = null;
         AircraftPanel.Reset();
         UpdateAircraftButtonState();
     }
@@ -335,8 +345,8 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private void UpdateAircraftButtonState()
     {
         var hasCdu = devices.Any(d => d.Cdu != null);
-        var shouldEnableButtons = IsBridgeRunning && !hasCdu;
-        
+        var shouldEnableButtons = !IsBridgeRunning && !hasCdu;
+
         AircraftPanel.ButtonsEnabled = shouldEnableButtons;
     }
 

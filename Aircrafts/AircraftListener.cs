@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System.IO;
 using Timer = System.Timers.Timer;
 using WwDevicesDotNet;
+using WwDevicesDotNet.Winctrl.Agp32;
 using WwDevicesDotNet.Winctrl.FcuAndEfis;
 using WwDevicesDotNet.Winctrl.Pap3;
 using WWCduDcsBiosBridge.Frontpanels;
@@ -135,7 +136,10 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
             
             // Check for PDC-3N (panel display controller, used with PAP3)
             var hasPdc3 = adapters.Any(a => a is Pdc3Adapter);
-            
+
+            // Check for AGP32 clock/gear panel
+            var hasAgp32 = adapters.Any(a => a is Agp32Adapter);
+
             if (hasFcuEfis)
             {
                 frontpanelState = new FcuEfisState();
@@ -170,6 +174,13 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
                 {
                     App.Logger.Info("PAP3 device detected and initialized");
                 }
+            }
+            else if (hasAgp32)
+            {
+                frontpanelState = new Agp32State();
+                frontpanelLeds = new Agp32State.Agp32Leds();
+                InitializeFrontpanelBrightness(255, 255, 255);
+                App.Logger.Info("AGP32 device detected and initialized");
             }
             else if (hasPdc3)
             {
