@@ -298,12 +298,10 @@ internal class F16C_Listener : AircraftListener
     // =========================================================================
     // Constructor / destructor
     // =========================================================================
-    protected override string GetAircraftName() => SupportedAircrafts.F16C_Name;
-    protected override string GetFontFile()     => "resources/f16c-font-21x31.json";
 
     public F16C_Listener(
         ICdu? mcdu,
-        UserOptions options) : base(mcdu, SupportedAircrafts.F16C, options)
+        UserOptions options) : base(mcdu, AircraftRegistry.F16C, options)
     {
         for (int i = 0; i < 5; i++)
         {

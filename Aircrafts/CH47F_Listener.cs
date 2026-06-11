@@ -50,10 +50,6 @@ internal class CH47F_Listener : AircraftListener
         .Select(_ => new string(' ', 24))
         .ToArray();
 
-    protected override string GetAircraftName() => SupportedAircrafts.CH47_Name;
-
-    protected override string GetFontFile() => "resources/ch47f-font-21x31.json";
-
     const int PILOT_SEAT = 0;
     const int COPILOT_SEAT = 1;
 
@@ -69,7 +65,7 @@ internal class CH47F_Listener : AircraftListener
 
     private readonly bool switchWithSeat;
 
-    public CH47F_Listener(ICdu? mcdu, UserOptions options, bool pilot = true, bool switchWithSeat = false) : base(mcdu, SupportedAircrafts.CH47, options)
+    public CH47F_Listener(ICdu? mcdu, UserOptions options, bool pilot = true, bool switchWithSeat = false) : base(mcdu, AircraftRegistry.CH47, options)
     {
         this.switchWithSeat = switchWithSeat;
         seatPosition = pilot ? PILOT_SEAT : COPILOT_SEAT;

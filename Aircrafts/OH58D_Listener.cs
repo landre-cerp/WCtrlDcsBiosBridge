@@ -58,11 +58,8 @@ internal class OH58D_Listener : AircraftListener
     private const int MPD_LINE = 5;
     private const int RFI_START_LINE = 8; 
 
-    protected override string GetFontFile() => "resources/oh58d-font-21x31.json";
-    protected override string GetAircraftName() => SupportedAircrafts.OH58D_Name;
-
     public OH58D_Listener(ICdu? mcdu, UserOptions options)
-        : base(mcdu, SupportedAircrafts.OH58D, options)
+        : base(mcdu, AircraftRegistry.OH58D, options)
     {
     }
     protected override void InitializeDcsBiosOutputs()

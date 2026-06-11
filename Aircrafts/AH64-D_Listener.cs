@@ -29,12 +29,9 @@ internal class AH64D_Listener : AircraftListener
     // Lights
     private DCSBIOSOutput? _PLT_MASTER_CAUTION_L;
     private DCSBIOSOutput? _PLT_MASTER_WARNING_L;
-
-    protected override string GetFontFile() => "resources/ah64d-font-21x31.json";
-    protected override string GetAircraftName() => SupportedAircrafts.AH64D_Name;
     
 
-    public AH64D_Listener(ICdu? mcdu, UserOptions options) : base(mcdu, SupportedAircrafts.AH64D , options) {
+    public AH64D_Listener(ICdu? mcdu, UserOptions options) : base(mcdu, AircraftRegistry.AH64D, options) {
     }
 
     ~AH64D_Listener()

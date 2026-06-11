@@ -21,12 +21,8 @@ internal class FA18C_Listener : AircraftListener
     private readonly Key _nextPageKey;
     private readonly Key _prevPageKey;
 
-    protected override string GetFontFile() => "resources/a10c-font-21x31.json";
-
-    protected override string GetAircraftName() => SupportedAircrafts.FA18C_Name;
-
     public FA18C_Listener(ICdu? mcdu, UserOptions options)
-        : base(mcdu, SupportedAircrafts.FA18C, options)
+        : base(mcdu, AircraftRegistry.FA18C, options)
     {
         _nextPageKey = Enum.TryParse<Key>(options.NextPageKey, out var nextKey)
             ? nextKey
