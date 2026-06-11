@@ -42,12 +42,9 @@ internal class A10C_Listener : AircraftListener
     private int[] pressureDigits = new int[4];
     private int[] altitudeDigits = new int[3];
 
-    protected override string GetAircraftName() => SupportedAircrafts.A10C_Name;
-    protected override string GetFontFile() => "resources/a10c-font-21x31.json";
-
     public A10C_Listener(
         ICdu? mcdu,
-        UserOptions options) : base(mcdu, SupportedAircrafts.A10C, options) {
+        UserOptions options) : base(mcdu, AircraftRegistry.A10C, options) {
     }
 
     ~A10C_Listener()

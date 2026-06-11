@@ -118,10 +118,7 @@ internal class M2000C_Listener : AircraftListener
     // Reusable buffer to avoid allocations every frame
     private readonly List<CautionItem> _cautionBuffer = new(32);
 
-    protected override string GetFontFile() => "resources/ah64d-font-21x31.json";
-    protected override string GetAircraftName() => SupportedAircrafts.M2000C_Name;
-
-    public M2000C_Listener(ICdu? mcdu, UserOptions options) : base(mcdu, SupportedAircrafts.M2000C, options)
+    public M2000C_Listener(ICdu? mcdu, UserOptions options) : base(mcdu, AircraftRegistry.M2000C, options)
     {
     }
 

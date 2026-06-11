@@ -23,6 +23,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     private uint _Count;
 
     protected readonly UserOptions options;
+    protected readonly AircraftDescriptor descriptor;
 
     protected const string DEFAULT_PAGE = "default";
     protected string _currentPage = DEFAULT_PAGE;
@@ -91,11 +92,12 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
               {DEFAULT_PAGE, new Screen() }
         };
 
-    public AircraftListener(ICdu? mcdu, int aircraftNumber, UserOptions options)
+    public AircraftListener(ICdu? mcdu, AircraftDescriptor descriptor, UserOptions options)
     {
         this.mcdu = mcdu;
+        this.descriptor = descriptor;
         this.options = options;
-        DCSBIOSControlLocator.DCSAircraft = DCSAircraft.GetAircraft(aircraftNumber);
+        DCSBIOSControlLocator.DCSAircraft = DCSAircraft.GetAircraft(descriptor.ModuleId);
         _UpdateCounterDCSBIOSOutput = DCSBIOSOutput.GetUpdateCounter();
 
         _DisplayCDUTimer = new(_TICK_DISPLAY);
@@ -119,7 +121,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         {
             RegisterMcduControls();
             // Load the correct font for this aircraft
-            var fontFile = GetFontFile();
+            var fontFile = descriptor.FontFile;
             try
             {
                 using var fileStream = new FileStream(fontFile, FileMode.Open, FileAccess.Read);
@@ -168,8 +170,6 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         }
     }
 
-    protected abstract string GetFontFile();
-    protected abstract string GetAircraftName();
     protected abstract void InitializeDcsBiosOutputs();
     protected abstract void RegisterMcduControls();
 
