@@ -1,4 +1,4 @@
-﻿using DCS_BIOS.ControlLocator;
+using DCS_BIOS.ControlLocator;
 using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using WWCduDcsBiosBridge.Frontpanels;
 
 namespace WWCduDcsBiosBridge.Aircrafts;
 
@@ -122,7 +121,7 @@ internal class M2000C_Listener : AircraftListener
     protected override string GetFontFile() => "resources/ah64d-font-21x31.json";
     protected override string GetAircraftName() => SupportedAircrafts.M2000C_Name;
 
-    public M2000C_Listener(ICdu? mcdu, UserOptions options) : base(mcdu, SupportedAircrafts.M2000C, options, FrontpanelHub.CreateEmpty())
+    public M2000C_Listener(ICdu? mcdu, UserOptions options) : base(mcdu, SupportedAircrafts.M2000C, options)
     {
     }
 

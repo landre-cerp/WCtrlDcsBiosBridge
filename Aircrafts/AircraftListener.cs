@@ -1,4 +1,4 @@
-﻿using ClassLibraryCommon;
+using ClassLibraryCommon;
 using DCS_BIOS.ControlLocator;
 using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
@@ -6,10 +6,6 @@ using Newtonsoft.Json;
 using System.IO;
 using Timer = System.Timers.Timer;
 using WwDevicesDotNet;
-using WwDevicesDotNet.Winctrl.Agp32;
-using WwDevicesDotNet.Winctrl.FcuAndEfis;
-using WwDevicesDotNet.Winctrl.Pap3;
-using WWCduDcsBiosBridge.Frontpanels;
 
 namespace WWCduDcsBiosBridge.Aircrafts;
 
@@ -18,9 +14,6 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     private static readonly double _TICK_DISPLAY = 100;
     private readonly Timer _DisplayCDUTimer;
     protected ICdu? mcdu;
-    protected FrontpanelHub frontpanelHub;
-    protected IFrontpanelState? frontpanelState;
-    protected IFrontpanelLeds? frontpanelLeds;
 
     private bool _disposed;
 
@@ -33,6 +26,12 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
 
     protected const string DEFAULT_PAGE = "default";
     protected string _currentPage = DEFAULT_PAGE;
+
+    /// <summary>
+    /// Semantic flight deck state populated by this listener. Frontpanel renderers
+    /// read from it; the listener never touches frontpanel device types.
+    /// </summary>
+    public FlightDeckState FlightDeck { get; } = new();
 
     // adresse DCS-BIOS -> handlers
     private readonly Dictionary<uint, List<Action<uint>>> _dataHandlers = new();
@@ -92,10 +91,9 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
               {DEFAULT_PAGE, new Screen() }
         };
 
-    public AircraftListener(ICdu? mcdu, int aircraftNumber, UserOptions options, FrontpanelHub frontpanelHub)
+    public AircraftListener(ICdu? mcdu, int aircraftNumber, UserOptions options)
     {
         this.mcdu = mcdu;
-        this.frontpanelHub = frontpanelHub ?? throw new ArgumentNullException(nameof(frontpanelHub));
         this.options = options;
         DCSBIOSControlLocator.DCSAircraft = DCSAircraft.GetAircraft(aircraftNumber);
         _UpdateCounterDCSBIOSOutput = DCSBIOSOutput.GetUpdateCounter();
@@ -108,106 +106,14 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
                 this.mcdu.Screen.CopyFrom(pages[_currentPage]);
                 this.mcdu.RefreshDisplay();
             }
-
-            if (frontpanelHub.HasFrontpanels && frontpanelState != null)
-            {
-                frontpanelHub.UpdateDisplay(frontpanelState);
-            }
-
-            if (frontpanelHub.HasFrontpanels && frontpanelLeds != null)
-            {
-                frontpanelHub.UpdateLeds(frontpanelLeds);
-            }
         };
-
-        // Initialize frontpanel state and LEDs based on connected adapters
-        // PAP3 and PDC-3N are designed to work together (Boeing 737 style)
-        // FCU and EFIS work together (Airbus style, but as single device with extension)
-        // All frontpanels receive the same brightness updates
-        if (frontpanelHub.HasFrontpanels)
-        {
-            var adapters = frontpanelHub.Adapters.ToList();
-            
-            // Check for FCU/EFIS (single device or device with extension)
-            var hasFcuEfis = adapters.Any(a => a is FcuEfisAdapter);
-            
-            // Check for PAP3 (primary autopilot panel)
-            var hasPap3 = adapters.Any(a => a is Pap3Adapter);
-            
-            // Check for PDC-3N (panel display controller, used with PAP3)
-            var hasPdc3 = adapters.Any(a => a is Pdc3Adapter);
-
-            // Check for AGP32 clock/gear panel
-            var hasAgp32 = adapters.Any(a => a is Agp32Adapter);
-
-            if (hasFcuEfis)
-            {
-                frontpanelState = new FcuEfisState();
-                frontpanelLeds = new FcuEfisLeds();
-                InitializeFrontpanelBrightness(128, 255, 255);
-                App.Logger.Info("FCU/EFIS device detected and initialized");
-            }
-            else if (hasPap3)
-            {
-                frontpanelState = new Pap3State();
-                frontpanelLeds = new Pap3Leds();
-                
-                // Initialize PAP3 state with default values so displays show something
-                // Empty/null values cause displays to turn off
-                if (frontpanelState is Pap3State pap3State)
-                {
-                    pap3State.Speed = 0;
-                    pap3State.Heading = 0;
-                    pap3State.Altitude = 0;
-                    pap3State.VerticalSpeed = 0;
-                }
-                
-                // PAP3 has separate brightness for: panel backlight, LCD displays, LED markers
-                // Set LCD displays (middle parameter) to full brightness for visibility
-                InitializeFrontpanelBrightness(255, 255, 255);
-                
-                if (hasPdc3)
-                {
-                    App.Logger.Info("PAP3 + PDC-3N devices detected and initialized (Boeing 737 configuration)");
-                }
-                else
-                {
-                    App.Logger.Info("PAP3 device detected and initialized");
-                }
-            }
-            else if (hasAgp32)
-            {
-                frontpanelState = new Agp32State();
-                frontpanelLeds = new Agp32State.Agp32Leds();
-                InitializeFrontpanelBrightness(255, 255, 255);
-                App.Logger.Info("AGP32 device detected and initialized");
-            }
-            else if (hasPdc3)
-            {
-                // PDC-3N alone: only brightness control, no display or LEDs
-                InitializeFrontpanelBrightness(255, 255, 255);
-                App.Logger.Info("PDC-3N device detected and initialized (brightness control only)");
-            }
-            else
-            {
-                var firstAdapter = adapters.FirstOrDefault();
-                if (firstAdapter == null)
-                {
-                    App.Logger.Warn("FrontpanelHub reports frontpanels, but no adapters were found.");
-                }
-                else
-                {
-                    App.Logger.Warn($"Unknown frontpanel adapter type: {firstAdapter.GetType().Name}");
-                }
-            }
-        }
     }
 
     public void Start()
     {
         InitializeDcsBiosOutputs();
 
-        if (frontpanelState != null) RegisterFrontpanelControls();
+        RegisterFrontpanelControls();
 
         if (mcdu != null)
         {
@@ -246,22 +152,6 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         mcdu.DisplayBrightnessPercent = 100;
     }
 
-    private void InitializeFrontpanelBrightness(byte panelBacklight, byte lcdBacklight, byte ledBacklight)
-    {
-        if (options.DisableLightingManagement || !frontpanelHub.HasFrontpanels) return;
-        
-        App.Logger.Info($"Setting frontpanel brightness: Panel={panelBacklight}, LCD={lcdBacklight}, LED={ledBacklight}");
-        frontpanelHub.SetBrightness(panelBacklight, lcdBacklight, ledBacklight);
-        
-        // For PAP3, send an initial display update to "wake up" the displays
-        // Some devices require at least one display update before brightness takes effect
-        if (frontpanelState != null)
-        {
-            App.Logger.Info("Sending initial frontpanel display update");
-            frontpanelHub.UpdateDisplay(frontpanelState);
-        }
-    }
-
     public void Stop()
     {
         _DisplayCDUTimer.Stop();
@@ -282,6 +172,13 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     protected abstract string GetAircraftName();
     protected abstract void InitializeDcsBiosOutputs();
     protected abstract void RegisterMcduControls();
+
+    /// <summary>
+    /// Registers DCS-BIOS handlers that populate <see cref="FlightDeck"/>.
+    /// Implementations write semantic values only — no frontpanel device types.
+    /// Called unconditionally: whether any frontpanel is connected is the
+    /// renderers' concern, not the aircraft's.
+    /// </summary>
     protected abstract void RegisterFrontpanelControls();
 
     public void DcsBiosConnectionActive(object sender, DCSBIOSConnectionEventArgs e)

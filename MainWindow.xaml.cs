@@ -304,7 +304,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
             await bridgeManager.StartAsync(devices, userOptions, config, _shutdownCts.Token);
 
-            ShowStatus($"Bridge started successfully with {bridgeManager.Contexts?.Count ?? 0} device(s)!", false);
+            ShowStatus($"Bridge started successfully with {bridgeManager.ActiveDeviceCount} device(s)!", false);
             StartButton.Content = "Bridge Running";
             StartButton.IsEnabled = false;
             OnPropertyChanged(nameof(IsBridgeRunning));

@@ -1,7 +1,6 @@
 using DCS_BIOS.ControlLocator;
 using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
-using WWCduDcsBiosBridge.Frontpanels;
 using WwDevicesDotNet;
 
 namespace WWCduDcsBiosBridge.Aircrafts;
@@ -27,7 +26,7 @@ internal class FA18C_Listener : AircraftListener
     protected override string GetAircraftName() => SupportedAircrafts.FA18C_Name;
 
     public FA18C_Listener(ICdu? mcdu, UserOptions options)
-        : base(mcdu, SupportedAircrafts.FA18C, options, FrontpanelHub.CreateEmpty())
+        : base(mcdu, SupportedAircrafts.FA18C, options)
     {
         _nextPageKey = Enum.TryParse<Key>(options.NextPageKey, out var nextKey)
             ? nextKey

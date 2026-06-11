@@ -1,7 +1,6 @@
-﻿using DCS_BIOS.ControlLocator;
+using DCS_BIOS.ControlLocator;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
-using WWCduDcsBiosBridge.Frontpanels;
 
 namespace WWCduDcsBiosBridge.Aircrafts;
 
@@ -35,7 +34,7 @@ internal class AH64D_Listener : AircraftListener
     protected override string GetAircraftName() => SupportedAircrafts.AH64D_Name;
     
 
-    public AH64D_Listener(ICdu? mcdu, UserOptions options) : base(mcdu, SupportedAircrafts.AH64D , options, FrontpanelHub.CreateEmpty()) {
+    public AH64D_Listener(ICdu? mcdu, UserOptions options) : base(mcdu, SupportedAircrafts.AH64D , options) {
     }
 
     ~AH64D_Listener()

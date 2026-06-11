@@ -1,29 +1,29 @@
 using WwDevicesDotNet;
 using WWCduDcsBiosBridge.Aircrafts;
 using WWCduDcsBiosBridge.Config;
-using WWCduDcsBiosBridge.Frontpanels;
-
 
 namespace WWCduDcsBiosBridge;
 
 /// <summary>
-/// Represents the context for a device (CDU or Frontpanel) within the bridge.
-/// CDU devices show an aircraft selection menu, while Frontpanel devices automatically
-/// participate once an aircraft is selected globally.
+/// Represents the context for a CDU device within the bridge: it shows the aircraft
+/// selection menu and runs the aircraft listener that drives the CDU display.
+/// Frontpanel devices are not contexts — they are rendered by the FrontpanelHub
+/// from one listener's FlightDeck model.
 /// </summary>
 internal class DeviceContext : IDisposable
 {
-    public ICdu? Mcdu { get; }
-    public IFrontpanel? Frontpanel { get; }
-    public bool IsCduDevice => Mcdu != null;
-    public bool IsFrontpanelDevice => Frontpanel != null;
+    public ICdu Mcdu { get; }
 
     public AircraftSelection? SelectedAircraft { get; private set; }
     public bool IsSelectedAircraft { get => isSelectedAircraft; }
-    public bool Pilot { get; private set; } = true;
 
     /// <summary>
-    /// Completes when an aircraft has been selected for this context.
+    /// The aircraft listener, available after <see cref="StartBridge"/> succeeded.
+    /// </summary>
+    public AircraftListener? Listener => listener;
+
+    /// <summary>
+    /// Completes when an aircraft has been selected on this CDU.
     /// </summary>
     public Task<AircraftSelection> SelectionTask => _selectionTcs.Task;
 
@@ -32,7 +32,7 @@ internal class DeviceContext : IDisposable
 
     private readonly UserOptions options;
     private readonly bool ch47SwitchWithSeat;
-    private readonly AircraftSelectionMenu? menu;
+    private readonly AircraftSelectionMenu menu;
     private AircraftListener? listener;
     private bool isSelectedAircraft = false;
 
@@ -52,25 +52,7 @@ internal class DeviceContext : IDisposable
         menu.AircraftSelected += OnAircraftSelected;
     }
 
-    /// <summary>
-    /// Creates a context for a Frontpanel device without aircraft selection menu
-    /// </summary>
-    public DeviceContext(IFrontpanel frontpanel, UserOptions options)
-    {
-        Frontpanel = frontpanel;
-        this.options = options;
-        // Frontpanel devices don't show aircraft selection menu
-        // They wait for global aircraft selection to be propagated
-    }
-
-    public void ShowStartupScreen()
-    {
-        if (IsCduDevice)
-        {
-            menu?.Show();
-        }
-        // Frontpanel devices don't show a startup screen
-    }
+    public void ShowStartupScreen() => menu.Show();
 
     /// <summary>
     /// Sets the aircraft selection for this device context
@@ -87,29 +69,26 @@ internal class DeviceContext : IDisposable
         SetAircraftSelection(e.Selection);
     }
 
-    public void StartBridge(FrontpanelHub frontpanelHub)
+    public void StartBridge()
     {
         if (!isSelectedAircraft || SelectedAircraft == null) return;
 
         try
         {
-            listener = new AircraftListenerFactory().CreateListener(SelectedAircraft, Mcdu, options, frontpanelHub, ch47SwitchWithSeat);
+            listener = new AircraftListenerFactory().CreateListener(SelectedAircraft, Mcdu, options, ch47SwitchWithSeat);
             listener.Start();
         }
         catch (Exception ex)
         {
             App.Logger.Error(ex, $"Failed to start listener for aircraft {SelectedAircraft.AircraftId}");
-            if (Mcdu != null)
-            {
-                Mcdu.Output.Newline().Red().WriteLine(ex.Message);
-                Mcdu.RefreshDisplay();
-            }
+            Mcdu.Output.Newline().Red().WriteLine(ex.Message);
+            Mcdu.RefreshDisplay();
         }
     }
 
     public void Dispose()
     {
-        menu?.Dispose();
+        menu.Dispose();
         listener?.Dispose();
     }
 }
