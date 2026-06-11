@@ -68,8 +68,11 @@ internal class CH47F_Listener : AircraftListener
         ["w"] = Colour.White
     };
 
-    public CH47F_Listener(ICdu? mcdu, UserOptions options, bool pilot = true) : base(mcdu, SupportedAircrafts.CH47, options, FrontpanelHub.CreateEmpty())
+    private readonly bool switchWithSeat;
+
+    public CH47F_Listener(ICdu? mcdu, UserOptions options, bool pilot = true, bool switchWithSeat = false) : base(mcdu, SupportedAircrafts.CH47, options, FrontpanelHub.CreateEmpty())
     {
+        this.switchWithSeat = switchWithSeat;
         seatPosition = pilot ? PILOT_SEAT : COPILOT_SEAT;
 
         // Always create the copilot page so both pilot and copilot CDU data
@@ -126,7 +129,7 @@ internal class CH47F_Listener : AircraftListener
         }
 
         // --- Seat-position switching ---
-        if (options.Ch47CduSwitchWithSeat)
+        if (switchWithSeat)
         {
             Register(_SEAT_POSITION, v =>
             {

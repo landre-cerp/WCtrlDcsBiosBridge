@@ -347,7 +347,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
                 else if (newCount - _Count != 1)
                 {
                     _Count = newCount;
-                    Console.WriteLine($"UpdateCounter: Address {address} has unexpected value {data}. Expected {_Count + 1}.");
+                    App.Logger.Warn($"UpdateCounter: Address {address} has unexpected value {data}. Expected {_Count + 1}.");
                 }
             }
         }

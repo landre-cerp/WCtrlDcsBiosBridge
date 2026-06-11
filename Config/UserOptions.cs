@@ -20,11 +20,6 @@ public class UserOptions
     public bool DisableLightingManagement { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the CH-47F CDU display should switch with seat position (useful for single CDU setups).
-    /// </summary>
-    public bool Ch47CduSwitchWithSeat { get; set; }
-
-    /// <summary>
     /// Gets or sets whether the bridge should automatically start when conditions are met.
     /// </summary>
     public bool AutoStart { get; set; }

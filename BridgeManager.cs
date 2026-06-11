@@ -1,4 +1,6 @@
+using ClassLibraryCommon;
 using DCS_BIOS;
+using DCS_BIOS.ControlLocator;
 using NLog;
 using WWCduDcsBiosBridge.Config;
 using WWCduDcsBiosBridge.Aircrafts;
@@ -12,10 +14,10 @@ namespace WWCduDcsBiosBridge;
 public class BridgeManager : IDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
+
     public bool IsStarted { get; private set; }
     internal List<DeviceContext>? Contexts { get; private set; }
-    
+
     private DCSBIOS? dcsBios;
     private bool _disposed = false;
     private TaskCompletionSource<AircraftSelection>? _globalAircraftSelectionTcs;
@@ -33,7 +35,7 @@ public class BridgeManager : IDisposable
     /// <summary>
     /// Starts the bridge with the specified devices and configuration
     /// </summary>
-    public async Task StartAsync(List<DeviceInfo> devices, UserOptions userOptions, DcsBiosConfig config)
+    public async Task StartAsync(List<DeviceInfo> devices, UserOptions userOptions, DcsBiosConfig config, CancellationToken cancellationToken = default)
     {
         if (IsStarted)
             throw new InvalidOperationException("Bridge is already started");
@@ -48,24 +50,22 @@ public class BridgeManager : IDisposable
         {
             // Create device contexts for all devices
             Contexts = new List<DeviceContext>();
-            
-            // Count CDUs and set Ch47CduSwitchWithSeat option automatically
-            var cduCount = devices.Count(d => d.Cdu != null);
-            if (userOptions != null)
-            {
-                userOptions.Ch47CduSwitchWithSeat = (cduCount == 1);
-            }
-            
+
+            // With a single CDU the CH-47F uses seat-switch mode: one menu entry,
+            // the CDU display follows the seat position at runtime.
+            var singleCdu = devices.Count(d => d.Cdu != null) == 1;
+            var options = userOptions ?? new UserOptions();
+
             foreach (var deviceInfo in devices)
             {
                 DeviceContext ctx;
                 if (deviceInfo.Cdu != null)
                 {
-                    ctx = new DeviceContext(deviceInfo.Cdu, userOptions ?? new UserOptions(), config);
+                    ctx = new DeviceContext(deviceInfo.Cdu, options, singleCdu);
                 }
                 else if (deviceInfo.Frontpanel != null)
                 {
-                    ctx = new DeviceContext(deviceInfo.Frontpanel, userOptions ?? new UserOptions(), config);
+                    ctx = new DeviceContext(deviceInfo.Frontpanel, options);
                 }
                 else
                 {
@@ -80,9 +80,9 @@ public class BridgeManager : IDisposable
                 throw new InvalidOperationException("No valid devices found.");
             }
 
-            cduCount = Contexts.Count(c => c.IsCduDevice);
+            var cduCount = Contexts.Count(c => c.IsCduDevice);
             var frontpanelCount = Contexts.Count(c => c.IsFrontpanelDevice);
-            
+
             Logger.Info($"Created contexts for {cduCount} CDU device(s) and {frontpanelCount} Frontpanel device(s)");
 
             // Show startup screens only on CDU devices
@@ -96,68 +96,45 @@ public class BridgeManager : IDisposable
 
             if (cduContexts.Any())
             {
-                if (cduContexts.Count == 1)
+                Logger.Info($"Waiting for aircraft selection on {cduContexts.Count} CDU device(s)...");
+                await Task.WhenAll(cduContexts.Select(c => c.SelectionTask.WaitAsync(cancellationToken)));
+
+                for (int i = 0; i < cduContexts.Count; i++)
                 {
-                    // Single CDU: wait for selection and use it globally
-                    Logger.Info("Waiting for aircraft selection on CDU...");
-                    while (!cduContexts[0].IsSelectedAircraft)
-                        await Task.Delay(100);
-                    
-                    var selectedAircraft = cduContexts[0].SelectedAircraft;
-                    Logger.Info($"Aircraft selected on CDU: {selectedAircraft!.AircraftId}, IsPilot: {selectedAircraft.IsPilot}");
-                    
-                    // Propagate to frontpanel-only devices
-                    foreach (var ctx in Contexts.Where(c => c.IsFrontpanelDevice))
-                    {
-                        ctx.SetAircraftSelection(selectedAircraft!);
-                    }
+                    var selection = cduContexts[i].SelectedAircraft;
+                    Logger.Info($"  CDU {i + 1}: Aircraft={selection!.AircraftId}, IsPilot={selection.IsPilot}");
                 }
-                else
+
+                // Frontpanel-only devices follow the first CDU's selection
+                var firstCduSelection = cduContexts[0].SelectedAircraft;
+                foreach (var ctx in Contexts.Where(c => c.IsFrontpanelDevice))
                 {
-                    // Multiple CDUs: each must select independently
-                    // This is important for CH47F where pilot and copilot CDUs can have different selections
-                    Logger.Info($"Waiting for aircraft selection on {cduContexts.Count} CDU device(s)...");
-                    
-                    // Wait for ALL CDUs to make a selection
-                    while (!cduContexts.All(c => c.IsSelectedAircraft))
-                        await Task.Delay(100);
-                    
-                    Logger.Info("All CDUs have made their aircraft selections");
-                    
-                    // Each CDU keeps its own selection - no need to propagate
-                    // Log all selections
-                    for (int i = 0; i < cduContexts.Count; i++)
-                    {
-                        var selection = cduContexts[i].SelectedAircraft;
-                        Logger.Info($"  CDU {i + 1}: Aircraft={selection!.AircraftId}, IsPilot={selection.IsPilot}");
-                    }
-                    
-                    // For frontpanel-only devices, use the first CDU's selection
-                    var firstCduSelection = cduContexts[0].SelectedAircraft;
-                    foreach (var ctx in Contexts.Where(c => c.IsFrontpanelDevice))
-                    {
-                        ctx.SetAircraftSelection(firstCduSelection!);
-                    }
+                    ctx.SetAircraftSelection(firstCduSelection!);
                 }
             }
             else
             {
                 // No CDU devices - wait for global UI selection
                 Logger.Info("No CDU devices found. Waiting for global aircraft selection from UI...");
-                _globalAircraftSelectionTcs = new TaskCompletionSource<AircraftSelection>();
+                _globalAircraftSelectionTcs = new TaskCompletionSource<AircraftSelection>(TaskCreationOptions.RunContinuationsAsynchronously);
                 if (_pendingGlobalAircraftSelection != null)
                 {
                     _globalAircraftSelectionTcs.TrySetResult(_pendingGlobalAircraftSelection);
                 }
-                var selectedAircraft = await _globalAircraftSelectionTcs.Task;
+                var selectedAircraft = await _globalAircraftSelectionTcs.Task.WaitAsync(cancellationToken);
                 Logger.Info($"Global aircraft selection received from UI: {selectedAircraft.AircraftId}, IsPilot: {selectedAircraft.IsPilot}");
-                
+
                 // Propagate to all frontpanel devices
                 foreach (var ctx in Contexts.Where(c => c.IsFrontpanelDevice))
                 {
                     ctx.SetAircraftSelection(selectedAircraft);
                 }
             }
+
+            // Global DCS-BIOS metadata initialization, once for all contexts
+            DCSAircraft.Init();
+            DCSAircraft.FillModulesListFromDcsBios(config.DcsBiosJsonLocation, true);
+            DCSBIOSControlLocator.JSONDirectory = config.DcsBiosJsonLocation;
 
             // Initialize DCS-BIOS
             InitializeDcsBios(config);
@@ -196,7 +173,7 @@ public class BridgeManager : IDisposable
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to start bridge");
-            await StopAsync(); // Clean up on failure
+            Stop(); // Clean up on failure
             throw;
         }
     }
@@ -209,7 +186,7 @@ public class BridgeManager : IDisposable
     /// <summary>
     /// Stops the bridge and cleans up resources
     /// </summary>
-    public async Task StopAsync()
+    public void Stop()
     {
         try
         {
@@ -226,8 +203,6 @@ public class BridgeManager : IDisposable
             Logger.Error(ex, "Error occurred while stopping bridge");
             throw;
         }
-
-        await Task.CompletedTask;
     }
 
     private void InitializeDcsBios(DcsBiosConfig config)
@@ -301,7 +276,7 @@ public class BridgeManager : IDisposable
             {
                 try
                 {
-                    StopAsync().GetAwaiter().GetResult();
+                    Stop();
                 }
                 catch (Exception ex)
                 {
