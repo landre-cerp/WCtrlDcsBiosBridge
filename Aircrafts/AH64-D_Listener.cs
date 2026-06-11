@@ -39,7 +39,7 @@ internal class AH64D_Listener : AircraftListener
         Dispose(false);
     }
 
-    protected override void RegisterMcduControls()
+    protected override void RegisterCduControls()
     {
         if (!options.DisableLightingManagement && mcdu != null)
         {

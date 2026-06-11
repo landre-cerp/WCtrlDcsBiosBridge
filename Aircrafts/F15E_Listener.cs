@@ -19,7 +19,7 @@ internal class F15E_Listener : AircraftListener
     {
     }
 
-    protected override void RegisterMcduControls() { }
+    protected override void RegisterCduControls() { }
     protected override void RegisterFrontpanelControls() { }
 
     protected override void InitializeDcsBiosOutputs()
