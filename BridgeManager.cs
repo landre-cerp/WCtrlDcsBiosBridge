@@ -19,9 +19,16 @@ public class BridgeManager : IDisposable
     internal List<DeviceContext>? Contexts { get; private set; }
 
     private DCSBIOS? dcsBios;
+    private FrontpanelHub? frontpanelHub;
+    private AircraftListener? headlessListener;
     private bool _disposed = false;
     private TaskCompletionSource<AircraftSelection>? _globalAircraftSelectionTcs;
     private AircraftSelection? _pendingGlobalAircraftSelection;
+
+    /// <summary>
+    /// Gets the number of devices the bridge is driving (CDUs + frontpanels)
+    /// </summary>
+    public int ActiveDeviceCount => (Contexts?.Count ?? 0) + (frontpanelHub?.Count ?? 0);
 
     /// <summary>
     /// Sets the global aircraft selection (used when no CDU is present)
@@ -48,69 +55,44 @@ public class BridgeManager : IDisposable
 
         try
         {
-            // Create device contexts for all devices
-            Contexts = new List<DeviceContext>();
+            var options = userOptions ?? new UserOptions();
+            var cduDevices = devices.Where(d => d.Cdu != null).ToList();
 
             // With a single CDU the CH-47F uses seat-switch mode: one menu entry,
             // the CDU display follows the seat position at runtime.
-            var singleCdu = devices.Count(d => d.Cdu != null) == 1;
-            var options = userOptions ?? new UserOptions();
+            var singleCdu = cduDevices.Count == 1;
+            var ch47SwitchWithSeat = singleCdu;
 
-            foreach (var deviceInfo in devices)
-            {
-                DeviceContext ctx;
-                if (deviceInfo.Cdu != null)
-                {
-                    ctx = new DeviceContext(deviceInfo.Cdu, options, singleCdu);
-                }
-                else if (deviceInfo.Frontpanel != null)
-                {
-                    ctx = new DeviceContext(deviceInfo.Frontpanel, options);
-                }
-                else
-                {
-                    Logger.Warn("Skipping device with no CDU or Frontpanel interface");
-                    continue;
-                }
-                Contexts.Add(ctx);
-            }
+            // One context per CDU; frontpanel devices are driven by the hub below.
+            Contexts = cduDevices.Select(d => new DeviceContext(d.Cdu!, options, ch47SwitchWithSeat)).ToList();
 
-            if (!Contexts.Any())
+            frontpanelHub = BuildFrontpanelHub(devices, manageLighting: !options.DisableLightingManagement);
+            Logger.Info($"Created {Contexts.Count} CDU context(s); frontpanel hub has {frontpanelHub.Count} device(s)");
+
+            if (Contexts.Count == 0 && !frontpanelHub.HasFrontpanels)
             {
                 throw new InvalidOperationException("No valid devices found.");
             }
 
-            var cduCount = Contexts.Count(c => c.IsCduDevice);
-            var frontpanelCount = Contexts.Count(c => c.IsFrontpanelDevice);
-
-            Logger.Info($"Created contexts for {cduCount} CDU device(s) and {frontpanelCount} Frontpanel device(s)");
-
-            // Show startup screens only on CDU devices
-            foreach (var ctx in Contexts.Where(c => c.IsCduDevice))
-                ctx.ShowStartupScreen();
-
             // Wait for aircraft selection
-            // If multiple CDUs are present, each must make its own selection
-            // (important for CH47F with pilot and copilot CDUs)
-            var cduContexts = Contexts.Where(c => c.IsCduDevice).ToList();
-
-            if (cduContexts.Any())
+            AircraftSelection firstSelection;
+            if (Contexts.Any())
             {
-                Logger.Info($"Waiting for aircraft selection on {cduContexts.Count} CDU device(s)...");
-                await Task.WhenAll(cduContexts.Select(c => c.SelectionTask.WaitAsync(cancellationToken)));
+                foreach (var ctx in Contexts)
+                    ctx.ShowStartupScreen();
 
-                for (int i = 0; i < cduContexts.Count; i++)
+                // Each CDU makes its own selection
+                // (important for CH47F with pilot and copilot CDUs)
+                Logger.Info($"Waiting for aircraft selection on {Contexts.Count} CDU device(s)...");
+                await Task.WhenAll(Contexts.Select(c => c.SelectionTask.WaitAsync(cancellationToken)));
+
+                for (int i = 0; i < Contexts.Count; i++)
                 {
-                    var selection = cduContexts[i].SelectedAircraft;
+                    var selection = Contexts[i].SelectedAircraft;
                     Logger.Info($"  CDU {i + 1}: Aircraft={selection!.AircraftId}, IsPilot={selection.IsPilot}");
                 }
 
-                // Frontpanel-only devices follow the first CDU's selection
-                var firstCduSelection = cduContexts[0].SelectedAircraft;
-                foreach (var ctx in Contexts.Where(c => c.IsFrontpanelDevice))
-                {
-                    ctx.SetAircraftSelection(firstCduSelection!);
-                }
+                firstSelection = Contexts[0].SelectedAircraft!;
             }
             else
             {
@@ -121,17 +103,11 @@ public class BridgeManager : IDisposable
                 {
                     _globalAircraftSelectionTcs.TrySetResult(_pendingGlobalAircraftSelection);
                 }
-                var selectedAircraft = await _globalAircraftSelectionTcs.Task.WaitAsync(cancellationToken);
-                Logger.Info($"Global aircraft selection received from UI: {selectedAircraft.AircraftId}, IsPilot: {selectedAircraft.IsPilot}");
-
-                // Propagate to all frontpanel devices
-                foreach (var ctx in Contexts.Where(c => c.IsFrontpanelDevice))
-                {
-                    ctx.SetAircraftSelection(selectedAircraft);
-                }
+                firstSelection = await _globalAircraftSelectionTcs.Task.WaitAsync(cancellationToken);
+                Logger.Info($"Global aircraft selection received from UI: {firstSelection.AircraftId}, IsPilot: {firstSelection.IsPilot}");
             }
 
-            // Global DCS-BIOS metadata initialization, once for all contexts
+            // Global DCS-BIOS metadata initialization, once for all listeners
             DCSAircraft.Init();
             DCSAircraft.FillModulesListFromDcsBios(config.DcsBiosJsonLocation, true);
             DCSBIOSControlLocator.JSONDirectory = config.DcsBiosJsonLocation;
@@ -139,36 +115,29 @@ public class BridgeManager : IDisposable
             // Initialize DCS-BIOS
             InitializeDcsBios(config);
 
-            // Build the frontpanel hub from all frontpanel devices
-            var frontpanelHub = BuildFrontpanelHub(Contexts);
-            Logger.Info($"Frontpanel hub created with {frontpanelHub.Count} device(s)");
-
-            // Start device bridges - pass hub to all contexts
-            // We ensure only ONE listener drives the frontpanel hub to avoid race conditions and double-updates.
-            // Priority: First CDU context, otherwise First Frontpanel context.
-            // Since all contexts use the same shared FrontpanelHub instance which contains ALL connected frontpanels,
-            // we only need one listener to feed it.
-            var masterContext = Contexts.FirstOrDefault(c => c.IsCduDevice) ?? Contexts.FirstOrDefault(c => c.IsFrontpanelDevice);
-            var emptyHub = FrontpanelHub.CreateEmpty();
-
             foreach (var ctx in Contexts)
             {
-                if (ctx == masterContext)
+                ctx.StartBridge();
+            }
+
+            // Frontpanels are rendered from one listener's FlightDeck model:
+            // the first CDU listener, or a headless listener when no CDU is present.
+            if (frontpanelHub.HasFrontpanels)
+            {
+                var modelSource = Contexts.FirstOrDefault(c => c.Listener != null)?.Listener;
+                if (modelSource == null)
                 {
-                    // This listener will drive all frontpanels in the hub
-                    Logger.Info($"Starting bridge for master context (driving frontpanels): {ctx.SelectedAircraft?.AircraftId}");
-                    ctx.StartBridge(frontpanelHub);
+                    Logger.Info($"Starting headless listener for frontpanels: {firstSelection.AircraftId}");
+                    headlessListener = new AircraftListenerFactory().CreateListener(firstSelection, null, options, ch47SwitchWithSeat);
+                    headlessListener.Start();
+                    modelSource = headlessListener;
                 }
-                else
-                {
-                    // This listener will allow CDU to work but won't touch frontpanels
-                    // For pure frontpanel contexts that are not master, this listener runs but writes to nowhere
-                    ctx.StartBridge(emptyHub);
-                }
+
+                frontpanelHub.Attach(modelSource.FlightDeck);
             }
 
             IsStarted = true;
-            Logger.Info($"Bridge started successfully with {Contexts.Count} device(s) ({cduCount} CDU, {frontpanelCount} Frontpanel)");
+            Logger.Info($"Bridge started successfully with {ActiveDeviceCount} device(s) ({Contexts.Count} CDU, {frontpanelHub.Count} Frontpanel)");
         }
         catch (Exception ex)
         {
@@ -179,11 +148,6 @@ public class BridgeManager : IDisposable
     }
 
     /// <summary>
-    /// Gets the number of active contexts
-    /// </summary>
-    public int ContextCount => Contexts?.Count ?? 0;
-
-    /// <summary>
     /// Stops the bridge and cleans up resources
     /// </summary>
     public void Stop()
@@ -192,6 +156,12 @@ public class BridgeManager : IDisposable
         {
             dcsBios?.Shutdown();
             dcsBios = null;
+
+            frontpanelHub?.Dispose();
+            frontpanelHub = null;
+
+            headlessListener?.Dispose();
+            headlessListener = null;
 
             DisposeContexts();
 
@@ -227,13 +197,12 @@ public class BridgeManager : IDisposable
         }
     }
 
-    private FrontpanelHub BuildFrontpanelHub(List<DeviceContext> contexts)
+    private static FrontpanelHub BuildFrontpanelHub(List<DeviceInfo> devices, bool manageLighting)
     {
         var adapters = new List<IFrontpanelAdapter>();
 
-        foreach (var ctx in contexts.Where(c => c.IsFrontpanelDevice && c.Frontpanel != null))
+        foreach (var frontpanel in devices.Where(d => d.Frontpanel != null).Select(d => d.Frontpanel!))
         {
-            var frontpanel = ctx.Frontpanel!;
             var adapter = FrontpanelAdapterFactory.CreateAdapter(frontpanel, frontpanel.DeviceId.ToString());
             if (adapter != null)
             {
@@ -246,7 +215,7 @@ public class BridgeManager : IDisposable
             }
         }
 
-        return new FrontpanelHub(adapters);
+        return new FrontpanelHub(adapters, manageLighting);
     }
 
     private void DisposeContexts()

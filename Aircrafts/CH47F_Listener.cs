@@ -1,8 +1,7 @@
-﻿using DCS_BIOS.ControlLocator;
+using DCS_BIOS.ControlLocator;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 using System.Linq;
-using WWCduDcsBiosBridge.Frontpanels;
 
 namespace WWCduDcsBiosBridge.Aircrafts;
 
@@ -70,7 +69,7 @@ internal class CH47F_Listener : AircraftListener
 
     private readonly bool switchWithSeat;
 
-    public CH47F_Listener(ICdu? mcdu, UserOptions options, bool pilot = true, bool switchWithSeat = false) : base(mcdu, SupportedAircrafts.CH47, options, FrontpanelHub.CreateEmpty())
+    public CH47F_Listener(ICdu? mcdu, UserOptions options, bool pilot = true, bool switchWithSeat = false) : base(mcdu, SupportedAircrafts.CH47, options)
     {
         this.switchWithSeat = switchWithSeat;
         seatPosition = pilot ? PILOT_SEAT : COPILOT_SEAT;

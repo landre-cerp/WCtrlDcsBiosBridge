@@ -4,7 +4,7 @@ using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 using WwDevicesDotNet.Winctrl.FcuAndEfis;
 using WwDevicesDotNet.Winctrl.Pap3;
-using WWCduDcsBiosBridge.Frontpanels;
+
 
 namespace WWCduDcsBiosBridge.Aircrafts;
 
@@ -303,8 +303,7 @@ internal class F16C_Listener : AircraftListener
 
     public F16C_Listener(
         ICdu? mcdu,
-        UserOptions options,
-        FrontpanelHub frontpanelHub) : base(mcdu, SupportedAircrafts.F16C, options, frontpanelHub)
+        UserOptions options) : base(mcdu, SupportedAircrafts.F16C, options)
     {
         for (int i = 0; i < 5; i++)
         {
@@ -533,13 +532,10 @@ internal class F16C_Listener : AircraftListener
                 }
             }
 
-            if (frontpanelHub.HasFrontpanels && !options.DisableLightingManagement)
+            if (!options.DisableLightingManagement && e.Address == _PRI_CONSOLES_BRT!.Address)
             {
-                if (e.Address == _PRI_CONSOLES_BRT!.Address)
-                {
-                    var b = (byte)(_PRI_CONSOLES_BRT!.GetUIntValue(e.Data) * 255 / _PRI_CONSOLES_BRT.MaxValue);
-                    frontpanelHub.SetBrightness(b, b, b);
-                }
+                FlightDeck.ConsoleBrightness =
+                    (byte)(_PRI_CONSOLES_BRT!.GetUIntValue(e.Data) * 255 / _PRI_CONSOLES_BRT.MaxValue);
             }
 
             // --- Master Caution LED — active regardless of display mode ---

@@ -1,8 +1,7 @@
-﻿using DCS_BIOS.ControlLocator;
+using DCS_BIOS.ControlLocator;
 using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
-using WWCduDcsBiosBridge.Frontpanels;
 
 namespace WWCduDcsBiosBridge.Aircrafts;
 
@@ -63,7 +62,7 @@ internal class OH58D_Listener : AircraftListener
     protected override string GetAircraftName() => SupportedAircrafts.OH58D_Name;
 
     public OH58D_Listener(ICdu? mcdu, UserOptions options)
-        : base(mcdu, SupportedAircrafts.OH58D, options, FrontpanelHub.CreateEmpty())
+        : base(mcdu, SupportedAircrafts.OH58D, options)
     {
     }
     protected override void InitializeDcsBiosOutputs()
