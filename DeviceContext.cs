@@ -1,5 +1,3 @@
-﻿using ClassLibraryCommon;
-using DCS_BIOS.ControlLocator;
 using WwDevicesDotNet;
 using WWCduDcsBiosBridge.Aircrafts;
 using WWCduDcsBiosBridge.Config;
@@ -19,13 +17,21 @@ internal class DeviceContext : IDisposable
     public IFrontpanel? Frontpanel { get; }
     public bool IsCduDevice => Mcdu != null;
     public bool IsFrontpanelDevice => Frontpanel != null;
-    
+
     public AircraftSelection? SelectedAircraft { get; private set; }
     public bool IsSelectedAircraft { get => isSelectedAircraft; }
     public bool Pilot { get; private set; } = true;
-    
-    private readonly DcsBiosConfig? config;
+
+    /// <summary>
+    /// Completes when an aircraft has been selected for this context.
+    /// </summary>
+    public Task<AircraftSelection> SelectionTask => _selectionTcs.Task;
+
+    private readonly TaskCompletionSource<AircraftSelection> _selectionTcs =
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
+
     private readonly UserOptions options;
+    private readonly bool ch47SwitchWithSeat;
     private readonly AircraftSelectionMenu? menu;
     private AircraftListener? listener;
     private bool isSelectedAircraft = false;
@@ -33,23 +39,26 @@ internal class DeviceContext : IDisposable
     /// <summary>
     /// Creates a context for a CDU device with aircraft selection menu
     /// </summary>
-    public DeviceContext(ICdu mcdu, UserOptions options, DcsBiosConfig? config)
+    /// <param name="ch47SwitchWithSeat">
+    /// True when a single CDU is connected: the CH-47F menu shows one entry and the
+    /// CDU display follows the seat position at runtime.
+    /// </param>
+    public DeviceContext(ICdu mcdu, UserOptions options, bool ch47SwitchWithSeat)
     {
         Mcdu = mcdu;
         this.options = options;
-        this.config = config;
-        menu = new AircraftSelectionMenu(mcdu, options.Ch47CduSwitchWithSeat);
+        this.ch47SwitchWithSeat = ch47SwitchWithSeat;
+        menu = new AircraftSelectionMenu(mcdu, ch47SwitchWithSeat);
         menu.AircraftSelected += OnAircraftSelected;
     }
 
     /// <summary>
     /// Creates a context for a Frontpanel device without aircraft selection menu
     /// </summary>
-    public DeviceContext(IFrontpanel frontpanel, UserOptions options, DcsBiosConfig? config)
+    public DeviceContext(IFrontpanel frontpanel, UserOptions options)
     {
         Frontpanel = frontpanel;
         this.options = options;
-        this.config = config;
         // Frontpanel devices don't show aircraft selection menu
         // They wait for global aircraft selection to be propagated
     }
@@ -70,6 +79,7 @@ internal class DeviceContext : IDisposable
     {
         isSelectedAircraft = true;
         SelectedAircraft = selection;
+        _selectionTcs.TrySetResult(selection);
     }
 
     private void OnAircraftSelected(object? sender, AircraftSelectedEventArgs e)
@@ -81,27 +91,14 @@ internal class DeviceContext : IDisposable
     {
         if (!isSelectedAircraft || SelectedAircraft == null) return;
 
-        DCSAircraft.Init();
-        DCSAircraft.FillModulesListFromDcsBios(config!.DcsBiosJsonLocation, true);
-        DCSBIOSControlLocator.JSONDirectory = config.DcsBiosJsonLocation;
-        
         try
         {
-            if (IsCduDevice)
-            {
-                // CDU device: create listener with CDU display and frontpanel hub
-                listener = new AircraftListenerFactory().CreateListener(SelectedAircraft, Mcdu!, options, frontpanelHub);
-                listener.Start();
-            }
-            else if (IsFrontpanelDevice)
-            {
-                // Frontpanel-only device: create listener without CDU (pass null for mcdu, pass hub)
-                listener = new AircraftListenerFactory().CreateListener(SelectedAircraft, null, options, frontpanelHub);
-                listener.Start();
-            }
+            listener = new AircraftListenerFactory().CreateListener(SelectedAircraft, Mcdu, options, frontpanelHub, ch47SwitchWithSeat);
+            listener.Start();
         }
-        catch (NotSupportedException ex)
+        catch (Exception ex)
         {
+            App.Logger.Error(ex, $"Failed to start listener for aircraft {SelectedAircraft.AircraftId}");
             if (Mcdu != null)
             {
                 Mcdu.Output.Newline().Red().WriteLine(ex.Message);
