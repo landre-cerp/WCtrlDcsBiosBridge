@@ -91,7 +91,7 @@ internal class A10C_Listener : AircraftListener
     }
 
 
-    protected override void RegisterMcduControls()
+    protected override void RegisterCduControls()
     {
         if (!options.DisableLightingManagement && mcdu != null) { 
             Register(_CONSOLE_BRT, v =>
@@ -198,7 +198,7 @@ internal class A10C_Listener : AircraftListener
             .Replace("?", "%")
             .Replace("¶", "⬡");
 
-    // Écrit une ligne CDU (avec substitution des caractères) et redessine le séparateur CMS si activé.
+    
     private void WriteCduLine(int lineIndex, string raw)
     {
         var output = GetCompositor(DEFAULT_PAGE);

@@ -119,7 +119,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
 
         if (mcdu != null)
         {
-            RegisterMcduControls();
+            RegisterCduControls();
             // Load the correct font for this aircraft
             var fontFile = descriptor.FontFile;
             try
@@ -171,7 +171,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     }
 
     protected abstract void InitializeDcsBiosOutputs();
-    protected abstract void RegisterMcduControls();
+    protected abstract void RegisterCduControls();
 
     /// <summary>
     /// Registers DCS-BIOS handlers that populate <see cref="FlightDeck"/>.

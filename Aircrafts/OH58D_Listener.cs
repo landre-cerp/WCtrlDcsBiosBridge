@@ -99,7 +99,7 @@ internal class OH58D_Listener : AircraftListener
     }
 
 
-    protected override void RegisterMcduControls() {
+    protected override void RegisterCduControls() {
 
         if (!options.DisableLightingManagement && mcdu != null) {
             Register(_RFI_BRIGHTNESS, v =>

@@ -79,7 +79,7 @@ internal class CH47F_Listener : AircraftListener
             _currentPage = COPILOT_PAGE;
     }
 
-    protected override void RegisterMcduControls()
+    protected override void RegisterCduControls()
     {
         // --- LED ---
         Register(_MSTR_CAUTION, v => { mcdu!.Leds.Fail = v != 0; mcdu!.RefreshLeds(); });
