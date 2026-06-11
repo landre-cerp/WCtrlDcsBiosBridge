@@ -75,7 +75,9 @@ internal class AircraftSelectionMenu : IDisposable
         }
 
         output.BottomLine().WriteLine($"v{version}");
-        mcdu.RefreshDisplay();
+        // Skip the duplicate check: after an unclean shutdown the device can be out
+        // of sync with the library's cache, and the menu must always reach the panel.
+        mcdu.RefreshDisplay(skipDuplicateCheck: true);
     }
 
     private void AttachEventHandlers() => mcdu.KeyDown += HandleKeyDown;

@@ -52,7 +52,20 @@ internal class DeviceContext : IDisposable
         menu.AircraftSelected += OnAircraftSelected;
     }
 
-    public void ShowStartupScreen() => menu.Show();
+    public void ShowStartupScreen()
+    {
+        // The CDU keeps brightness/display state across app restarts. If a previous
+        // session ended uncleanly (or Cleanup() zeroed the brightness), the menu
+        // would render invisibly — force a known-visible state first.
+        if (!options.DisableLightingManagement)
+        {
+            Mcdu.DisplayBrightnessPercent = 100;
+            Mcdu.BacklightBrightnessPercent = 100;
+            Mcdu.RefreshBrightnesses();
+        }
+
+        menu.Show();
+    }
 
     /// <summary>
     /// Sets the aircraft selection for this device context
