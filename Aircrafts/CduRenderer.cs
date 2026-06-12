@@ -7,10 +7,10 @@ internal sealed class CduRenderState
 {
     public object SyncRoot { get; } = new();
 
-    public int BacklightBrightnessPercent { get; set; } = 100;
-    public int DisplayBrightnessPercent { get; set; } = 100;
-    public int LedBrightnessPercent { get; set; } = 100;
-    public bool BrightnessDirty { get; set; } = true;
+public int BacklightBrightnessPercent { get; set; } = 100;
+public int DisplayBrightnessPercent { get; set; } = 100;
+public int LedBrightnessPercent { get; set; } = 100;
+public bool BrightnessDirty { get; set; } = false;
 
     public bool LedFail { get; set; }
     public bool LedFm1 { get; set; }
