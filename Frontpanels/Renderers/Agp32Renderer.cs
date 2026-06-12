@@ -23,7 +23,7 @@ internal class Agp32Renderer : FrontpanelRenderer
     {
         // Family policy: stay visible even when the cockpit console brightness
         // is at zero — the AGP32 gear lights are useless when dark.
-        ApplyBrightnessFromConsoleAndSegmentPercent(model);
+        ApplyBrightness(model);
 
         _state.ChrDisplay = model.Agp32Chrono ?? string.Empty;
         _state.ClockDisplay = model.Agp32UtcTime ?? string.Empty;

@@ -28,19 +28,7 @@ internal abstract class FrontpanelRenderer
     /// </summary>
     public abstract void Render(FlightDeckState model);
 
-    protected void ApplyBrightnessFromConsole(
-        FlightDeckState model,
-        byte fallbackPanelBacklight = 255,
-        byte fallbackLcdBacklight = 255,
-        byte fallbackLedBacklight = 255)
-    {
-        if (model.ConsoleBrightness is byte b)
-            ApplyBrightness(b, b, b);
-        else
-            ApplyBrightness(fallbackPanelBacklight, fallbackLcdBacklight, fallbackLedBacklight);
-    }
-
-    protected void ApplyBrightnessFromConsoleAndSegmentPercent(
+    protected void ApplyBrightness(
         FlightDeckState model,
         byte fallbackPanelBacklight = 255,
         byte fallbackLcdBacklight = 255,
@@ -49,10 +37,10 @@ internal abstract class FrontpanelRenderer
         if (model.ConsoleBrightness is byte b)
         {
             var segment = PercentToByte(model.SegmentBrightnessPercent);
-            ApplyBrightness(b, segment, segment);
+            ApplyDeviceBrightness(b, segment, segment);
         }
         else
-            ApplyBrightness(fallbackPanelBacklight, fallbackLcdBacklight, fallbackLedBacklight);
+            ApplyDeviceBrightness(fallbackPanelBacklight, fallbackLcdBacklight, fallbackLedBacklight);
     }
 
     private static byte PercentToByte(int percent)
@@ -67,7 +55,7 @@ internal abstract class FrontpanelRenderer
     /// (SetBrightness is several HID commands per call). No-op when lighting
     /// management is disabled (SimAppPro users).
     /// </summary>
-    protected void ApplyBrightness(byte panelBacklight, byte lcdBacklight, byte ledBacklight)
+    private void ApplyDeviceBrightness(byte panelBacklight, byte lcdBacklight, byte ledBacklight)
     {
         if (!manageLighting) return;
 

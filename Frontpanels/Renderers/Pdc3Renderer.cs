@@ -16,6 +16,6 @@ internal class Pdc3Renderer : FrontpanelRenderer
 
     public override void Render(FlightDeckState model)
     {
-        ApplyBrightnessFromConsole(model);
+        ApplyBrightness(model);
     }
 }

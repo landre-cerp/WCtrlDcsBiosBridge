@@ -27,7 +27,7 @@ internal class Pap3Renderer : FrontpanelRenderer
 
     public override void Render(FlightDeckState model)
     {
-        ApplyBrightnessFromConsoleAndSegmentPercent(model);
+        ApplyBrightness(model);
 
         _state.Speed = model.Speed ?? 0;
         _state.Heading = model.Heading ?? 0;
