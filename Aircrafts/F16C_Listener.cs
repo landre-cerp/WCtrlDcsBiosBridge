@@ -625,16 +625,16 @@ internal class F16C_Listener : AircraftListener
                 { _fuelLow = _LIGHT_FUEL_LOW.GetUIntValue(e.Data) == 1; refreshDisplay = true; }
 
                 if (e.Address == _CLOCK_H!.Address)
-                { _clockH = (int)Math.Round(_CLOCK_H.GetUIntValue(e.Data) * 23.0 / 65535.0); refreshDisplay = true; }
+                { _clockH = (int)Math.Floor(_CLOCK_H.GetUIntValue(e.Data) * 24.0 / 65536.0); refreshDisplay = true; }
 
                 if (e.Address == _CLOCK_MS!.Address)
-                { _clockMin = (int)Math.Round(_CLOCK_MS.GetUIntValue(e.Data) * 59.0 / 65535.0); refreshDisplay = true; }
+                { _clockMin = (int)Math.Floor(_CLOCK_MS.GetUIntValue(e.Data) * 60.0 / 65536.0); refreshDisplay = true; }
 
                 if (e.Address == _CLOCK_ELAPSED_M!.Address)
-                { _elapsedMin = (int)Math.Round(_CLOCK_ELAPSED_M.GetUIntValue(e.Data) * 59.0 / 65535.0); refreshDisplay = true; }
+                { _elapsedMin = (int)Math.Floor(_CLOCK_ELAPSED_M.GetUIntValue(e.Data) * 60.0 / 65536.0); refreshDisplay = true; }
 
                 if (e.Address == _CLOCK_ELAPSED_S!.Address)
-                { _elapsedSec = (int)Math.Round(_CLOCK_ELAPSED_S.GetUIntValue(e.Data) * 59.0 / 65535.0); refreshDisplay = true; }
+                { _elapsedSec = (int)Math.Floor(_CLOCK_ELAPSED_S.GetUIntValue(e.Data) * 60.0 / 65536.0); refreshDisplay = true; }
             }
 
             if (e.Address == _STANDBY_COMPASS_HEADING!.Address)
