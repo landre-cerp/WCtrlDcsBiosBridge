@@ -92,7 +92,8 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             {
                 ShowStatus(p.Message, false);
             });
-            var detected = await DeviceManager.DetectAndConnectDevicesAsync(progress, _detectCts.Token);
+            var detected = await DeviceManager.DetectAndConnectDevicesAsync(progress, _detectCts.Token,
+                resetDevices: !userOptions.DisableLightingManagement);
             devices.AddRange(detected);
             BuildDeviceTabs();
             UpdateStartButtonState();

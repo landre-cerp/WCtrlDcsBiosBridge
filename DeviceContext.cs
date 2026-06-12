@@ -56,12 +56,10 @@ internal class DeviceContext : IDisposable
     {
         // The CDU keeps brightness/display state across app restarts. If a previous
         // session ended uncleanly (or Cleanup() zeroed the brightness), the menu
-        // would render invisibly — force a known-visible state first.
+        // would render invisibly — return to the known-good state first.
         if (!options.DisableLightingManagement)
         {
-            Mcdu.DisplayBrightnessPercent = 100;
-            Mcdu.BacklightBrightnessPercent = 100;
-            Mcdu.RefreshBrightnesses();
+            Mcdu.Reset();
         }
 
         menu.Show();
