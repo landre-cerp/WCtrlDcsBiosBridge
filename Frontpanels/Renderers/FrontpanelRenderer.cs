@@ -28,12 +28,34 @@ internal abstract class FrontpanelRenderer
     /// </summary>
     public abstract void Render(FlightDeckState model);
 
+    protected void ApplyBrightness(
+        FlightDeckState model,
+        byte fallbackPanelBacklight = 255,
+        byte fallbackLcdBacklight = 255,
+        byte fallbackLedBacklight = 255)
+    {
+        if (model.ConsoleBrightness is byte b)
+        {
+            var segment = PercentToByte(model.SegmentBrightnessPercent);
+            ApplyDeviceBrightness(b, segment, segment);
+        }
+        else
+            ApplyDeviceBrightness(fallbackPanelBacklight, fallbackLcdBacklight, fallbackLedBacklight);
+    }
+
+    private static byte PercentToByte(int percent)
+    {
+        if (percent < 0) percent = 0;
+        if (percent > 100) percent = 100;
+        return (byte)(percent * 255 / 100);
+    }
+
     /// <summary>
     /// Sends brightness to the family's adapters, but only when it changed
     /// (SetBrightness is several HID commands per call). No-op when lighting
     /// management is disabled (SimAppPro users).
     /// </summary>
-    protected void ApplyBrightness(byte panelBacklight, byte lcdBacklight, byte ledBacklight)
+    private void ApplyDeviceBrightness(byte panelBacklight, byte lcdBacklight, byte ledBacklight)
     {
         if (!manageLighting) return;
 

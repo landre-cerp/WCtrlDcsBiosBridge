@@ -38,9 +38,20 @@ internal class A10C_Listener : AircraftListener
     private DCSBIOSOutput? _GEAR_N_SAFE;
 
     private DCSBIOSOutput? _HANDLE_GEAR_WARNING;
+    private DCSBIOSOutput? _UFC_INTEN;
+
+    private DCSBIOSOutput? _CLOCK_ETC;
+    private DCSBIOSOutput? _CLOCK_HH;
+    private DCSBIOSOutput? _CLOCK_MM;
+    private DCSBIOSOutput? _CLOCK_SS;
 
     private int[] pressureDigits = new int[4];
     private int[] altitudeDigits = new int[3];
+
+    private bool _clockShowsEt;
+    private string _clockHh = "00";
+    private string _clockMm = "00";
+    private string _clockSs = "00";
 
     public A10C_Listener(
         ICdu? mcdu,
@@ -88,6 +99,13 @@ internal class A10C_Listener : AircraftListener
         _GEAR_N_SAFE = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("GEAR_N_SAFE");
 
         _HANDLE_GEAR_WARNING = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("HANDLE_GEAR_WARNING");
+
+        _UFC_INTEN = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("UFC_INTEN");
+
+        _CLOCK_ETC = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CLOCK_ETC");
+        _CLOCK_HH = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CLOCK_HH");
+        _CLOCK_MM = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CLOCK_MM");
+        _CLOCK_SS = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CLOCK_SS");
     }
 
 
@@ -141,6 +159,19 @@ internal class A10C_Listener : AircraftListener
                 // Convert to byte range (0-255) directly, not percentage
                 FlightDeck.ConsoleBrightness = (byte)(v * 255 / _CONSOLE_BRT!.MaxValue);
             });
+
+            Register(_UFC_INTEN, v =>
+            {
+                if (v == 0)
+                {
+                    FlightDeck.SegmentBrightnessPercent = Math.Min(100, FlightDeck.SegmentBrightnessPercent - BRT_STEP);
+                }
+                if (v==2)
+                {
+                    FlightDeck.SegmentBrightnessPercent = Math.Min(100, FlightDeck.SegmentBrightnessPercent + BRT_STEP);
+                }
+
+            });
         }
 
         Register(_HEADING, v => FlightDeck.Heading = (int)v);
@@ -186,6 +217,31 @@ internal class A10C_Listener : AircraftListener
         Register(_GEAR_N_SAFE, v => FlightDeck.GearNoseDown = v == 1);
         Register(_GEAR_R_SAFE, v => FlightDeck.GearRightDown = v == 1);
         Register(_HANDLE_GEAR_WARNING, v => FlightDeck.GearWarning = v == 1);
+
+        RegisterString(_CLOCK_ETC, s =>
+        {
+            var mode = s.Trim();
+            _clockShowsEt = mode.Equals("ET", StringComparison.OrdinalIgnoreCase);
+            UpdateAgp32ClockFields();
+        });
+
+        RegisterString(_CLOCK_HH, s =>
+        {
+            _clockHh = NormalizeTwoDigitClockPart(s);
+            UpdateAgp32ClockFields();
+        });
+
+        RegisterString(_CLOCK_MM, s =>
+        {
+            _clockMm = NormalizeTwoDigitClockPart(s);
+            UpdateAgp32ClockFields();
+        });
+
+        RegisterString(_CLOCK_SS, s =>
+        {
+            _clockSs = NormalizeTwoDigitClockPart(s);
+            UpdateAgp32ClockFields();
+        });
     }
     
     private static string ReplaceSpecialChars(string data) =>
@@ -266,7 +322,7 @@ internal class A10C_Listener : AircraftListener
         // Variometer linear segments based on DCS LUA definition:
         // Input (ft/min): {-6000, -2000, -1000, 1000, 2000, 6000}
         // Output (gauge): {-1.0, -0.5, -0.29, 0.29, 0.5, 1.0}
-        
+
         // Convert 0-65535 to -1.0 to 1.0
         double pos = (rawValue / 65535.0) * 2.0 - 1.0;
         double vvi;
@@ -288,5 +344,34 @@ internal class A10C_Listener : AircraftListener
         {
             return y1 + (value - x1) * (y2 - y1) / (x2 - x1);
         }
+    }
+
+    private void UpdateAgp32ClockFields()
+    {
+        var hhmmss = _clockHh + _clockMm + _clockSs;
+
+        // A-10C exposes only the currently selected clock source on CLOCK_HH/MM/SS.
+        // Keep UTC updated every time; when ET is selected, also derive AGP32 ET.
+        FlightDeck.Agp32UtcTime = hhmmss;
+
+        if (_clockShowsEt)
+        {
+            // AGP32 ET has 4 digits; keep minutes+seconds from HHMMSS.
+            FlightDeck.Agp32Et = hhmmss.Substring(2, 4);
+        }
+        else
+        {
+            FlightDeck.Agp32Et = string.Empty;
+        }
+    }
+
+    private static string NormalizeTwoDigitClockPart(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return "00";
+
+        var trimmed = value.Trim();
+        if (trimmed.Length == 1 && char.IsDigit(trimmed[0])) return "0" + trimmed;
+        if (trimmed.Length >= 2) return trimmed[..2];
+        return "00";
     }
 }
