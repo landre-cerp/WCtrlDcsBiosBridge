@@ -38,8 +38,8 @@ internal class F15E_Listener : AircraftListener
         {
             UpdateCounter(e.Address, e.Data);
         }
-        catch (Exception)
-        {
+        catch (Exception ex) { 
+            App.Logger.Error(ex, "Failed to process DCS-BIOS data"); 
         }
     }
 

@@ -86,7 +86,7 @@ internal class A10C_Listener : AircraftListener
         _ALTITUDE_100ft = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_100FT_CNT");
 
         _HEADING = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("HDG_DEG_MAG");
-        _IAS = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IAS_US");
+        _IAS = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("IAS_US_INT");
         _VS = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("VVI");
 
         _ALT_PRESSURE0 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE0");
@@ -206,11 +206,9 @@ internal class A10C_Listener : AircraftListener
             });
         }
 
-        RegisterString(_IAS, s =>
+        Register(_IAS, s =>
         {
-            // there's a bug? in DCS-BIOS A-10C module where IAS is 2 knots below the actual value
-            var trimmed = s.Trim();
-            FlightDeck.Speed = trimmed == "" ? 0 : int.Parse(trimmed) + 2;
+            FlightDeck.Speed = (int)s;
         });
 
         Register(_GEAR_L_SAFE, v => FlightDeck.GearLeftDown = v == 1);
