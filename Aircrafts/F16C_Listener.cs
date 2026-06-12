@@ -631,19 +631,19 @@ internal class F16C_Listener : AircraftListener
                 if (e.Address == _FUEL_FF_10K!.Address)
                 {
                     _fuelFf10kDigit = DecodeDrumDigit(_FUEL_FF_10K!, e.Data);
-                    _fuelFlowPph = _fuelFf10kDigit * 10000 + _fuelFf1kDigit * 1000 + _fuelFf100Digit * 100;
+                    _fuelFlowPph = ComposeFuelFlowPph(_fuelFf10kDigit, _fuelFf1kDigit, _fuelFf100Digit);
                     refreshDisplay = true;
                 }
                 if (e.Address == _FUEL_FF_1K!.Address)
                 {
                     _fuelFf1kDigit = DecodeDrumDigit(_FUEL_FF_1K!, e.Data);
-                    _fuelFlowPph = _fuelFf10kDigit * 10000 + _fuelFf1kDigit * 1000 + _fuelFf100Digit * 100;
+                    _fuelFlowPph = ComposeFuelFlowPph(_fuelFf10kDigit, _fuelFf1kDigit, _fuelFf100Digit);
                     refreshDisplay = true;
                 }
                 if (e.Address == _FUEL_FF_100!.Address)
                 {
                     _fuelFf100Digit = DecodeDrumDigit(_FUEL_FF_100!, e.Data);
-                    _fuelFlowPph = _fuelFf10kDigit * 10000 + _fuelFf1kDigit * 1000 + _fuelFf100Digit * 100;
+                    _fuelFlowPph = ComposeFuelFlowPph(_fuelFf10kDigit, _fuelFf1kDigit, _fuelFf100Digit);
                     refreshDisplay = true;
                 }
 
@@ -1241,6 +1241,12 @@ internal class F16C_Listener : AircraftListener
                 if (high <= low) return i * 0.1;
                 double t = (high - clamped) / (high - low);
                 return i * 0.1 + t * 0.1;
+            }
+
+            private static int ComposeFuelFlowPph(int tenThousandsDigit, int thousandsDigit, int hundredsDigit)
+            {
+                // DCS-BIOS fuel-flow counter is exported with a +1100 pph baseline removed.
+                return tenThousandsDigit * 10000 + thousandsDigit * 1000 + hundredsDigit * 100 + 1100;
             }
         }
 
