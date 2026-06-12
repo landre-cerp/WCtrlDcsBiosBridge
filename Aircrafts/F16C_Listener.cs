@@ -225,6 +225,12 @@ internal class F16C_Listener : AircraftListener
     private int  _vviFpm;
     private int  _fuelTotalLb;
     private int  _fuelFlowPph;
+    private int  _fuelTot10kDigit;
+    private int  _fuelTot1kDigit;
+    private int  _fuelTot100Digit;
+    private int  _fuelFf10kDigit;
+    private int  _fuelFf1kDigit;
+    private int  _fuelFf100Digit;
     private int  _fuelAlLb;
     private int  _fuelFrLb;
     private bool _fuelLow;
@@ -565,19 +571,19 @@ internal class F16C_Listener : AircraftListener
                 // Altitude drums — each drum updates its own cached digit, then recompose
                 if (e.Address == _ALT_10000!.Address)
                 {
-                    _altD10k = (int)Math.Round(_ALT_10000.GetUIntValue(e.Data) * 9.0 / 65535.0);
+                    _altD10k = DecodeDrumDigit(_ALT_10000!, e.Data);
                     _altFt = _altD10k * 10000 + _altD1k * 1000 + _altD100 * 100;
                     refreshDisplay = true;
                 }
                 if (e.Address == _ALT_1000!.Address)
                 {
-                    _altD1k = (int)Math.Round(_ALT_1000.GetUIntValue(e.Data) * 9.0 / 65535.0);
+                    _altD1k = DecodeDrumDigit(_ALT_1000!, e.Data);
                     _altFt = _altD10k * 10000 + _altD1k * 1000 + _altD100 * 100;
                     refreshDisplay = true;
                 }
                 if (e.Address == _ALT_100!.Address)
                 {
-                    _altD100 = (int)Math.Round(_ALT_100.GetUIntValue(e.Data) * 9.0 / 65535.0);
+                    _altD100 = DecodeDrumDigit(_ALT_100!, e.Data);
                     _altFt = _altD10k * 10000 + _altD1k * 1000 + _altD100 * 100;
                     refreshDisplay = true;
                 }
@@ -585,33 +591,59 @@ internal class F16C_Listener : AircraftListener
                 if (e.Address == _ALT_PNEU!.Address)
                 { _pneuFail = _ALT_PNEU.GetUIntValue(e.Data) > 32767; refreshDisplay = true; }
 
-                if (e.Address == _QNH_D0!.Address) { _qnhD0 = (int)Math.Round(_QNH_D0.GetUIntValue(e.Data) * 9.0 / 65535.0); refreshDisplay = true; }
-                if (e.Address == _QNH_D1!.Address) { _qnhD1 = (int)Math.Round(_QNH_D1.GetUIntValue(e.Data) * 9.0 / 65535.0); refreshDisplay = true; }
-                if (e.Address == _QNH_D2!.Address) { _qnhD2 = (int)Math.Round(_QNH_D2.GetUIntValue(e.Data) * 9.0 / 65535.0); refreshDisplay = true; }
-                if (e.Address == _QNH_D3!.Address) { _qnhD3 = (int)Math.Round(_QNH_D3.GetUIntValue(e.Data) * 9.0 / 65535.0); refreshDisplay = true; }
+                if (e.Address == _QNH_D0!.Address) { _qnhD0 = DecodeDrumDigit(_QNH_D0!, e.Data); refreshDisplay = true; }
+                if (e.Address == _QNH_D1!.Address) { _qnhD1 = DecodeDrumDigit(_QNH_D1!, e.Data); refreshDisplay = true; }
+                if (e.Address == _QNH_D2!.Address) { _qnhD2 = DecodeDrumDigit(_QNH_D2!, e.Data); refreshDisplay = true; }
+                if (e.Address == _QNH_D3!.Address) { _qnhD3 = DecodeDrumDigit(_QNH_D3!, e.Data); refreshDisplay = true; }
 
                 if (e.Address == _AIRSPEED!.Address)
                 { _iasKts = (int)Math.Round(_AIRSPEED.GetUIntValue(e.Data) * 1000.0 / 65535.0); refreshDisplay = true; }
 
                 if (e.Address == _MACH!.Address)
-                { _mach = _MACH.GetUIntValue(e.Data) * 0.85 / 65535.0; refreshDisplay = true; }
+                {
+                    double rawMachNeedle = _MACH.GetUIntValue(e.Data) / (double)_MACH.MaxValue;
+                    _mach = DecodeMach(rawMachNeedle);
+                    refreshDisplay = true;
+                }
 
                 if (e.Address == _VVI!.Address)
                 { _vviFpm = (int)Math.Round((_VVI.GetUIntValue(e.Data) - 32768.0) * 6000.0 / 32767.0); refreshDisplay = true; }
 
-                if (e.Address == _FUEL_TOT_10K!.Address || e.Address == _FUEL_TOT_1K!.Address || e.Address == _FUEL_TOT_100!.Address)
+                if (e.Address == _FUEL_TOT_10K!.Address)
                 {
-                    _fuelTotalLb = (int)Math.Round(_FUEL_TOT_10K!.GetUIntValue(e.Data) * 9.0 / 65535.0) * 1000
-                                 + (int)Math.Round(_FUEL_TOT_1K!.GetUIntValue(e.Data)  * 9.0 / 65535.0) * 100
-                                 + (int)Math.Round(_FUEL_TOT_100!.GetUIntValue(e.Data) * 9.0 / 65535.0) * 10;
+                    _fuelTot10kDigit = DecodeDrumDigit(_FUEL_TOT_10K!, e.Data);
+                    _fuelTotalLb = _fuelTot10kDigit * 10000 + _fuelTot1kDigit * 1000 + _fuelTot100Digit * 100;
+                    refreshDisplay = true;
+                }
+                if (e.Address == _FUEL_TOT_1K!.Address)
+                {
+                    _fuelTot1kDigit = DecodeDrumDigit(_FUEL_TOT_1K!, e.Data);
+                    _fuelTotalLb = _fuelTot10kDigit * 10000 + _fuelTot1kDigit * 1000 + _fuelTot100Digit * 100;
+                    refreshDisplay = true;
+                }
+                if (e.Address == _FUEL_TOT_100!.Address)
+                {
+                    _fuelTot100Digit = DecodeDrumDigit(_FUEL_TOT_100!, e.Data);
+                    _fuelTotalLb = _fuelTot10kDigit * 10000 + _fuelTot1kDigit * 1000 + _fuelTot100Digit * 100;
                     refreshDisplay = true;
                 }
 
-                if (e.Address == _FUEL_FF_10K!.Address || e.Address == _FUEL_FF_1K!.Address || e.Address == _FUEL_FF_100!.Address)
+                if (e.Address == _FUEL_FF_10K!.Address)
                 {
-                    _fuelFlowPph = (int)Math.Round(_FUEL_FF_10K!.GetUIntValue(e.Data) * 9.0 / 65535.0) * 1000
-                                 + (int)Math.Round(_FUEL_FF_1K!.GetUIntValue(e.Data)  * 9.0 / 65535.0) * 100
-                                 + (int)Math.Round(_FUEL_FF_100!.GetUIntValue(e.Data) * 9.0 / 65535.0) * 10;
+                    _fuelFf10kDigit = DecodeDrumDigit(_FUEL_FF_10K!, e.Data);
+                    _fuelFlowPph = _fuelFf10kDigit * 10000 + _fuelFf1kDigit * 1000 + _fuelFf100Digit * 100;
+                    refreshDisplay = true;
+                }
+                if (e.Address == _FUEL_FF_1K!.Address)
+                {
+                    _fuelFf1kDigit = DecodeDrumDigit(_FUEL_FF_1K!, e.Data);
+                    _fuelFlowPph = _fuelFf10kDigit * 10000 + _fuelFf1kDigit * 1000 + _fuelFf100Digit * 100;
+                    refreshDisplay = true;
+                }
+                if (e.Address == _FUEL_FF_100!.Address)
+                {
+                    _fuelFf100Digit = DecodeDrumDigit(_FUEL_FF_100!, e.Data);
+                    _fuelFlowPph = _fuelFf10kDigit * 10000 + _fuelFf1kDigit * 1000 + _fuelFf100Digit * 100;
                     refreshDisplay = true;
                 }
 
@@ -640,7 +672,7 @@ internal class F16C_Listener : AircraftListener
             if (e.Address == _STANDBY_COMPASS_HEADING!.Address)
             {
                 uint raw = _STANDBY_COMPASS_HEADING.GetUIntValue(e.Data);
-                _currentHeadingDeg = (int)Math.Round(raw * 360.0 / 65535.0) % 360;
+                _currentHeadingDeg = (int)Math.Floor(raw * 360.0 / 65536.0) % 360;
                 if (_currentDisplay == DisplayMode.NAV) UpdateNAVDisplay();
             }
 
@@ -1177,6 +1209,38 @@ internal class F16C_Listener : AircraftListener
     // Maps a 0–65535 BIOS knob position linearly to 0–359 degrees.
     private static int KnobToDegrees(uint raw) =>
         (int)Math.Round(raw / 65535.0 * 359.0) % 360;
+
+    private static int DecodeDrumDigit(DCSBIOSOutput output, uint data)
+    {
+        double normalized = output.GetUIntValue(data) / (double)(output.MaxValue + 1);
+        int digit = (int)Math.Floor(normalized * 10.0 + 1e-9);
+        return Math.Clamp(digit, 0, 9);
+    }
+
+    private static double DecodeMach(double rawNeedle)
+    {
+        // Calibration table used by older DCS-BIOS F-16C modules for MACH_INDICATOR.
+        // Index = Mach / 0.1, value = exported needle position.
+        ReadOnlySpan<double> rawByMachStep =
+        [
+            1.000, 0.958, 0.921, 0.902, 0.885, 0.848, 0.812, 0.775, 0.741, 0.704,
+            0.668, 0.632, 0.596, 0.562, 0.528, 0.493, 0.459, 0.422, 0.387
+        ];
+
+        double clamped = Math.Clamp(rawNeedle, rawByMachStep[^1], rawByMachStep[0]);
+        for (int i = 0; i < rawByMachStep.Length - 1; i++)
+        {
+            double high = rawByMachStep[i];
+            double low = rawByMachStep[i + 1];
+            if (clamped <= high && clamped >= low)
+            {
+                double t = (high - clamped) / (high - low);
+                return i * 0.1 + t * 0.1;
+            }
+        }
+
+        return 0.0;
+    }
 
     // Returns the nearest 8-point compass label for a 0–359° bearing.
     // Breakpoints: N=337–22, NE=23–67, E=68–112, SE=113–157,
