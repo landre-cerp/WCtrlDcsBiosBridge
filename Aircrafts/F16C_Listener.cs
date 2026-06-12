@@ -1214,10 +1214,10 @@ internal class F16C_Listener : AircraftListener
     {
         if (output.MaxValue == 0) return 0;
         double normalized = output.GetUIntValue(data) / (double)output.MaxValue;
-        // 0.0–1.0 float drums represent one full 0–9 revolution.
-        // Multiplying by 10 and clamping keeps the top edge in range.
-        int digit = (int)Math.Floor(normalized * 10.0);
-        return Math.Clamp(digit, 0, 9);
+        // Drum exports are continuous and can sit just below band boundaries.
+        // Decode to nearest digit instead of always flooring.
+        int digit = (int)Math.Floor(normalized * 10.0 + 0.5);
+        return digit == 10 ? 0 : Math.Clamp(digit, 0, 9);
     }
 
     private static double DecodeMach(double rawNeedle)
@@ -1251,8 +1251,7 @@ internal class F16C_Listener : AircraftListener
 
     private static int ComposeFuelFlowPph(int tenThousandsDigit, int thousandsDigit, int hundredsDigit)
     {
-        // DCS-BIOS fuel-flow counter is exported with a +1100 pph baseline removed.
-        return tenThousandsDigit * 10000 + thousandsDigit * 1000 + hundredsDigit * 100 + 1100;
+        return tenThousandsDigit * 10000 + thousandsDigit * 1000 + hundredsDigit * 100;
     }
 
     // Returns the nearest 8-point compass label for a 0–359° bearing.
