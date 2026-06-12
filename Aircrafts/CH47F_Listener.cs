@@ -1,8 +1,7 @@
-﻿using DCS_BIOS.ControlLocator;
+using DCS_BIOS.ControlLocator;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 using System.Linq;
-using WWCduDcsBiosBridge.Frontpanels;
 
 namespace WWCduDcsBiosBridge.Aircrafts;
 
@@ -51,10 +50,6 @@ internal class CH47F_Listener : AircraftListener
         .Select(_ => new string(' ', 24))
         .ToArray();
 
-    protected override string GetAircraftName() => SupportedAircrafts.CH47_Name;
-
-    protected override string GetFontFile() => "resources/ch47f-font-21x31.json";
-
     const int PILOT_SEAT = 0;
     const int COPILOT_SEAT = 1;
 
@@ -68,8 +63,11 @@ internal class CH47F_Listener : AircraftListener
         ["w"] = Colour.White
     };
 
-    public CH47F_Listener(ICdu? mcdu, UserOptions options, bool pilot = true) : base(mcdu, SupportedAircrafts.CH47, options, FrontpanelHub.CreateEmpty())
+    private readonly bool switchWithSeat;
+
+    public CH47F_Listener(ICdu? mcdu, UserOptions options, bool pilot = true, bool switchWithSeat = false) : base(mcdu, AircraftRegistry.CH47, options)
     {
+        this.switchWithSeat = switchWithSeat;
         seatPosition = pilot ? PILOT_SEAT : COPILOT_SEAT;
 
         // Always create the copilot page so both pilot and copilot CDU data
@@ -81,7 +79,7 @@ internal class CH47F_Listener : AircraftListener
             _currentPage = COPILOT_PAGE;
     }
 
-    protected override void RegisterMcduControls()
+    protected override void RegisterCduControls()
     {
         // --- LED ---
         Register(_MSTR_CAUTION, v => { mcdu!.Leds.Fail = v != 0; mcdu!.RefreshLeds(); });
@@ -126,7 +124,7 @@ internal class CH47F_Listener : AircraftListener
         }
 
         // --- Seat-position switching ---
-        if (options.Ch47CduSwitchWithSeat)
+        if (switchWithSeat)
         {
             Register(_SEAT_POSITION, v =>
             {

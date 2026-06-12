@@ -1,7 +1,6 @@
 using DCS_BIOS.ControlLocator;
 using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
-using WWCduDcsBiosBridge.Frontpanels;
 using WwDevicesDotNet;
 
 namespace WWCduDcsBiosBridge.Aircrafts;
@@ -22,12 +21,8 @@ internal class FA18C_Listener : AircraftListener
     private readonly Key _nextPageKey;
     private readonly Key _prevPageKey;
 
-    protected override string GetFontFile() => "resources/a10c-font-21x31.json";
-
-    protected override string GetAircraftName() => SupportedAircrafts.FA18C_Name;
-
     public FA18C_Listener(ICdu? mcdu, UserOptions options)
-        : base(mcdu, SupportedAircrafts.FA18C, options, FrontpanelHub.CreateEmpty())
+        : base(mcdu, AircraftRegistry.FA18C, options)
     {
         _nextPageKey = Enum.TryParse<Key>(options.NextPageKey, out var nextKey)
             ? nextKey
@@ -58,7 +53,7 @@ internal class FA18C_Listener : AircraftListener
         }
     }
 
-    protected override void RegisterMcduControls() { }
+    protected override void RegisterCduControls() { }
     protected override void RegisterFrontpanelControls() { }
 
     protected override void InitializeDcsBiosOutputs()

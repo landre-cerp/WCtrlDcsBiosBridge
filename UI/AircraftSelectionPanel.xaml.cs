@@ -40,50 +40,30 @@ public partial class AircraftSelectionPanel : UserControl, INotifyPropertyChange
 
     public ICommand SelectAircraftCommand { get; }
 
+    /// <summary>
+    /// Selectable aircraft generated from the registry. The panel is only shown
+    /// when no CDU is connected, so seat-selection aircraft always get a PLT/CPLT pair.
+    /// </summary>
+    public IReadOnlyList<AircraftMenuEntry> AircraftEntries { get; } =
+        AircraftRegistry.BuildMenuEntries(ch47SwitchWithSeat: false);
+
     public event EventHandler<AircraftSelection>? AircraftSelected;
 
     public AircraftSelectionPanel()
     {
         InitializeComponent();
         DataContext = this;
-        SelectAircraftCommand = new RelayCommand<string>(OnAircraftSelected);
+        SelectAircraftCommand = new RelayCommand<AircraftMenuEntry>(OnAircraftSelected);
     }
 
-    private void OnAircraftSelected(string? tag)
+    private void OnAircraftSelected(AircraftMenuEntry? entry)
     {
-        if (tag is null) return;
+        if (entry is null) return;
 
-        var selection = tag switch
-        {
-            "A10C" => new AircraftSelection(SupportedAircrafts.A10C, true),
-            "AH64D" => new AircraftSelection(SupportedAircrafts.AH64D, true),
-            "FA18C" => new AircraftSelection(SupportedAircrafts.FA18C, true),
-            "CH47_PLT" => new AircraftSelection(SupportedAircrafts.CH47, true),
-            "CH47_CPLT" => new AircraftSelection(SupportedAircrafts.CH47, false),
-            "F15E" => new AircraftSelection(SupportedAircrafts.F15E, true),
-            "M2000C" => new AircraftSelection(SupportedAircrafts.M2000C, true),
-            _ => null
-        };
-
-        var displayName = tag switch
-        {
-            "A10C" => "A-10C",
-            "AH64D" => "AH-64D",
-            "FA18C" => "F/A-18C",
-            "CH47_PLT" => "CH-47F (PLT)",
-            "CH47_CPLT" => "CH-47F (CPLT)",
-            "F15E" => "F-15E",
-            "M2000C" => "M-2000C",
-            _ => tag
-        };
-
-        if (selection is not null)
-        {
-            SelectionStatus = $"Selected: {displayName}";
-            SelectionStatusColor = Brushes.Green;
-            ButtonsEnabled = false;
-            AircraftSelected?.Invoke(this, selection);
-        }
+        SelectionStatus = $"Selected: {entry.Label}";
+        SelectionStatusColor = Brushes.Green;
+        ButtonsEnabled = false;
+        AircraftSelected?.Invoke(this, entry.Selection);
     }
 
     public void Reset()

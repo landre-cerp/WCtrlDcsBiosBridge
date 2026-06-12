@@ -169,7 +169,7 @@ public static class ConfigManager
                      .Select(f => Path.GetFileName(f)!.ToLowerInvariant())
         );
 
-        return SupportedAircrafts.expected_json
+        return AircraftRegistry.ExpectedJsonFiles
             .Where(name => !present.Contains(name.ToLowerInvariant()))
             .ToArray();
     }

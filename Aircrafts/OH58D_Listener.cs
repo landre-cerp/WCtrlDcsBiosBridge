@@ -1,8 +1,7 @@
-﻿using DCS_BIOS.ControlLocator;
+using DCS_BIOS.ControlLocator;
 using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
-using WWCduDcsBiosBridge.Frontpanels;
 
 namespace WWCduDcsBiosBridge.Aircrafts;
 
@@ -59,11 +58,8 @@ internal class OH58D_Listener : AircraftListener
     private const int MPD_LINE = 5;
     private const int RFI_START_LINE = 8; 
 
-    protected override string GetFontFile() => "resources/oh58d-font-21x31.json";
-    protected override string GetAircraftName() => SupportedAircrafts.OH58D_Name;
-
     public OH58D_Listener(ICdu? mcdu, UserOptions options)
-        : base(mcdu, SupportedAircrafts.OH58D, options, FrontpanelHub.CreateEmpty())
+        : base(mcdu, AircraftRegistry.OH58D, options)
     {
     }
     protected override void InitializeDcsBiosOutputs()
@@ -103,7 +99,7 @@ internal class OH58D_Listener : AircraftListener
     }
 
 
-    protected override void RegisterMcduControls() {
+    protected override void RegisterCduControls() {
 
         if (!options.DisableLightingManagement && mcdu != null) {
             Register(_RFI_BRIGHTNESS, v =>

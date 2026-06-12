@@ -17,7 +17,6 @@ public static class UserOptionsStorage
             DisplayBottomAligned = false,
             DisplayCMS = false,
             DisableLightingManagement = false,
-            Ch47CduSwitchWithSeat = false,
             AutoStart = false,
             MinimizeOnStart = false,
             NextPageKey = "NextPage",
