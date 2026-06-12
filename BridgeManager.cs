@@ -19,12 +19,14 @@ public class BridgeManager : IDisposable
     private DCSBIOS? dcsBios;
     private bool _disposed = false;
     private TaskCompletionSource<AircraftSelection>? _globalAircraftSelectionTcs;
+    private AircraftSelection? _pendingGlobalAircraftSelection;
 
     /// <summary>
     /// Sets the global aircraft selection (used when no CDU is present)
     /// </summary>
     public void SetGlobalAircraftSelection(AircraftSelection selection)
     {
+        _pendingGlobalAircraftSelection = selection;
         _globalAircraftSelectionTcs?.TrySetResult(selection);
     }
 
@@ -143,6 +145,10 @@ public class BridgeManager : IDisposable
                 // No CDU devices - wait for global UI selection
                 Logger.Info("No CDU devices found. Waiting for global aircraft selection from UI...");
                 _globalAircraftSelectionTcs = new TaskCompletionSource<AircraftSelection>();
+                if (_pendingGlobalAircraftSelection != null)
+                {
+                    _globalAircraftSelectionTcs.TrySetResult(_pendingGlobalAircraftSelection);
+                }
                 var selectedAircraft = await _globalAircraftSelectionTcs.Task;
                 Logger.Info($"Global aircraft selection received from UI: {selectedAircraft.AircraftId}, IsPilot: {selectedAircraft.IsPilot}");
                 
