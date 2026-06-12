@@ -26,6 +26,10 @@ internal class OH58D_Listener : AircraftListener
 
     private DCSBIOSOutput? _RFI_BRIGHTNESS;
 
+    private DCSBIOSOutput? _CLOCK_HOURS;
+    private DCSBIOSOutput? _CLOCK_MINUTES;
+    private DCSBIOSOutput? _CLOCK_SECONDS;
+
     private string _mpdLeft = "---";
     private string _mpdRight = "---";
     private string _tgt = "---";
@@ -56,7 +60,12 @@ internal class OH58D_Listener : AircraftListener
     private const int TGT_LINE=2;
     private const int NG_LINE=3;
     private const int MPD_LINE = 5;
-    private const int RFI_START_LINE = 8; 
+    private const int RFI_START_LINE = 8;
+
+    private string _clockHh = "00";
+    private string _clockMm = "00";
+    private string _clockSs = "00";
+
 
     public OH58D_Listener(ICdu? mcdu, UserOptions options)
         : base(mcdu, AircraftRegistry.OH58D, options)
@@ -94,6 +103,10 @@ internal class OH58D_Listener : AircraftListener
         _MPD_SEL_5 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("MPD_SEL_5");
 
         _RFI_BRIGHTNESS = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("RFI_BRIGHTNESS");
+
+        _CLOCK_MINUTES = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CLOCK_MINUTES");
+        _CLOCK_SECONDS = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CLOCK_SECONDS");
+        _CLOCK_HOURS = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CLOCK_HOURS");
 
         InitializeDisplay();
     }
@@ -165,6 +178,15 @@ internal class OH58D_Listener : AircraftListener
         RegisterString(_TGT_DISPLAY, v => { _tgt = v; UpdateTgtTrq(); });
         RegisterString(_TRQ_DISPLAY, v => { _trq = v;UpdateTgtTrq(); } );
 
+        RegisterString(_CLOCK_HOURS, v => { _clockHh = FormatValue(v, 2, "00"); UpdateClock(); });
+        RegisterString(_CLOCK_MINUTES, v => { _clockMm = FormatValue(v, 2, "00"); UpdateClock(); });
+        RegisterString(_CLOCK_SECONDS, v => { _clockSs = FormatValue(v, 2, "00"); UpdateClock(); });
+
+    }
+
+    private void UpdateClock()
+    {
+        FlightDeck.Agp32UtcTime = _clockHh+_clockMm+_clockSs;
     }
 
     protected override void RegisterFrontpanelControls() { }
