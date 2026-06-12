@@ -100,5 +100,10 @@ internal sealed class AircraftCduContext
 
     public void Render(Screen screen) => _renderer.Render(screen, State);
 
-    public void Cleanup() => _renderer.Cleanup();
+public void Cleanup()
+{
+    lock (State.SyncRoot)
+    {
+        _renderer.Cleanup();
+    }
 }
