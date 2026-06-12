@@ -29,4 +29,29 @@ internal class FlightDeckState
     /// (or lighting management is disabled); renderers then keep their family default.
     /// </summary>
     public byte? ConsoleBrightness { get; set; }
+
+    /// <summary>
+    /// 7 Segment LCD display brightness, 0-255. Null when the aircraft does not drive it
+    /// (or lighting management is disabled); renderers then keep their family default.
+    /// </summary>
+    public int SegmentBrightnessPercent { get; set; } = 100;
+
+    /// <summary>
+    /// AGP32 chrono display as "MMSS" digits (device renders it as "88:88").
+    /// Example: "1234" for 12:34.
+    /// </summary>
+    public string? Agp32Chrono { get; set; }
+
+    /// <summary>
+    /// AGP32 UTC time display as "HHMMSS" digits (device renders it as "88:88:88").
+    /// Example: "123456" for 12:34:56.
+    /// </summary>
+    public string? Agp32UtcTime { get; set; }
+
+    /// <summary>
+    /// AGP32 ET display as "HHMM" digits (device renders it as "88:88").
+    /// Example: "1234" for 12:34.
+    /// </summary>
+    public string? Agp32Et { get; set; }
+
 }
