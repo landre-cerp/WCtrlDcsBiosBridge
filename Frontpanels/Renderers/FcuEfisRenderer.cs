@@ -9,8 +9,6 @@ namespace WWCduDcsBiosBridge.Frontpanels.Renderers;
 /// </summary>
 internal class FcuEfisRenderer : FrontpanelRenderer
 {
-    private const byte DefaultPanelBacklight = 128;
-
     private readonly FcuEfisState _state = new();
     private readonly FcuEfisLeds _leds = new();
 
@@ -21,10 +19,7 @@ internal class FcuEfisRenderer : FrontpanelRenderer
 
     public override void Render(FlightDeckState model)
     {
-        if (model.ConsoleBrightness is byte b)
-            ApplyBrightness(b, b, b);
-        else
-            ApplyBrightness(DefaultPanelBacklight, 255, 255);
+        ApplyBrightnessFromConsoleAndSegmentPercent(model);
 
         _state.Speed = model.Speed;
         _state.Heading = model.Heading;

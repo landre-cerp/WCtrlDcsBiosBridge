@@ -23,24 +23,29 @@ internal class Agp32Renderer : FrontpanelRenderer
     {
         // Family policy: stay visible even when the cockpit console brightness
         // is at zero — the AGP32 gear lights are useless when dark.
-        ApplyBrightness(255, 255, 255);
+        ApplyBrightnessFromConsoleAndSegmentPercent(model);
 
-        if (model.GearLeftDown is bool left)
-            _desired[Agp32State.Agp32Led.Gear1Down] = left;
-        if (model.GearNoseDown is bool nose)
-            _desired[Agp32State.Agp32Led.Gear2Down] = nose;
-        if (model.GearRightDown is bool right)
-            _desired[Agp32State.Agp32Led.Gear3Down] = right;
-        if (model.GearWarning is bool warning)
-        {
-            // A single gear-in-transit warning maps to the A320 panel's red UNLK
-            // triangles (lit while a gear disagrees with the lever) plus the
-            // lever's red arrow.
-            _desired[Agp32State.Agp32Led.Gear1Unlk] = warning;
-            _desired[Agp32State.Agp32Led.Gear2Unlk] = warning;
-            _desired[Agp32State.Agp32Led.Gear3Unlk] = warning;
-            _desired[Agp32State.Agp32Led.GearDownRed] = warning;
-        }
+        _state.ChrDisplay = model.Agp32Chrono ?? string.Empty;
+        _state.ClockDisplay = model.Agp32UtcTime ?? string.Empty;
+        _state.EtDisplay = model.Agp32Et ?? string.Empty;
+
+        // Always drive gear LEDs from current model snapshot to avoid stale values.
+        var left = model.GearLeftDown ?? false;
+        var nose = model.GearNoseDown ?? false;
+        var right = model.GearRightDown ?? false;
+        var warning = model.GearWarning ?? false;
+
+        _desired[Agp32State.Agp32Led.Gear1Down] = left;
+        _desired[Agp32State.Agp32Led.Gear2Down] = nose;
+        _desired[Agp32State.Agp32Led.Gear3Down] = right;
+
+        // A single gear-in-transit warning maps to the A320 panel's red UNLK
+        // triangles (lit while a gear disagrees with the lever) plus the
+        // lever's red arrow.
+        _desired[Agp32State.Agp32Led.Gear1Unlk] = warning;
+        _desired[Agp32State.Agp32Led.Gear2Unlk] = warning;
+        _desired[Agp32State.Agp32Led.Gear3Unlk] = warning;
+        _desired[Agp32State.Agp32Led.GearDownRed] = warning;
 
         // Only transmit LEDs whose state changed: each entry is one HID command,
         // and re-sending the full set every tick risks the device dropping the
