@@ -777,9 +777,15 @@ internal class F16C_Listener : AircraftListener
                     }
                     if (e.Address == _EHSI_RANGE!.Address)
                     {
-                        string raw = e.StringData.Trim();
+                        // Strip NUL bytes that DCS-BIOS may include in fixed-length string padding.
+                        string raw = e.StringData.Replace("\0", "").Trim();
                         if (int.TryParse(raw, out int rangeRaw))
+                            // Integer tenths of NM (e.g. "2809" → 280.9 nm)
                             _ehsiRange = (rangeRaw / 10.0).ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
+                        else if (double.TryParse(raw, System.Globalization.NumberStyles.Float,
+                                                 System.Globalization.CultureInfo.InvariantCulture, out double rangeNm))
+                            // Already-formatted decimal string (e.g. "280.9")
+                            _ehsiRange = rangeNm.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
                         else
                             _ehsiRange = raw;
                         hsiChanged = true;
@@ -1214,9 +1220,11 @@ internal class F16C_Listener : AircraftListener
     {
         if (output.MaxValue == 0) return 0;
         double normalized = output.GetUIntValue(data) / (double)output.MaxValue;
-        // Drum exports are continuous and can sit just below band boundaries.
-        // Decode to nearest digit instead of always flooring.
-        int digit = (int)Math.Floor(normalized * 10.0 + 0.5);
+        // Drum exports are continuous. A small epsilon handles DCS-BIOS
+        // quantization noise at exact band boundaries (e.g. 2.9999 → digit 3)
+        // without prematurely advancing the digit mid-transition (e.g. 1.5 must
+        // still decode as 1, not 2, when the drum is halfway between 1 and 2).
+        int digit = (int)Math.Floor(normalized * 10.0 + 0.05);
         return digit == 10 ? 0 : Math.Clamp(digit, 0, 9);
     }
 
