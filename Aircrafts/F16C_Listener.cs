@@ -1009,7 +1009,7 @@ internal class F16C_Listener : AircraftListener
             double endurH = _fuelFlowPph > 0 ? (double)_fuelTotalLb / _fuelFlowPph : 0;
             int endurMin  = (int)(endurH * 60);
             int rangeNm   = (int)(endurH * 300); // 300kt groundspeed estimate
-            o.Line(10).Green().WriteLine($"END:{endurMin/60}h{endurMin%60:D2}  RNG~{rangeNm,4}nm");
+            o.Line(10).Green().WriteLine($"END:{endurMin/60,2}h{endurMin%60:D2}  RNG~{rangeNm,4}nm");
 
             // Row 11 — separator
             o.Line(11).Green().WriteLine(new string('-', 24));
