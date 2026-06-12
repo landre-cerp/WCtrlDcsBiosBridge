@@ -15,7 +15,7 @@ internal class F15E_Listener : AircraftListener
     private DCSBIOSOutput? F_UFC_LINE5_DISPLAY;
     private DCSBIOSOutput? F_UFC_LINE6_DISPLAY;
 
-    public F15E_Listener(ICdu? mcdu, UserOptions options) : base(mcdu, AircraftRegistry.F15E, options)
+    public F15E_Listener(UserOptions options) : base(AircraftRegistry.F15E, options)
     {
     }
 

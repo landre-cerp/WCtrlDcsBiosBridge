@@ -33,6 +33,7 @@ internal class DeviceContext : IDisposable
     private readonly UserOptions options;
     private readonly bool ch47SwitchWithSeat;
     private readonly AircraftSelectionMenu menu;
+    private readonly AircraftCduContext cduContext;
     private AircraftListener? listener;
     private bool isSelectedAircraft = false;
 
@@ -49,6 +50,7 @@ internal class DeviceContext : IDisposable
         this.options = options;
         this.ch47SwitchWithSeat = ch47SwitchWithSeat;
         menu = new AircraftSelectionMenu(mcdu, ch47SwitchWithSeat);
+        cduContext = new AircraftCduContext(mcdu);
         menu.AircraftSelected += OnAircraftSelected;
     }
 
@@ -59,7 +61,7 @@ internal class DeviceContext : IDisposable
         // would render invisibly — return to the known-good state first.
         if (!options.DisableLightingManagement)
         {
-            Mcdu.Reset();
+            cduContext.Reset();
         }
 
         menu.Show();
@@ -86,7 +88,7 @@ internal class DeviceContext : IDisposable
 
         try
         {
-            listener = new AircraftListenerFactory().CreateListener(SelectedAircraft, Mcdu, options, ch47SwitchWithSeat);
+            listener = new AircraftListenerFactory().CreateListener(SelectedAircraft, cduContext, options, ch47SwitchWithSeat);
             listener.Start();
         }
         catch (Exception ex)

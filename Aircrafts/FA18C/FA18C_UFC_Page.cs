@@ -136,7 +136,8 @@ internal class FA18C_UFC_Page
 
         const string filler = "                   ";
 
-        output.Yellow().Line(0).ClearRow().Column(21).Write("1/2");
+        
+        output.Line(0).ClearRow().Yellow().Centered("F/A-18C UFC").Column(21).Write("1/2");
         output.Line(1).WriteLine(string.Format("{0,2}{1,2}{2,8}", _scratchPad1, _scratchPad2, _scratchPadNumber));
         output.Line(2).WriteLine(string.Format("{2,19}{0,1}{1,4}", _cue1, _option1, filler));
         output.Line(3).ClearRow();

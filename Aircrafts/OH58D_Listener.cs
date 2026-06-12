@@ -67,8 +67,8 @@ internal class OH58D_Listener : AircraftListener
     private string _clockSs = "00";
 
 
-    public OH58D_Listener(ICdu? mcdu, UserOptions options)
-        : base(mcdu, AircraftRegistry.OH58D, options)
+    public OH58D_Listener(UserOptions options)
+        : base(AircraftRegistry.OH58D, options)
     {
     }
     protected override void InitializeDcsBiosOutputs()
@@ -114,14 +114,13 @@ internal class OH58D_Listener : AircraftListener
 
     protected override void RegisterCduControls() {
 
-        if (!options.DisableLightingManagement && mcdu != null) {
+        if (!options.DisableLightingManagement && HasCdu) {
             Register(_RFI_BRIGHTNESS, v =>
             {
                 var brightness = (int) v * 100 / _RFI_BRIGHTNESS!.MaxValue;
-                mcdu.BacklightBrightnessPercent = brightness;
-                mcdu.DisplayBrightnessPercent = brightness;
-                mcdu.LedBrightnessPercent = brightness;
-                mcdu.RefreshBrightnesses();
+                SetBacklightBrightnessPercent(brightness);
+                SetDisplayBrightnessPercent(brightness);
+                SetLedBrightnessPercent(brightness);
             });
         }
 
@@ -200,7 +199,7 @@ internal class OH58D_Listener : AircraftListener
 
     private void UpdateRFILine(int line, RFILineData data)
     {
-        if (mcdu == null) return;
+        if (!HasCdu) return;
         var output = GetCompositor(DEFAULT_PAGE);
         output.Line(line).Column(11)
             .White().Write(data.Number)
@@ -213,7 +212,7 @@ internal class OH58D_Listener : AircraftListener
 
     private void InitializeDisplay()
     {
-        if (mcdu == null) return;
+        if (!HasCdu) return;
 
         // Render static parts of the display once
         var output = GetCompositor(DEFAULT_PAGE);
@@ -233,8 +232,7 @@ internal class OH58D_Listener : AircraftListener
             UpdateRFILine(8 + i, _rfiData[i]);
         }
 
-        mcdu.RefreshDisplay();
-    }
+        }
 
     private (string Left, string Right) GetActiveLabels()
     {
