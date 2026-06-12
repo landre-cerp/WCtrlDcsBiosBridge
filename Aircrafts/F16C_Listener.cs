@@ -1212,8 +1212,9 @@ internal class F16C_Listener : AircraftListener
 
     private static int DecodeDrumDigit(DCSBIOSOutput output, uint data)
     {
-        double normalized = output.GetUIntValue(data) / (double)(output.MaxValue + 1);
-        int digit = (int)Math.Floor(normalized * 10.0 + 1e-9);
+        if (output.MaxValue == 0) return 0;
+        double normalized = output.GetUIntValue(data) / (double)output.MaxValue;
+        int digit = (int)Math.Floor(normalized * 10.0);
         return Math.Clamp(digit, 0, 9);
     }
 
@@ -1227,6 +1228,7 @@ internal class F16C_Listener : AircraftListener
             0.668, 0.632, 0.596, 0.562, 0.528, 0.493, 0.459, 0.422, 0.387
         ];
 
+        // The calibration table is descending, so index 0 is max and ^1 is min.
         double clamped = Math.Clamp(rawNeedle, rawByMachStep[^1], rawByMachStep[0]);
         for (int i = 0; i < rawByMachStep.Length - 1; i++)
         {
@@ -1239,6 +1241,7 @@ internal class F16C_Listener : AircraftListener
             }
         }
 
+        // Safety fallback; clamping should always match one interpolation interval.
         return 0.0;
     }
 
