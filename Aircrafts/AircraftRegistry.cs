@@ -55,7 +55,7 @@ internal static class AircraftRegistry
         c => new M2000C_Listener(c.Options));
 
     public static readonly AircraftDescriptor F16C = new(
-        17, "F-16C", "F-16C_50.json", "resources/f16c-font-21x31.json", false,
+        17, "F-16C", "F-16C_50.json", "resources/ah64d-font-21x31.json", false,
         c => new F16C_Listener(c.Options));
 
     public static readonly AircraftDescriptor OH58D = new(
