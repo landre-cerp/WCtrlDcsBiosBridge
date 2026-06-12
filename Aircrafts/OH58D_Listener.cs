@@ -117,7 +117,7 @@ internal class OH58D_Listener : AircraftListener
         if (!options.DisableLightingManagement && mcdu != null) {
             Register(_RFI_BRIGHTNESS, v =>
             {
-                var brightness = (int)(_RFI_BRIGHTNESS!.GetUIntValue(v) * 100 / _RFI_BRIGHTNESS.MaxValue);
+                var brightness = (int) v * 100 / _RFI_BRIGHTNESS!.MaxValue;
                 mcdu.BacklightBrightnessPercent = brightness;
                 mcdu.DisplayBrightnessPercent = brightness;
                 mcdu.LedBrightnessPercent = brightness;
