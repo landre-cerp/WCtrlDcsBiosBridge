@@ -230,22 +230,18 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
             if (_UpdateCounterDCSBIOSOutput != null && _UpdateCounterDCSBIOSOutput.Address == address)
             {
                 var newCount = _UpdateCounterDCSBIOSOutput.GetUIntValue(data);
+                var previousCount = _Count;
+
                 if (!_HasSyncOnce)
                 {
-                    _Count = newCount;
                     _HasSyncOnce = true;
-                    return;
+                }
+                else if (!((newCount == 0 && previousCount == 255) || newCount - previousCount == 1))
+                {
+                    App.Logger.Warn($"UpdateCounter: Address {address} has unexpected value {data}. Expected {previousCount + 1}.");
                 }
 
-                if (newCount == 0 && _Count == 255 || newCount - _Count == 1)
-                {
-                    _Count = newCount;
-                }
-                else if (newCount - _Count != 1)
-                {
-                    _Count = newCount;
-                    App.Logger.Warn($"UpdateCounter: Address {address} has unexpected value {data}. Expected {_Count + 1}.");
-                }
+                _Count = newCount;
             }
         }
     }
