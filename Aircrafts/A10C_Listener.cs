@@ -32,6 +32,7 @@ internal class A10C_Listener : AircraftListener
     private DCSBIOSOutput? _ALTITUDE_10000ft;
     private DCSBIOSOutput? _ALTITUDE_1000ft;
     private DCSBIOSOutput? _ALTITUDE_100ft;
+    private DCSBIOSOutput? _ALTITUDE_100ftPointer;
 
     private DCSBIOSOutput? _GEAR_L_SAFE;
     private DCSBIOSOutput? _GEAR_R_SAFE;
@@ -47,6 +48,7 @@ internal class A10C_Listener : AircraftListener
 
     private int[] pressureDigits = new int[4];
     private int[] altitudeDigits = new int[3];
+    private int altitudeFine;
 
     private bool _clockShowsEt;
     private string _clockHh = "00";
@@ -84,8 +86,9 @@ internal class A10C_Listener : AircraftListener
         _ALTITUDE_10000ft = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_10000FT_CNT");
         _ALTITUDE_1000ft = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_1000FT_CNT");
         _ALTITUDE_100ft = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_100FT_CNT");
+        _ALTITUDE_100ftPointer = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_100FT");
 
-        _HEADING = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("HDG_DEG_MAG");
+        _HEADING = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("HDG_DEG");
         _IAS = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("IAS_US_INT");
         _VS = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("VVI");
 
@@ -190,7 +193,12 @@ internal class A10C_Listener : AircraftListener
         });
         Register(_ALTITUDE_100ft, v =>
         {
-            altitudeDigits[0] = ConvertDrumPositionToAltitude100ft(v, _ALTITUDE_100ft!.MaxValue);
+            altitudeDigits[0] = ConvertDrumPositionToDigit(v, _ALTITUDE_100ft!.MaxValue);
+            FlightDeck.Altitude = CombineAltitude();
+        });
+        Register(_ALTITUDE_100ftPointer, v =>
+        {
+            altitudeFine = ConvertPointerPositionToFineAltitude(v, _ALTITUDE_100ftPointer!.MaxValue);
             FlightDeck.Altitude = CombineAltitude();
         });
 
@@ -277,11 +285,12 @@ internal class A10C_Listener : AircraftListener
     private int CombineAltitude()
     {
         // Combine altitude components
-        // altitudeDigits[0] now contains the precise 100s value (0-999)
-        // altitudeDigits[1] and [2] contain single digits (0-9)
+        // altitudeDigits[0] contains the visible 100 ft counter digit.
+        // altitudeFine contains the pointer-derived 0-99 ft portion inside the current 100 ft band.
         return altitudeDigits[2] * 10000 +
                altitudeDigits[1] * 1000 +
-               altitudeDigits[0];
+               altitudeDigits[0] * 100 +
+               altitudeFine;
     }
     
     private int ConvertDrumPositionToDigit(uint position, int maxValue)
@@ -301,18 +310,14 @@ internal class A10C_Listener : AircraftListener
         return digit;
     }
     
-    private int ConvertDrumPositionToAltitude100ft(uint position, int maxValue)
+    private int ConvertPointerPositionToFineAltitude(uint position, int maxValue)
     {
-        // The 100ft drum provides continuous position data
-        // We can use the fractional position to get 20ft precision
-        // Position 0-maxValue maps to 0-1000 feet (full rotation shows 0,1,2...9 then back to 0)
+        // The 100 ft pointer sweeps through a full 1000 ft each revolution.
+        // Use it only for the fine portion inside the current 100 ft drum band.
         double rotationPercentage = (double)position / maxValue;
-        
-        // Convert to altitude: 0.0 = 0ft, 1.0 = 1000ft
-        // But we only want the hundreds portion (0-900)
-        int altitude100 = (int)(rotationPercentage * 1000) % 1000;
-        
-        return altitude100;
+
+        int altitudeWithinThousand = (int)Math.Round(rotationPercentage * 1000) % 1000;
+        return altitudeWithinThousand % 100;
     }
     
     private int ConvertVviToVerticalSpeed(int rawValue)
