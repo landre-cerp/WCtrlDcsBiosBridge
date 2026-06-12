@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using WwDevicesDotNet.Winctrl.FcuAndEfis;
 using WWCduDcsBiosBridge.Aircrafts;
 
-namespace WWCduDcsBiosBridge.Frontpanels.Renderers;
+namespace WWCduDcsBiosBridge.Devices.Frontpanels.Renderers;
 
 /// <summary>
 /// Renders the flight deck state to FCU/EFIS devices (Airbus style).

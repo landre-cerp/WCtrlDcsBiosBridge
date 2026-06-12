@@ -4,7 +4,7 @@ using DCS_BIOS.ControlLocator;
 using NLog;
 using WWCduDcsBiosBridge.Config;
 using WWCduDcsBiosBridge.Aircrafts;
-using WWCduDcsBiosBridge.Frontpanels;
+using WWCduDcsBiosBridge.Devices.Frontpanels;
 
 namespace WWCduDcsBiosBridge;
 

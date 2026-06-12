@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System.IO;
 using Timer = System.Timers.Timer;
 using WwDevicesDotNet;
+using WWCduDcsBiosBridge.Devices.Cdu;
 
 namespace WWCduDcsBiosBridge.Aircrafts;
 

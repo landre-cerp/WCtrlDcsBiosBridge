@@ -1,6 +1,6 @@
 using WwDevicesDotNet;
 
-namespace WWCduDcsBiosBridge.Frontpanels;
+namespace WWCduDcsBiosBridge.Devices.Frontpanels;
 
 /// <summary>
 /// Adapter interface that exposes capabilities of a frontpanel device

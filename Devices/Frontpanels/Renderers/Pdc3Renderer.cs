@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using WWCduDcsBiosBridge.Aircrafts;
 
-namespace WWCduDcsBiosBridge.Frontpanels.Renderers;
+namespace WWCduDcsBiosBridge.Devices.Frontpanels.Renderers;
 
 /// <summary>
 /// Renders to PDC-3N panel display controllers: brightness control only,

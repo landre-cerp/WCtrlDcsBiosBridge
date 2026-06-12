@@ -1,6 +1,7 @@
 using WwDevicesDotNet;
 using WWCduDcsBiosBridge.Aircrafts;
 using WWCduDcsBiosBridge.Config;
+using WWCduDcsBiosBridge.Devices.Cdu;
 
 namespace WWCduDcsBiosBridge;
 
