@@ -151,7 +151,7 @@ internal class F16C_Listener : AircraftListener
 
     // EHSI text outputs
     private DCSBIOSOutput? _EHSI_COURSE;      // 0x45E6  String  e.g. "270"
-    private DCSBIOSOutput? _EHSI_RANGE;       // 0x45EA  String  e.g. "12.3"
+    private DCSBIOSOutput? _EHSI_RANGE;       // 0x45EA  String  integer tenths of NM, e.g. "636" → 63.6 nm
     private DCSBIOSOutput? _EHSI_MODE_LEFT;   // 0x45DE  String  blank or "PLS"
     private DCSBIOSOutput? _EHSI_MODE_RIGHT;  // 0x45E2  String  "NAV", "TCN", etc.
 
@@ -743,7 +743,15 @@ internal class F16C_Listener : AircraftListener
                         if (int.TryParse(e.StringData.Trim(), out int crs))
                             _selectedCourseDeg = crs;
                     }
-                    if (e.Address == _EHSI_RANGE!.Address)      { _ehsiRange      = e.StringData.Trim(); hsiChanged = true; }
+                    if (e.Address == _EHSI_RANGE!.Address)
+                    {
+                        string raw = e.StringData.Trim();
+                        if (int.TryParse(raw, out int rangeRaw))
+                            _ehsiRange = (rangeRaw / 10.0).ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
+                        else
+                            _ehsiRange = raw;
+                        hsiChanged = true;
+                    }
                     if (e.Address == _EHSI_MODE_LEFT!.Address)  { _ehsiModeLeft   = e.StringData.Trim(); hsiChanged = true; }
                     if (e.Address == _EHSI_MODE_RIGHT!.Address) { _ehsiModeRight  = e.StringData.Trim(); hsiChanged = true; }
                     if (hsiChanged) UpdateNAVDisplay();
