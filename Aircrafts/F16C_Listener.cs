@@ -1238,31 +1238,11 @@ internal class F16C_Listener : AircraftListener
 
     private static double DecodeMach(double rawNeedle)
     {
-        // Calibration table used by older DCS-BIOS F-16C modules for MACH_INDICATOR.
-        // Index = Mach / 0.1, value = exported needle position.
-        ReadOnlySpan<double> rawByMachStep =
-        [
-            1.000, 0.958, 0.921, 0.902, 0.885, 0.848, 0.812, 0.775, 0.741, 0.704,
-            0.668, 0.632, 0.596, 0.562, 0.528, 0.493, 0.459, 0.422, 0.387
-        ];
-
-        // The calibration table is descending, so index 0 is max and ^1 is min.
-        double clamped = Math.Clamp(rawNeedle, rawByMachStep[^1], rawByMachStep[0]);
-        for (int i = 0; i < rawByMachStep.Length - 1; i++)
-        {
-            double high = rawByMachStep[i];
-            double low = rawByMachStep[i + 1];
-            if (clamped <= high && clamped >= low)
-            {
-                if (high <= low) return i * 0.1;
-                double t = (high - clamped) / (high - low);
-                return i * 0.1 + t * 0.1;
-            }
-
-        }
-
-        // Safety fallback; clamping should always match one interpolation interval.
-        return 0.0;
+        // Newer DCS-BIOS exports MACH_INDICATOR as normalized needle travel.
+        // 0.92 (92%) corresponds to Mach 1.0.
+        const double rawAtMachOne = 0.92;
+        double clamped = Math.Max(0.0, rawNeedle);
+        return clamped / rawAtMachOne;
     }
 
     private static int ComposeFuelFlowPph(int tenThousandsDigit, int thousandsDigit, int hundredsDigit)
