@@ -1,3 +1,5 @@
+using WWCduDcsBiosBridge.Devices.Cdu;
+
 namespace WWCduDcsBiosBridge.Aircrafts;
 
 internal interface IAircraftListenerFactory

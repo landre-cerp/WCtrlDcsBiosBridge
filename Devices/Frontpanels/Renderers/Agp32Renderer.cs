@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using WwDevicesDotNet.Winctrl.Agp32;
 using WWCduDcsBiosBridge.Aircrafts;
 
-namespace WWCduDcsBiosBridge.Frontpanels.Renderers;
+namespace WWCduDcsBiosBridge.Devices.Frontpanels.Renderers;
 
 /// <summary>
 /// Renders the flight deck state to AGP32 clock/gear panels (A320 style).

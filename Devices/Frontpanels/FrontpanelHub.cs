@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using WWCduDcsBiosBridge.Aircrafts;
-using WWCduDcsBiosBridge.Frontpanels.Renderers;
+using WWCduDcsBiosBridge.Devices.Frontpanels.Renderers;
 using Timer = System.Timers.Timer;
 
-namespace WWCduDcsBiosBridge.Frontpanels;
+namespace WWCduDcsBiosBridge.Devices.Frontpanels;
 
 /// <summary>
 /// Hosts one renderer per connected frontpanel family and periodically renders

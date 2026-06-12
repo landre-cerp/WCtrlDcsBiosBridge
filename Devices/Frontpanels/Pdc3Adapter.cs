@@ -2,7 +2,7 @@ using System;
 using WwDevicesDotNet;
 using WwDevicesDotNet.Winctrl.Pdc3nm;
 
-namespace WWCduDcsBiosBridge.Frontpanels;
+namespace WWCduDcsBiosBridge.Devices.Frontpanels;
 
 /// <summary>
 /// Adapter for WinWing PDC-3N devices.

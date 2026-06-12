@@ -1,15 +1,15 @@
 using System;
 using WwDevicesDotNet;
-using WwDevicesDotNet.Winctrl.Pap3;
+using WwDevicesDotNet.Winctrl.FcuAndEfis;
 
-namespace WWCduDcsBiosBridge.Frontpanels;
+namespace WWCduDcsBiosBridge.Devices.Frontpanels;
 
 /// <summary>
-/// Adapter for PAP3 devices that implements the capability-based pattern.
+/// Adapter for FCU/EFIS devices that implements the capability-based pattern.
 /// </summary>
-public class Pap3Adapter : IFrontpanelAdapter
+public class FcuEfisAdapter : IFrontpanelAdapter
 {
-    private readonly Pap3Device _device;
+    private readonly FcuEfisDevice _device;
 
     public IFrontpanel Device => _device;
     public string DisplayName { get; }
@@ -17,7 +17,7 @@ public class Pap3Adapter : IFrontpanelAdapter
 
     public IFrontpanelCapabilities Capabilities => _device.Capabilities;
 
-    public Pap3Adapter(Pap3Device device, string displayName)
+    public FcuEfisAdapter(FcuEfisDevice device, string displayName)
     {
         _device = device ?? throw new ArgumentNullException(nameof(device));
         DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));

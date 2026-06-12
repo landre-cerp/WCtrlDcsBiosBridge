@@ -1,15 +1,15 @@
 using System;
 using WwDevicesDotNet;
-using WwDevicesDotNet.Winctrl.Agp32;
+using WwDevicesDotNet.Winctrl.Pap3;
 
-namespace WWCduDcsBiosBridge.Frontpanels;
+namespace WWCduDcsBiosBridge.Devices.Frontpanels;
 
 /// <summary>
-/// Adapter for AGP32 devices that implements the capability-based pattern.
+/// Adapter for PAP3 devices that implements the capability-based pattern.
 /// </summary>
-public class Agp32Adapter : IFrontpanelAdapter
+public class Pap3Adapter : IFrontpanelAdapter
 {
-    private readonly Agp32Device _device;
+    private readonly Pap3Device _device;
 
     public IFrontpanel Device => _device;
     public string DisplayName { get; }
@@ -17,7 +17,7 @@ public class Agp32Adapter : IFrontpanelAdapter
 
     public IFrontpanelCapabilities Capabilities => _device.Capabilities;
 
-    public Agp32Adapter(Agp32Device device, string displayName)
+    public Pap3Adapter(Pap3Device device, string displayName)
     {
         _device = device ?? throw new ArgumentNullException(nameof(device));
         DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));

@@ -1,15 +1,15 @@
 using System;
 using WwDevicesDotNet;
-using WwDevicesDotNet.Winctrl.FcuAndEfis;
+using WwDevicesDotNet.Winctrl.Agp32;
 
-namespace WWCduDcsBiosBridge.Frontpanels;
+namespace WWCduDcsBiosBridge.Devices.Frontpanels;
 
 /// <summary>
-/// Adapter for FCU/EFIS devices that implements the capability-based pattern.
+/// Adapter for AGP32 devices that implements the capability-based pattern.
 /// </summary>
-public class FcuEfisAdapter : IFrontpanelAdapter
+public class Agp32Adapter : IFrontpanelAdapter
 {
-    private readonly FcuEfisDevice _device;
+    private readonly Agp32Device _device;
 
     public IFrontpanel Device => _device;
     public string DisplayName { get; }
@@ -17,7 +17,7 @@ public class FcuEfisAdapter : IFrontpanelAdapter
 
     public IFrontpanelCapabilities Capabilities => _device.Capabilities;
 
-    public FcuEfisAdapter(FcuEfisDevice device, string displayName)
+    public Agp32Adapter(Agp32Device device, string displayName)
     {
         _device = device ?? throw new ArgumentNullException(nameof(device));
         DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
