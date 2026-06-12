@@ -453,7 +453,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             _detectCts?.Cancel();
             bridgeManager?.Dispose();
             SaveUserSettings();
-            DeviceManager.DisposeDevices(devices);
+            DeviceManager.DisposeDevices(devices, resetDevices: !userOptions.DisableLightingManagement);
         }
 
         _disposed = true;

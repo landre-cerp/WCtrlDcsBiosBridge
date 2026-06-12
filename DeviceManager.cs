@@ -138,11 +138,28 @@ public class DeviceManager
     /// <summary>
     /// Disposes a list of devices safely
     /// </summary>
-    public static void DisposeDevices(IEnumerable<DeviceInfo> devices)
+    /// <param name="resetDevices">
+    /// Reset each device to its known-good state before disposing, so the panels are
+    /// left clean (blank displays, LEDs off) rather than frozen on the last frame.
+    /// </param>
+    public static void DisposeDevices(IEnumerable<DeviceInfo> devices, bool resetDevices = true)
     {
         if (devices == null) return;
         foreach (var deviceInfo in devices)
         {
+            if (resetDevices)
+            {
+                try
+                {
+                    deviceInfo.Cdu?.Reset();
+                    deviceInfo.Frontpanel?.Reset();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warn(ex, "Error resetting device during dispose");
+                }
+            }
+
             try
             {
                 deviceInfo.Dispose();
