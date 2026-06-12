@@ -672,7 +672,7 @@ internal class F16C_Listener : AircraftListener
             if (e.Address == _STANDBY_COMPASS_HEADING!.Address)
             {
                 uint raw = _STANDBY_COMPASS_HEADING.GetUIntValue(e.Data);
-                _currentHeadingDeg = (int)Math.Floor(raw * 360.0 / 65536.0) % 360;
+                _currentHeadingDeg = (int)Math.Round(raw * 360.0 / 65536.0, MidpointRounding.AwayFromZero) % 360;
                 if (_currentDisplay == DisplayMode.NAV) UpdateNAVDisplay();
             }
 
@@ -1214,6 +1214,8 @@ internal class F16C_Listener : AircraftListener
     {
         if (output.MaxValue == 0) return 0;
         double normalized = output.GetUIntValue(data) / (double)output.MaxValue;
+        // 0.0–1.0 float drums represent one full 0–9 revolution.
+        // Multiplying by 10 and clamping keeps the top edge in range.
         int digit = (int)Math.Floor(normalized * 10.0);
         return Math.Clamp(digit, 0, 9);
     }
@@ -1236,6 +1238,7 @@ internal class F16C_Listener : AircraftListener
             double low = rawByMachStep[i + 1];
             if (clamped <= high && clamped >= low)
             {
+                if (high <= low) return i * 0.1;
                 double t = (high - clamped) / (high - low);
                 return i * 0.1 + t * 0.1;
             }
