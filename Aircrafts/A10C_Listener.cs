@@ -2,10 +2,6 @@ using DCS_BIOS.ControlLocator;
 using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
-using WwDevicesDotNet.Winctrl.Agp32;
-using WwDevicesDotNet.Winctrl.FcuAndEfis;
-using WwDevicesDotNet.Winctrl.Pap3;
-using WWCduDcsBiosBridge.Frontpanels;
 
 namespace WWCduDcsBiosBridge.Aircrafts;
 
@@ -43,21 +39,12 @@ internal class A10C_Listener : AircraftListener
 
     private DCSBIOSOutput? _HANDLE_GEAR_WARNING;
 
-    private int speed = 0;
-    private int heading = 0;
-    private int altitude = 0;
-    private int verticalSpeed = 0;
-    private int baroPressure = 0;
     private int[] pressureDigits = new int[4];
     private int[] altitudeDigits = new int[3];
 
-    protected override string GetAircraftName() => SupportedAircrafts.A10C_Name;
-    protected override string GetFontFile() => "resources/a10c-font-21x31.json";
-
     public A10C_Listener(
-        ICdu? mcdu, 
-        UserOptions options,
-        FrontpanelHub frontpanelHub) : base(mcdu, SupportedAircrafts.A10C, options, frontpanelHub) {
+        ICdu? mcdu,
+        UserOptions options) : base(mcdu, AircraftRegistry.A10C, options) {
     }
 
     ~A10C_Listener()
@@ -104,7 +91,7 @@ internal class A10C_Listener : AircraftListener
     }
 
 
-    protected override void RegisterMcduControls()
+    protected override void RegisterCduControls()
     {
         if (!options.DisableLightingManagement && mcdu != null) { 
             Register(_CONSOLE_BRT, v =>
@@ -147,128 +134,58 @@ internal class A10C_Listener : AircraftListener
 
     protected override void RegisterFrontpanelControls()
     {
-        var hasOnlyAgp32 = frontpanelHub.HasFrontpanels;
-        if (hasOnlyAgp32)
+        if (!options.DisableLightingManagement)
         {
-            foreach (var adapter in frontpanelHub.Adapters)
+            Register(_CONSOLE_BRT, v =>
             {
-                if (adapter is not Agp32Adapter)
-                {
-                    hasOnlyAgp32 = false;
-                    break;
-                }
-            }
-        }
-
-        if (frontpanelHub.HasFrontpanels)
-        {
-            if (hasOnlyAgp32)
-            {
-                // Keep AGP32 visible even when cockpit console brightness is at zero.
-                frontpanelHub.SetBrightness(255, 255, 255);
-            }
-            else
-            {
-                Register(_CONSOLE_BRT, v =>
-                {
-                    // Convert to byte range (0-255) directly, not percentage
-                    var b = (byte)(v * 255 / _CONSOLE_BRT!.MaxValue);
-                    frontpanelHub.SetBrightness(b, b, b);
-                });
-            }
-        }
-
-        var cap = frontpanelHub.Capabilities;
-
-        if (cap.HasHeadingDisplay)
-            Register(_HEADING, v => { heading = (int)v; frontpanelState!.Heading = heading; });
-
-        if (cap.HasVerticalSpeedDisplay)
-            Register(_VS, v =>
-            {
-                verticalSpeed = ConvertVviToVerticalSpeed((int)v);
-                frontpanelState!.VerticalSpeed = verticalSpeed;
-            });
-
-        if (cap.HasAltitudeDisplay)
-        {
-            Register(_ALTITUDE_10000ft, v =>
-            {
-                altitudeDigits[2] = ConvertDrumPositionToDigit(v, _ALTITUDE_10000ft!.MaxValue);
-                UpdateAltitude();
-                frontpanelState!.Altitude = altitude;
-            });
-            Register(_ALTITUDE_1000ft, v =>
-            {
-                altitudeDigits[1] = ConvertDrumPositionToDigit(v, _ALTITUDE_1000ft!.MaxValue);
-                UpdateAltitude();
-                frontpanelState!.Altitude = altitude;
-            });
-            Register(_ALTITUDE_100ft, v =>
-            {
-                altitudeDigits[0] = ConvertDrumPositionToAltitude100ft(v, _ALTITUDE_100ft!.MaxValue);
-                UpdateAltitude();
-                frontpanelState!.Altitude = altitude;
+                // Convert to byte range (0-255) directly, not percentage
+                FlightDeck.ConsoleBrightness = (byte)(v * 255 / _CONSOLE_BRT!.MaxValue);
             });
         }
 
-        if (cap.CanDisplayBarometricPressure)
+        Register(_HEADING, v => FlightDeck.Heading = (int)v);
+
+        Register(_VS, v => FlightDeck.VerticalSpeed = ConvertVviToVerticalSpeed((int)v));
+
+        Register(_ALTITUDE_10000ft, v =>
         {
-            var pressureDrums = new[] { _ALT_PRESSURE0, _ALT_PRESSURE1, _ALT_PRESSURE2, _ALT_PRESSURE3 };
-            for (int i = 0; i < pressureDrums.Length; i++)
+            altitudeDigits[2] = ConvertDrumPositionToDigit(v, _ALTITUDE_10000ft!.MaxValue);
+            FlightDeck.Altitude = CombineAltitude();
+        });
+        Register(_ALTITUDE_1000ft, v =>
+        {
+            altitudeDigits[1] = ConvertDrumPositionToDigit(v, _ALTITUDE_1000ft!.MaxValue);
+            FlightDeck.Altitude = CombineAltitude();
+        });
+        Register(_ALTITUDE_100ft, v =>
+        {
+            altitudeDigits[0] = ConvertDrumPositionToAltitude100ft(v, _ALTITUDE_100ft!.MaxValue);
+            FlightDeck.Altitude = CombineAltitude();
+        });
+
+        var pressureDrums = new[] { _ALT_PRESSURE0, _ALT_PRESSURE1, _ALT_PRESSURE2, _ALT_PRESSURE3 };
+        for (int i = 0; i < pressureDrums.Length; i++)
+        {
+            int digitIndex = i;
+            var drum = pressureDrums[i];
+            Register(drum, v =>
             {
-                int digitIndex = i;
-                var drum = pressureDrums[i];
-                Register(drum, v =>
-                {
-                    pressureDigits[digitIndex] = ConvertDrumPositionToDigit(v, drum!.MaxValue);
-                    if (frontpanelState is FcuEfisState fcuState)
-                    {
-                        UpdateBaroPressure();
-                        fcuState.LeftBaroPressure = baroPressure;
-                    }
-                });
-            }
+                pressureDigits[digitIndex] = ConvertDrumPositionToDigit(v, drum!.MaxValue);
+                FlightDeck.BaroPressure = CombineBaroPressure();
+            });
         }
 
-        if (cap.HasSpeedDisplay)
-            RegisterString(_IAS, s =>
-            {
-                // there's a bug? in DCS-BIOS A-10C module where IAS is 2 knots below the actual value
-                var trimmed = s.Trim();
-                speed = trimmed == "" ? 0 : int.Parse(trimmed) + 2;
-                frontpanelState!.Speed = speed;
-            });
-
-        if (frontpanelLeds is Agp32State.Agp32Leds agp32Leds)
+        RegisterString(_IAS, s =>
         {
-            Register(_GEAR_L_SAFE, v =>
-            {
-                var isDown = v == 1;
-                agp32Leds.Set(Agp32State.Agp32Led.Gear1Down, isDown);
-                
-            });
+            // there's a bug? in DCS-BIOS A-10C module where IAS is 2 knots below the actual value
+            var trimmed = s.Trim();
+            FlightDeck.Speed = trimmed == "" ? 0 : int.Parse(trimmed) + 2;
+        });
 
-            Register(_GEAR_N_SAFE, v =>
-            {
-                var isDown = v == 1;
-                agp32Leds.Set(Agp32State.Agp32Led.Gear2Down, isDown);
-                
-            });
-
-            Register(_GEAR_R_SAFE, v =>
-            {
-                var isDown = v == 1;
-                agp32Leds.Set(Agp32State.Agp32Led.Gear3Down, isDown);
-                
-            });
-
-            Register(_HANDLE_GEAR_WARNING, v =>
-            {
-                var isOn = v == 1;
-                agp32Leds.Set(Agp32State.Agp32Led.GearDownRed, isOn);
-            });
-        }
+        Register(_GEAR_L_SAFE, v => FlightDeck.GearLeftDown = v == 1);
+        Register(_GEAR_N_SAFE, v => FlightDeck.GearNoseDown = v == 1);
+        Register(_GEAR_R_SAFE, v => FlightDeck.GearRightDown = v == 1);
+        Register(_HANDLE_GEAR_WARNING, v => FlightDeck.GearWarning = v == 1);
     }
     
     private static string ReplaceSpecialChars(string data) =>
@@ -281,7 +198,7 @@ internal class A10C_Listener : AircraftListener
             .Replace("?", "%")
             .Replace("¶", "⬡");
 
-    // Écrit une ligne CDU (avec substitution des caractères) et redessine le séparateur CMS si activé.
+    
     private void WriteCduLine(int lineIndex, string raw)
     {
         var output = GetCompositor(DEFAULT_PAGE);
@@ -293,24 +210,24 @@ internal class A10C_Listener : AircraftListener
         }
     }
 
-    private void UpdateBaroPressure()
+    private int CombineBaroPressure()
     {
         // Combine the four digits into inHg format (e.g., 3000 for 30.00 inHg)
         // The FCU expects values >= 2000 for inHg mode (representing 20.00-32.00)
-        baroPressure = pressureDigits[3] * 1000 + 
-                       pressureDigits[2] * 100 + 
-                       pressureDigits[1] * 10 + 
-                       pressureDigits[0];
+        return pressureDigits[3] * 1000 +
+               pressureDigits[2] * 100 +
+               pressureDigits[1] * 10 +
+               pressureDigits[0];
     }
-    
-    private void UpdateAltitude()
+
+    private int CombineAltitude()
     {
         // Combine altitude components
         // altitudeDigits[0] now contains the precise 100s value (0-999)
         // altitudeDigits[1] and [2] contain single digits (0-9)
-        altitude = altitudeDigits[2] * 10000 + 
-                   altitudeDigits[1] * 1000 + 
-                   altitudeDigits[0];
+        return altitudeDigits[2] * 10000 +
+               altitudeDigits[1] * 1000 +
+               altitudeDigits[0];
     }
     
     private int ConvertDrumPositionToDigit(uint position, int maxValue)

@@ -1,73 +1,35 @@
 <UserControl x:Class="WWCduDcsBiosBridge.UI.AircraftSelectionPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    
+
     <GroupBox Header="Aircraft Selection" Padding="8" Margin="0,0,0,15">
         <StackPanel>
             <TextBlock Text="{Binding HeaderMessage}"
                       TextWrapping="Wrap"
                       Margin="0,0,0,8"
                       Foreground="Gray"/>
-            
+
             <TextBlock Text="{Binding SelectionStatus}"
                       FontWeight="Bold"
                       Foreground="{Binding SelectionStatusColor}"
                       Margin="0,0,0,8"/>
 
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <Button Content="A-10C" Grid.Row="0" Grid.Column="0" 
-                        Margin="3" Padding="8,4" 
-                        Command="{Binding SelectAircraftCommand}"
-                        CommandParameter="A10C"
-                        IsEnabled="{Binding ButtonsEnabled}"/>
-                
-                <Button Content="AH-64D" Grid.Row="0" Grid.Column="1" 
-                        Margin="3" Padding="8,4"
-                        Command="{Binding SelectAircraftCommand}"
-                        CommandParameter="AH64D"
-                        IsEnabled="{Binding ButtonsEnabled}"/>
-                
-                <Button Content="F/A-18C" Grid.Row="0" Grid.Column="2" 
-                        Margin="3" Padding="8,4"
-                        Command="{Binding SelectAircraftCommand}"
-                        CommandParameter="FA18C"
-                        IsEnabled="{Binding ButtonsEnabled}"/>
-                
-                <Button Content="F-15E" Grid.Row="0" Grid.Column="3" 
-                        Margin="3" Padding="8,4"
-                        Command="{Binding SelectAircraftCommand}"
-                        CommandParameter="F15E"
-                        IsEnabled="{Binding ButtonsEnabled}"/>
-                
-                <Button Content="CH-47F (PLT)" Grid.Row="1" Grid.Column="0" 
-                        Margin="3" Padding="8,4"
-                        Command="{Binding SelectAircraftCommand}"
-                        CommandParameter="CH47_PLT"
-                        IsEnabled="{Binding ButtonsEnabled}"/>
-                
-                <Button Content="CH-47F (CPLT)" Grid.Row="1" Grid.Column="1" 
-                        Margin="3" Padding="8,4"
-                        Command="{Binding SelectAircraftCommand}"
-                        CommandParameter="CH47_CPLT"
-                        IsEnabled="{Binding ButtonsEnabled}"/>
-                
-                <Button Content="M-2000C" Grid.Row="1" Grid.Column="2" 
-                        Margin="3" Padding="8,4"
-                        Command="{Binding SelectAircraftCommand}"
-                        CommandParameter="M2000C"
-                        IsEnabled="{Binding ButtonsEnabled}"/>
-            </Grid>
+            <ItemsControl ItemsSource="{Binding AircraftEntries}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="4"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Content="{Binding Label}"
+                                Margin="3" Padding="8,4"
+                                Command="{Binding DataContext.SelectAircraftCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding}"
+                                IsEnabled="{Binding DataContext.ButtonsEnabled, RelativeSource={RelativeSource AncestorType=ItemsControl}}"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </StackPanel>
     </GroupBox>
 </UserControl>

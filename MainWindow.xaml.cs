@@ -23,6 +23,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private bool _disposed = false;
     private BridgeManager? bridgeManager;
     private CancellationTokenSource? _detectCts;
+    private readonly CancellationTokenSource _shutdownCts = new();
     private AircraftSelection? _selectedAircraft;
 
     private const string GitHubOwner = "landre-cerp";
@@ -91,7 +92,8 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             {
                 ShowStatus(p.Message, false);
             });
-            var detected = await DeviceManager.DetectAndConnectDevicesAsync(progress, _detectCts.Token);
+            var detected = await DeviceManager.DetectAndConnectDevicesAsync(progress, _detectCts.Token,
+                resetDevices: !userOptions.DisableLightingManagement);
             devices.AddRange(detected);
             BuildDeviceTabs();
             UpdateStartButtonState();
@@ -301,9 +303,9 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
                 bridgeManager.SetGlobalAircraftSelection(_selectedAircraft);
             }
 
-            await bridgeManager.StartAsync(devices, userOptions, config);
+            await bridgeManager.StartAsync(devices, userOptions, config, _shutdownCts.Token);
 
-            ShowStatus($"Bridge started successfully with {bridgeManager.Contexts?.Count ?? 0} device(s)!", false);
+            ShowStatus($"Bridge started successfully with {bridgeManager.ActiveDeviceCount} device(s)!", false);
             StartButton.Content = "Bridge Running";
             StartButton.IsEnabled = false;
             OnPropertyChanged(nameof(IsBridgeRunning));
@@ -317,6 +319,10 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
                 WindowState = WindowState.Minimized;
                 Logger.Info("Window minimized on bridge start as per user settings");
             }
+        }
+        catch (OperationCanceledException)
+        {
+            Logger.Info("Bridge start cancelled by application shutdown");
         }
         catch (Exception ex)
         {
@@ -379,15 +385,17 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         }
     }
 
-    private async void ExitButton_Click(object sender, RoutedEventArgs e)
+    private void ExitButton_Click(object sender, RoutedEventArgs e)
     {
+        _shutdownCts.Cancel();
+
         if (bridgeManager != null)
         {
             try
             {
                 if (IsBridgeRunning)
                 {
-                    await bridgeManager.StopAsync();
+                    bridgeManager.Stop();
                 }
                 else if (bridgeManager.Contexts != null)
                 {
@@ -441,10 +449,11 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
         if (disposing)
         {
+            _shutdownCts.Cancel();
             _detectCts?.Cancel();
             bridgeManager?.Dispose();
             SaveUserSettings();
-            DeviceManager.DisposeDevices(devices);
+            DeviceManager.DisposeDevices(devices, resetDevices: !userOptions.DisableLightingManagement);
         }
 
         _disposed = true;

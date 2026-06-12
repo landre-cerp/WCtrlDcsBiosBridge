@@ -20,9 +20,14 @@ public class DeviceManager
     /// <summary>
     /// Asynchronously detects and connects to all available CDU and FrontPanel devices with progress reporting
     /// </summary>
+    /// <param name="resetDevices">
+    /// Reset each device to its known-good state after connecting (devices keep their
+    /// state across app restarts). Disable for SimApp Pro users who manage lighting externally.
+    /// </param>
     public static async Task<List<DeviceInfo>> DetectAndConnectDevicesAsync(
-        IProgress<DeviceDetectionProgress>? progress = null, 
-        CancellationToken cancellationToken = default)
+        IProgress<DeviceDetectionProgress>? progress = null,
+        CancellationToken cancellationToken = default,
+        bool resetDevices = true)
     {
         var detectedDevices = new List<DeviceInfo>();
         try
@@ -50,6 +55,7 @@ public class DeviceManager
                 {
                     var cdu = await Task.Run(() => CduFactory.ConnectLocal(deviceId), cancellationToken).ConfigureAwait(false);
                     InitializeCdu(cdu);
+                    if (resetDevices) cdu.Reset();
                     var displayName = GetDeviceName(deviceId);
                     var deviceInfo = new DeviceInfo(cdu, deviceId, displayName);
                     detectedDevices.Add(deviceInfo);
@@ -82,7 +88,9 @@ public class DeviceManager
                     }
                     
                     Logger.Info($"Frontpanel device connected: IsConnected={frontpanel.IsConnected}, Type={frontpanel.GetType().Name}");
-                    
+
+                    if (resetDevices) frontpanel.Reset();
+
                     var displayName = GetDeviceName(deviceId);
                     var deviceInfo = new DeviceInfo(frontpanel, deviceId, displayName);
                     detectedDevices.Add(deviceInfo);
@@ -130,11 +138,28 @@ public class DeviceManager
     /// <summary>
     /// Disposes a list of devices safely
     /// </summary>
-    public static void DisposeDevices(IEnumerable<DeviceInfo> devices)
+    /// <param name="resetDevices">
+    /// Reset each device to its known-good state before disposing, so the panels are
+    /// left clean (blank displays, LEDs off) rather than frozen on the last frame.
+    /// </param>
+    public static void DisposeDevices(IEnumerable<DeviceInfo> devices, bool resetDevices = true)
     {
         if (devices == null) return;
         foreach (var deviceInfo in devices)
         {
+            if (resetDevices)
+            {
+                try
+                {
+                    deviceInfo.Cdu?.Reset();
+                    deviceInfo.Frontpanel?.Reset();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warn(ex, "Error resetting device during dispose");
+                }
+            }
+
             try
             {
                 deviceInfo.Dispose();
