@@ -219,7 +219,7 @@ internal class F16C_Listener : AircraftListener
     private int  _altFt;
     private int  _altD10k  = 0;
     private int  _altD1k   = 0;
-    private int  _altLowFt = 0;   // 0-999 ft from ALT_100_FT_PTR
+    private int  _altLowFt = 0;   // 0-999 ft from ALT_100_FT_CNT
     private int  _iasKts;
     private double _mach;
     private int  _vviFpm;
@@ -441,7 +441,7 @@ internal class F16C_Listener : AircraftListener
 
         _ALT_10000        = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_10000_FT_CNT");
         _ALT_1000         = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_1000_FT_CNT");
-        _ALT_100          = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_100_FT_PTR");
+        _ALT_100          = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_100_FT_CNT");
         _ALT_PNEU         = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PNEU_FLAG");
         _QNH_D0           = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE_DRUM_0_CNT");
         _QNH_D1           = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE_DRUM_1_CNT");
@@ -583,8 +583,8 @@ internal class F16C_Listener : AircraftListener
                 }
                 if (e.Address == _ALT_100!.Address)
                 {
-                    // ALT_100_FT_PTR is a continuous pointer (0-65535) spanning 0-999 ft
-                    _altLowFt = (int)Math.Round(_ALT_100!.GetUIntValue(e.Data) * 1000.0 / _ALT_100.MaxValue);
+                    // ALT_100_FT_CNT is continuous (0-65535) and maps to 0-999 ft.
+                    _altLowFt = DecodeSubThousandValue(_ALT_100!, e.Data, 1);
                     _altFt = _altD10k * 10000 + _altD1k * 1000 + _altLowFt;
                     refreshDisplay = true;
                 }
@@ -643,7 +643,9 @@ internal class F16C_Listener : AircraftListener
                 }
                 if (e.Address == _FUEL_FF_100!.Address)
                 {
-                    _fuelFf100Digit = DecodeDrumDigit(_FUEL_FF_100!, e.Data);
+                    // Keep half-step precision (e.g. 7250 pph) by decoding this drum
+                    // as a continuous 0-999 component rounded to 50-pph increments.
+                    _fuelFf100Digit = DecodeSubThousandValue(_FUEL_FF_100!, e.Data, 50);
                     _fuelFlowPph = ComposeFuelFlowPph(_fuelFf10kDigit, _fuelFf1kDigit, _fuelFf100Digit);
                     refreshDisplay = true;
                 }
@@ -658,7 +660,11 @@ internal class F16C_Listener : AircraftListener
                 { _fuelLow = _LIGHT_FUEL_LOW.GetUIntValue(e.Data) == 1; refreshDisplay = true; }
 
                 if (e.Address == _CLOCK_H!.Address)
-                { _clockH = (int)Math.Floor(_CLOCK_H.GetUIntValue(e.Data) * 24.0 / 65536.0); refreshDisplay = true; }
+                {
+                    int rawHour = (int)Math.Floor(_CLOCK_H.GetUIntValue(e.Data) * 24.0 / (_CLOCK_H.MaxValue + 1.0));
+                    _clockH = (rawHour + 23) % 24; // normalize to Z shown on DED
+                    refreshDisplay = true;
+                }
 
                 if (e.Address == _CLOCK_MS!.Address)
                 { _clockMin = (int)Math.Floor(_CLOCK_MS.GetUIntValue(e.Data) * 60.0 / 65536.0); refreshDisplay = true; }
@@ -780,15 +786,16 @@ internal class F16C_Listener : AircraftListener
                     {
                         // Strip NUL bytes that DCS-BIOS may include in fixed-length string padding.
                         string raw = e.StringData.Replace("\0", "").Trim();
-                        if (int.TryParse(raw, out int rangeRaw))
+                        string normalized = NormalizeRangeText(raw);
+                        if (int.TryParse(normalized, out int rangeRaw))
                             // Integer tenths of NM (e.g. "2809" → 280.9 nm)
                             _ehsiRange = (rangeRaw / 10.0).ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
-                        else if (double.TryParse(raw, System.Globalization.NumberStyles.Float,
+                        else if (double.TryParse(normalized, System.Globalization.NumberStyles.Float,
                                                  System.Globalization.CultureInfo.InvariantCulture, out double rangeNm))
                             // Already-formatted decimal string (e.g. "280.9")
                             _ehsiRange = rangeNm.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
                         else
-                            _ehsiRange = raw;
+                            _ehsiRange = normalized;
                         hsiChanged = true;
                     }
                     if (e.Address == _EHSI_MODE_LEFT!.Address)  { _ehsiModeLeft   = e.StringData.Trim(); hsiChanged = true; }
@@ -1260,7 +1267,24 @@ internal class F16C_Listener : AircraftListener
 
     private static int ComposeFuelFlowPph(int tenThousandsDigit, int thousandsDigit, int hundredsDigit)
     {
-        return tenThousandsDigit * 10000 + thousandsDigit * 1000 + hundredsDigit * 100;
+        return tenThousandsDigit * 10000 + thousandsDigit * 1000 + hundredsDigit;
+    }
+
+    private static int DecodeSubThousandValue(DCSBIOSOutput output, uint data, int step)
+    {
+        if (output.MaxValue == 0 || step <= 0) return 0;
+        double scaled = output.GetUIntValue(data) * 1000.0 / output.MaxValue;
+        int quantized = (int)Math.Round(scaled / step, MidpointRounding.AwayFromZero) * step;
+        return Math.Clamp(quantized, 0, 1000 - step);
+    }
+
+    private static string NormalizeRangeText(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
+        string cleaned = raw.Replace(" ", "").Trim();
+        if (cleaned.EndsWith("NM", StringComparison.OrdinalIgnoreCase))
+            cleaned = cleaned[..^2];
+        return cleaned.Trim();
     }
 
     // Returns the nearest 8-point compass label for a 0–359° bearing.
