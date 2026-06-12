@@ -118,7 +118,7 @@ internal class M2000C_Listener : AircraftListener
     // Reusable buffer to avoid allocations every frame
     private readonly List<CautionItem> _cautionBuffer = new(32);
 
-    public M2000C_Listener(ICdu? mcdu, UserOptions options) : base(mcdu, AircraftRegistry.M2000C, options)
+    public M2000C_Listener(UserOptions options) : base(AircraftRegistry.M2000C, options)
     {
     }
 
@@ -155,27 +155,25 @@ internal class M2000C_Listener : AircraftListener
         {
             UpdateCounter(e.Address, e.Data);
 
-            if (mcdu != null)
-            { 
-                bool refreshLeds = false;
+            if (HasCdu)
+            {
                 bool refreshDisplay = false;
 
                 if (e.Address == PCN_LIGHTS_ADDRESS)
                 {
                     ushort val = (ushort)e.Data;
-                    mcdu.Leds.Fm1 = (val & MASK_ALN) > 0;
-                    mcdu.Leds.Rdy = (val & MASK_PRET) > 0;
-                    mcdu.Leds.Fm = (val & MASK_NDEG) > 0;
-                    mcdu.Leds.Ind = (val & MASK_MIP) > 0;
-                    mcdu.Leds.Fm2 = (val & MASK_SEC) > 0;
-                    refreshLeds = true;
+                    SetCduLeds(
+                        fm1: (val & MASK_ALN) > 0,
+                        rdy: (val & MASK_PRET) > 0,
+                        fm: (val & MASK_NDEG) > 0,
+                        ind: (val & MASK_MIP) > 0,
+                        fm2: (val & MASK_SEC) > 0);
                 }
 
                 if (e.Address == PCN_LIGHTS_ADDRESS_2)
                 {
                     ushort val = (ushort)e.Data;
-                    mcdu.Leds.Fail = (val & MASK_UNI) > 0;
-                    refreshLeds = true;
+                    SetCduLeds(fail: (val & MASK_UNI) > 0);
                 }
 
                 if (e.Address == CLP_ADDR_1) {
@@ -191,9 +189,7 @@ internal class M2000C_Listener : AircraftListener
                     if (_clpValue3 != val) { _clpValue3 = val; refreshDisplay = true; }
                 }
 
-                if (refreshLeds) mcdu.RefreshLeds();
                 if (refreshDisplay) UpdateCautionPanel();
-
             }
         }
         catch (Exception ex)
@@ -207,16 +203,16 @@ internal class M2000C_Listener : AircraftListener
                     Clp1 = _clpValue1,
                     Clp2 = _clpValue2,
                     Clp3 = _clpValue3,
-                    Ind = mcdu?.Leds?.Ind,
-                    Rdy = mcdu?.Leds?.Rdy,
-                    Fail = mcdu?.Leds?.Fail
+                    Ind = CduDevice?.Leds?.Ind,
+                    Rdy = CduDevice?.Leds?.Rdy,
+                    Fail = CduDevice?.Leds?.Fail
                 });
         }
     }
 
     public override void DCSBIOSStringReceived(object sender, DCSBIOSStringDataEventArgs e)
     {
-        if (mcdu != null)
+        if (HasCdu)
         {
             var output = GetCompositor(DEFAULT_PAGE);
             try
@@ -241,8 +237,6 @@ internal class M2000C_Listener : AircraftListener
                     _pcnDest = e.StringData;
                     UpdateCombinedPrepDestDisplay(output);
                 }
-            
-                mcdu.RefreshDisplay();
             }
             catch (Exception ex)
             {
@@ -263,7 +257,7 @@ internal class M2000C_Listener : AircraftListener
     
     private void UpdateCautionPanel()
     {
-        if (mcdu == null) return;
+        if (!HasCdu) return;
         
         _cautionBuffer.Clear();
         DecodeRegister29238(_clpValue2, _cautionBuffer);
@@ -335,7 +329,7 @@ internal class M2000C_Listener : AircraftListener
 
     private void RenderCautions(List<CautionItem> items)
     {
-        if (mcdu == null) return;
+        if (!HasCdu) return;
         
         var output = GetCompositor(DEFAULT_PAGE);
         const int COL_WIDTH_1 = 7;
@@ -386,8 +380,7 @@ internal class M2000C_Listener : AircraftListener
             output.Line(j).ClearRow();
         }
 
-        mcdu.RefreshDisplay();
-    }
+        }
 
     private void UpdateCombinedPCNDisplay(Compositor output)
     {

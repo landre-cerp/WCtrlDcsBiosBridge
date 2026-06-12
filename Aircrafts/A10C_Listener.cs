@@ -56,8 +56,7 @@ internal class A10C_Listener : AircraftListener
     private string _clockSs = "00";
 
     public A10C_Listener(
-        ICdu? mcdu,
-        UserOptions options) : base(mcdu, AircraftRegistry.A10C, options) {
+        UserOptions options) : base(AircraftRegistry.A10C, options) {
     }
 
     ~A10C_Listener()
@@ -114,27 +113,26 @@ internal class A10C_Listener : AircraftListener
 
     protected override void RegisterCduControls()
     {
-        if (!options.DisableLightingManagement && mcdu != null) { 
+        if (!options.DisableLightingManagement && HasCdu) { 
             Register(_CONSOLE_BRT, v =>
             {
-                mcdu!.BacklightBrightnessPercent = (int)(v * 100 / _CONSOLE_BRT!.MaxValue);
-                mcdu!.RefreshBrightnesses();
+                SetBacklightBrightnessPercent((int)(v * 100 / _CONSOLE_BRT!.MaxValue));
             });
             Register(_CDU_BRT, v =>
             {
+                var currentBrightness = GetDisplayBrightnessPercent();
                 if (v == 0)
-                    mcdu!.DisplayBrightnessPercent = Math.Min(100, mcdu!.DisplayBrightnessPercent - BRT_STEP);
+                    SetDisplayBrightnessPercent(Math.Min(100, currentBrightness - BRT_STEP));
                 else if (v == 2)
-                    mcdu!.DisplayBrightnessPercent = Math.Min(100, mcdu!.DisplayBrightnessPercent + BRT_STEP);
-                mcdu!.RefreshBrightnesses();
+                    SetDisplayBrightnessPercent(Math.Min(100, currentBrightness + BRT_STEP));
             }); 
         }
 
         // --- LEDs ---
-        Register(_CANOPY_LED,         v => { mcdu!.Leds.Fm2  = v == 1; mcdu!.RefreshLeds(); });
-        Register(_NOSE_SW_GREENLIGHT, v => { mcdu!.Leds.Ind  = v == 1; mcdu!.RefreshLeds(); });
-        Register(_GUN_READY,          v => { mcdu!.Leds.Fm1  = v == 1; mcdu!.RefreshLeds(); });
-        Register(_MASTER_CAUTION,     v => { mcdu!.Leds.Fail = v == 1; mcdu!.RefreshLeds(); });
+        Register(_CANOPY_LED,         v => SetCduLeds(fm2: v == 1));
+        Register(_NOSE_SW_GREENLIGHT, v => SetCduLeds(ind: v == 1));
+        Register(_GUN_READY,          v => SetCduLeds(fm1: v == 1));
+        Register(_MASTER_CAUTION,     v => SetCduLeds(fail: v == 1));
 
         // --- CDU display lines ---
         bool bottomAligned = options.DisplayBottomAligned;

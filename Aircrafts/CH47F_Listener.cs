@@ -65,7 +65,7 @@ internal class CH47F_Listener : AircraftListener
 
     private readonly bool switchWithSeat;
 
-    public CH47F_Listener(ICdu? mcdu, UserOptions options, bool pilot = true, bool switchWithSeat = false) : base(mcdu, AircraftRegistry.CH47, options)
+    public CH47F_Listener(UserOptions options, bool pilot = true, bool switchWithSeat = false) : base(AircraftRegistry.CH47, options)
     {
         this.switchWithSeat = switchWithSeat;
         seatPosition = pilot ? PILOT_SEAT : COPILOT_SEAT;
@@ -82,10 +82,10 @@ internal class CH47F_Listener : AircraftListener
     protected override void RegisterCduControls()
     {
         // --- LED ---
-        Register(_MSTR_CAUTION, v => { mcdu!.Leds.Fail = v != 0; mcdu!.RefreshLeds(); });
+        Register(_MSTR_CAUTION, v => SetCduLeds(fail: v != 0));
 
         // --- Brightness (display step knob) ---
-        if (!options.DisableLightingManagement && mcdu != null)
+        if (!options.DisableLightingManagement && HasCdu)
         {
             Register(_PLT_CDU_BRT, v =>
             {
@@ -190,20 +190,19 @@ internal class CH47F_Listener : AircraftListener
 
     private void ApplyBrightness()
     {
-        if (options.DisableLightingManagement || mcdu == null) return;
+        if (options.DisableLightingManagement || !HasCdu) return;
         if (seatPosition == PILOT_SEAT)
         {
-            mcdu.DisplayBrightnessPercent = _pilot_cdu_brightness;
-            mcdu.BacklightBrightnessPercent = _pilot_key_brightness;
-            mcdu.LedBrightnessPercent = _pilot_led_brightness;
+            SetDisplayBrightnessPercent(_pilot_cdu_brightness);
+            SetBacklightBrightnessPercent(_pilot_key_brightness);
+            SetLedBrightnessPercent(_pilot_led_brightness);
         }
         else
         {
-            mcdu.DisplayBrightnessPercent = _copilot_cdu_brightness;
-            mcdu.BacklightBrightnessPercent = _copilot_key_brightness;
-            mcdu.LedBrightnessPercent = _copilot_led_brightness;
+            SetDisplayBrightnessPercent(_copilot_cdu_brightness);
+            SetBacklightBrightnessPercent(_copilot_key_brightness);
+            SetLedBrightnessPercent(_copilot_led_brightness);
         }
-        mcdu.RefreshBrightnesses();
     }
 
     private static string NormalizeCduString(string s) =>

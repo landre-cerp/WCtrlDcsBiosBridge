@@ -306,8 +306,7 @@ internal class F16C_Listener : AircraftListener
     // =========================================================================
 
     public F16C_Listener(
-        ICdu? mcdu,
-        UserOptions options) : base(mcdu, AircraftRegistry.F16C, options)
+        UserOptions options) : base(AircraftRegistry.F16C, options)
     {
         for (int i = 0; i < 5; i++)
         {
@@ -330,11 +329,6 @@ internal class F16C_Listener : AircraftListener
         _rwrDisplayKey = Enum.TryParse<Key>(options.F16CRwrDisplayKey, out var rwrKey)
             ? rwrKey
             : Key.LineSelectRight1;
-
-        if (mcdu != null)
-        {
-            mcdu.KeyDown += HandleKeyDown;
-        }
     }
 
     ~F16C_Listener() => Dispose(false);
@@ -380,9 +374,9 @@ internal class F16C_Listener : AircraftListener
     // Unsubscribes the keyboard hook before the base class disposes the MCDU.
     protected override void Dispose(bool disposing)
     {
-        if (disposing && mcdu != null)
+        if (disposing && CduDevice != null)
         {
-            mcdu.KeyDown -= HandleKeyDown;
+            CduDevice.KeyDown -= HandleKeyDown;
         }
         base.Dispose(disposing);
     }
@@ -390,7 +384,14 @@ internal class F16C_Listener : AircraftListener
     // =========================================================================
     // Initialization
     // =========================================================================
-    protected override void RegisterCduControls() { }
+    protected override void RegisterCduControls()
+    {
+        if (CduDevice != null)
+        {
+            CduDevice.KeyDown -= HandleKeyDown;
+            CduDevice.KeyDown += HandleKeyDown;
+        }
+    }
     protected override void RegisterFrontpanelControls() { }
 
     protected override void InitializeDcsBiosOutputs()
@@ -513,26 +514,23 @@ internal class F16C_Listener : AircraftListener
     {
         try
         {
-            bool refreshCdu     = false;
             bool refreshDisplay = false;
             UpdateCounter(e.Address, e.Data);
 
             // --- MCDU backlight — active regardless of display mode ---
-            if (mcdu != null && !options.DisableLightingManagement)
+            if (HasCdu && !options.DisableLightingManagement)
             {
                 if (e.Address == _PRI_CONSOLES_BRT!.Address)
                 {
-                    mcdu.BacklightBrightnessPercent =
-                        (int)(_PRI_CONSOLES_BRT!.GetUIntValue(e.Data) * 100 / _PRI_CONSOLES_BRT.MaxValue);
-                    refreshCdu = true;
+                    SetBacklightBrightnessPercent(
+                        (int)(_PRI_CONSOLES_BRT!.GetUIntValue(e.Data) * 100 / _PRI_CONSOLES_BRT.MaxValue));
                 }
 
                 // Mirror the cockpit DED brightness knob to the MCDU display brightness
                 if (e.Address == _PRI_DATA_DISPLAY_BRT!.Address)
                 {
-                    mcdu.DisplayBrightnessPercent =
-                        (int)(_PRI_DATA_DISPLAY_BRT!.GetUIntValue(e.Data) * 100 / _PRI_DATA_DISPLAY_BRT.MaxValue);
-                    refreshCdu = true;
+                    SetDisplayBrightnessPercent(
+                        (int)(_PRI_DATA_DISPLAY_BRT!.GetUIntValue(e.Data) * 100 / _PRI_DATA_DISPLAY_BRT.MaxValue));
                 }
             }
 
@@ -543,10 +541,9 @@ internal class F16C_Listener : AircraftListener
             }
 
             // --- Master Caution LED — active regardless of display mode ---
-            if (mcdu != null && e.Address == _LIGHT_MASTER_CAUTION!.Address)
+            if (HasCdu && e.Address == _LIGHT_MASTER_CAUTION!.Address)
             {
-                mcdu.Leds.Fail = _LIGHT_MASTER_CAUTION.GetUIntValue(e.Data) == 1;
-                refreshCdu = true;
+                SetCduLeds(fail: _LIGHT_MASTER_CAUTION.GetUIntValue(e.Data) == 1);
             }
 
             // --- Display-specific integer data ---
@@ -731,12 +728,6 @@ internal class F16C_Listener : AircraftListener
             L(_LIGHT_CMDS_DISP, ref _cmdsDisp);
 
             if (refreshDisplay) RefreshActiveDisplay();
-
-            if (refreshCdu && mcdu != null)
-            {
-                if (!options.DisableLightingManagement) mcdu.RefreshBrightnesses();
-                mcdu.RefreshLeds();
-            }
         }
         catch (Exception ex)
         {
@@ -846,7 +837,7 @@ internal class F16C_Listener : AircraftListener
     // =========================================================================
     private void UpdateDEDDisplay()
     {
-        if (mcdu == null) return;
+        if (!HasCdu) return;
         var output = GetCompositor(DEFAULT_PAGE);
 
         for (int i = 0; i < 5; i++)
@@ -920,7 +911,7 @@ internal class F16C_Listener : AircraftListener
     // =========================================================================
     private void UpdateMFD1Display()
     {
-        if (mcdu == null) return;
+        if (!HasCdu) return;
         var output = GetCompositor(DEFAULT_PAGE);
         output.Clear().Line(0).Amber().Write("[LEFT MFD]")
               .Line(2).Green().Write("No framebuffer data.")
@@ -930,7 +921,7 @@ internal class F16C_Listener : AircraftListener
 
     private void UpdateMFD2Display()
     {
-        if (mcdu == null) return;
+        if (!HasCdu) return;
         var output = GetCompositor(DEFAULT_PAGE);
         output.Clear().Line(0).Amber().Write("[RIGHT MFD]")
               .Line(2).Green().Write("No framebuffer data.")

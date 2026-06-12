@@ -13,7 +13,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
 {
     private static readonly double _TICK_DISPLAY = 100;
     private readonly Timer _DisplayCDUTimer;
-    protected ICdu? mcdu;
+    protected AircraftCduContext? cdu;
 
     private bool _disposed;
 
@@ -92,9 +92,8 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
               {DEFAULT_PAGE, new Screen() }
         };
 
-    public AircraftListener(ICdu? mcdu, AircraftDescriptor descriptor, UserOptions options)
+    public AircraftListener(AircraftDescriptor descriptor, UserOptions options)
     {
-        this.mcdu = mcdu;
         this.descriptor = descriptor;
         this.options = options;
         DCSBIOSControlLocator.DCSAircraft = DCSAircraft.GetAircraft(descriptor.ModuleId);
@@ -103,12 +102,16 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         _DisplayCDUTimer = new(_TICK_DISPLAY);
         _DisplayCDUTimer.Elapsed += (_, _) =>
         {
-            if (this.mcdu != null)
+            if (cdu != null)
             {
-                this.mcdu.Screen.CopyFrom(pages[_currentPage]);
-                this.mcdu.RefreshDisplay();
+                cdu.Render(pages[_currentPage]);
             }
         };
+    }
+
+    internal void AttachCduContext(AircraftCduContext cduContext)
+    {
+        cdu = cduContext ?? throw new ArgumentNullException(nameof(cduContext));
     }
 
     public void Start()
@@ -117,7 +120,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
 
         RegisterFrontpanelControls();
 
-        if (mcdu != null)
+        if (cdu != null)
         {
             RegisterCduControls();
             // Load the correct font for this aircraft
@@ -127,7 +130,15 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
                 using var fileStream = new FileStream(fontFile, FileMode.Open, FileAccess.Read);
                 using var reader = new StreamReader(fileStream);
                 var fontJson = reader.ReadToEnd();
-                mcdu.UseFont(JsonConvert.DeserializeObject<McduFontFile>(fontJson), true);
+                var font = JsonConvert.DeserializeObject<McduFontFile>(fontJson);
+                if (font != null)
+                {
+                    lock (cdu.State.SyncRoot)
+                    {
+                        cdu.State.Font = font;
+                        cdu.State.FontDirty = true;
+                    }
+                }
                 App.Logger.Info($"Loaded aircraft font: {fontFile}");
             }
             catch (Exception ex)
@@ -148,10 +159,10 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
 
     private void InitMcduBrightness(bool disabledBrightness)
     {
-        if (disabledBrightness || mcdu == null) return;
-        mcdu.BacklightBrightnessPercent = 100;
-        mcdu.LedBrightnessPercent = 100;
-        mcdu.DisplayBrightnessPercent = 100;
+        if (disabledBrightness || cdu == null) return;
+        SetBacklightBrightnessPercent(100);
+        SetLedBrightnessPercent(100);
+        SetDisplayBrightnessPercent(100);
     }
 
     public void Stop()
@@ -162,11 +173,69 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         BIOSEventHandler.DetachDataListener(this);
         BIOSEventHandler.DetachStringListener(this);
 
-        if (mcdu != null)
+        cdu?.Cleanup();
+    }
+
+    protected bool HasCdu => cdu != null;
+    protected ICdu? CduDevice => cdu?.Device;
+
+    protected int GetDisplayBrightnessPercent()
+    {
+        if (cdu == null) return 100;
+        lock (cdu.State.SyncRoot)
         {
-            mcdu.Output.Clear();
-            mcdu.Cleanup();
-            mcdu.RefreshDisplay();
+            return cdu.State.DisplayBrightnessPercent;
+        }
+    }
+
+    protected void SetDisplayBrightnessPercent(int value)
+    {
+        if (cdu == null) return;
+        lock (cdu.State.SyncRoot)
+        {
+            cdu.State.DisplayBrightnessPercent = Math.Clamp(value, 0, 100);
+            cdu.State.BrightnessDirty = true;
+        }
+    }
+
+    protected void SetBacklightBrightnessPercent(int value)
+    {
+        if (cdu == null) return;
+        lock (cdu.State.SyncRoot)
+        {
+            cdu.State.BacklightBrightnessPercent = Math.Clamp(value, 0, 100);
+            cdu.State.BrightnessDirty = true;
+        }
+    }
+
+    protected void SetLedBrightnessPercent(int value)
+    {
+        if (cdu == null) return;
+        lock (cdu.State.SyncRoot)
+        {
+            cdu.State.LedBrightnessPercent = Math.Clamp(value, 0, 100);
+            cdu.State.BrightnessDirty = true;
+        }
+    }
+
+    protected void SetCduLeds(
+        bool? fail = null,
+        bool? fm1 = null,
+        bool? fm2 = null,
+        bool? fm = null,
+        bool? ind = null,
+        bool? rdy = null)
+    {
+        if (cdu == null) return;
+        lock (cdu.State.SyncRoot)
+        {
+            if (fail.HasValue) cdu.State.LedFail = fail.Value;
+            if (fm1.HasValue) cdu.State.LedFm1 = fm1.Value;
+            if (fm2.HasValue) cdu.State.LedFm2 = fm2.Value;
+            if (fm.HasValue) cdu.State.LedFm = fm.Value;
+            if (ind.HasValue) cdu.State.LedInd = ind.Value;
+            if (rdy.HasValue) cdu.State.LedRdy = rdy.Value;
+            cdu.State.LedsDirty = true;
         }
     }
 

@@ -31,7 +31,7 @@ internal class AH64D_Listener : AircraftListener
     private DCSBIOSOutput? _PLT_MASTER_WARNING_L;
     
 
-    public AH64D_Listener(ICdu? mcdu, UserOptions options) : base(mcdu, AircraftRegistry.AH64D, options) {
+    public AH64D_Listener(UserOptions options) : base(AircraftRegistry.AH64D, options) {
     }
 
     ~AH64D_Listener()
@@ -41,20 +41,19 @@ internal class AH64D_Listener : AircraftListener
 
     protected override void RegisterCduControls()
     {
-        if (!options.DisableLightingManagement && mcdu != null)
+        if (!options.DisableLightingManagement && HasCdu)
         {
             Register(_PLT_EUFD_BRT, v =>
             {
                 int eufdBright = 100 * (int)v / 65536;
-                mcdu!.BacklightBrightnessPercent = eufdBright;
-                mcdu!.DisplayBrightnessPercent = eufdBright;
-                mcdu!.LedBrightnessPercent = eufdBright;
-                mcdu!.RefreshBrightnesses();
+                SetBacklightBrightnessPercent(eufdBright);
+                SetDisplayBrightnessPercent(eufdBright);
+                SetLedBrightnessPercent(eufdBright);
             });
         }
 
-        Register(_PLT_MASTER_CAUTION_L, v => { mcdu!.Leds.Fail = v == 1; mcdu!.RefreshLeds(); });
-        Register(_PLT_MASTER_WARNING_L, v => { mcdu!.Leds.Ind  = v == 1; mcdu!.RefreshLeds(); });
+        Register(_PLT_MASTER_CAUTION_L, v => SetCduLeds(fail: v == 1));
+        Register(_PLT_MASTER_WARNING_L, v => SetCduLeds(ind: v == 1));
 
         RegisterString(_PLT_EUFD_LINE14, s =>
         {

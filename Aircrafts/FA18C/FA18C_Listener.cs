@@ -21,8 +21,8 @@ internal class FA18C_Listener : AircraftListener
     private readonly Key _nextPageKey;
     private readonly Key _prevPageKey;
 
-    public FA18C_Listener(ICdu? mcdu, UserOptions options)
-        : base(mcdu, AircraftRegistry.FA18C, options)
+    public FA18C_Listener(UserOptions options)
+        : base(AircraftRegistry.FA18C, options)
     {
         _nextPageKey = Enum.TryParse<Key>(options.NextPageKey, out var nextKey)
             ? nextKey
@@ -32,11 +32,6 @@ internal class FA18C_Listener : AircraftListener
             : Key.PrevPage;
 
         AddNewPage(IFEI_PAGE);
-
-        if (mcdu != null)
-        {
-            mcdu.KeyDown += HandleKeyDown;
-        }
     }
 
     private void HandleKeyDown(object? sender, KeyEventArgs e)
@@ -53,7 +48,14 @@ internal class FA18C_Listener : AircraftListener
         }
     }
 
-    protected override void RegisterCduControls() { }
+    protected override void RegisterCduControls()
+    {
+        if (CduDevice != null)
+        {
+            CduDevice.KeyDown -= HandleKeyDown;
+            CduDevice.KeyDown += HandleKeyDown;
+        }
+    }
     protected override void RegisterFrontpanelControls() { }
 
     protected override void InitializeDcsBiosOutputs()
@@ -76,18 +78,13 @@ internal class FA18C_Listener : AircraftListener
                 _lightMode = _cockpitLightModeSw.GetUIntValue(e.Data);
             }
 
-            if (
-                mcdu != null
-                && MASTER_CAUTION_LT != null
-                && e.Address.Equals(MASTER_CAUTION_LT.Address)
-            )
+            if (MASTER_CAUTION_LT != null && e.Address.Equals(MASTER_CAUTION_LT.Address))
             {
                 uint newMasterCaution = MASTER_CAUTION_LT.GetUIntValue(e.Data);
                 if (_masterCaution != newMasterCaution)
                 {
                     _masterCaution = newMasterCaution;
-                    mcdu.Leds.Fail = _masterCaution != 0;
-                    mcdu.RefreshLeds();
+                    SetCduLeds(fail: _masterCaution != 0);
                 }
             }
         }
@@ -120,9 +117,9 @@ internal class FA18C_Listener : AircraftListener
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing && mcdu != null)
+        if (disposing && CduDevice != null)
         {
-            mcdu.KeyDown -= HandleKeyDown;
+            CduDevice.KeyDown -= HandleKeyDown;
         }
         base.Dispose(disposing);
     }
