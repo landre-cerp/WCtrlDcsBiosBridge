@@ -1243,15 +1243,16 @@ internal class F16C_Listener : AircraftListener
                 return i * 0.1 + t * 0.1;
             }
 
-            private static int ComposeFuelFlowPph(int tenThousandsDigit, int thousandsDigit, int hundredsDigit)
-            {
-                // DCS-BIOS fuel-flow counter is exported with a +1100 pph baseline removed.
-                return tenThousandsDigit * 10000 + thousandsDigit * 1000 + hundredsDigit * 100 + 1100;
-            }
         }
 
         // Safety fallback; clamping should always match one interpolation interval.
         return 0.0;
+    }
+
+    private static int ComposeFuelFlowPph(int tenThousandsDigit, int thousandsDigit, int hundredsDigit)
+    {
+        // DCS-BIOS fuel-flow counter is exported with a +1100 pph baseline removed.
+        return tenThousandsDigit * 10000 + thousandsDigit * 1000 + hundredsDigit * 100 + 1100;
     }
 
     // Returns the nearest 8-point compass label for a 0–359° bearing.
