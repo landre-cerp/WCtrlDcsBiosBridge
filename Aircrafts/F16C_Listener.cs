@@ -217,9 +217,9 @@ internal class F16C_Listener : AircraftListener
 
     // NAV page — cached values
     private int  _altFt;
-    private int  _altD10k = 0;
-    private int  _altD1k  = 0;
-    private int  _altD100 = 0;
+    private int  _altD10k  = 0;
+    private int  _altD1k   = 0;
+    private int  _altLowFt = 0;   // 0-999 ft from ALT_100_FT_PTR
     private int  _iasKts;
     private double _mach;
     private int  _vviFpm;
@@ -441,7 +441,7 @@ internal class F16C_Listener : AircraftListener
 
         _ALT_10000        = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_10000_FT_CNT");
         _ALT_1000         = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_1000_FT_CNT");
-        _ALT_100          = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_100_FT_CNT");
+        _ALT_100          = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_100_FT_PTR");
         _ALT_PNEU         = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PNEU_FLAG");
         _QNH_D0           = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE_DRUM_0_CNT");
         _QNH_D1           = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE_DRUM_1_CNT");
@@ -572,19 +572,20 @@ internal class F16C_Listener : AircraftListener
                 if (e.Address == _ALT_10000!.Address)
                 {
                     _altD10k = DecodeDrumDigit(_ALT_10000!, e.Data);
-                    _altFt = _altD10k * 10000 + _altD1k * 1000 + _altD100 * 100;
+                    _altFt = _altD10k * 10000 + _altD1k * 1000 + _altLowFt;
                     refreshDisplay = true;
                 }
                 if (e.Address == _ALT_1000!.Address)
                 {
                     _altD1k = DecodeDrumDigit(_ALT_1000!, e.Data);
-                    _altFt = _altD10k * 10000 + _altD1k * 1000 + _altD100 * 100;
+                    _altFt = _altD10k * 10000 + _altD1k * 1000 + _altLowFt;
                     refreshDisplay = true;
                 }
                 if (e.Address == _ALT_100!.Address)
                 {
-                    _altD100 = DecodeDrumDigit(_ALT_100!, e.Data);
-                    _altFt = _altD10k * 10000 + _altD1k * 1000 + _altD100 * 100;
+                    // ALT_100_FT_PTR is a continuous pointer (0-65535) spanning 0-999 ft
+                    _altLowFt = (int)Math.Round(_ALT_100!.GetUIntValue(e.Data) * 1000.0 / _ALT_100.MaxValue);
+                    _altFt = _altD10k * 10000 + _altD1k * 1000 + _altLowFt;
                     refreshDisplay = true;
                 }
 
