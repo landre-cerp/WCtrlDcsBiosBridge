@@ -15,9 +15,9 @@ This console application bridges DCS World with some of the WinCtrl hardware, en
 
 1. **Install DCS-BIOS** (see detailed instructions below)
 2. **Download and extract** this application to your preferred folder
-5. **Connect** your WinCtrl CDU ( before starting bridge )
-6. **run** the application
-7. **Launch DCS** and select your aircraft from the CDU menu
+3. **Connect** your WinCtrl CDU ( before starting bridge )
+4. **Run** the application
+5. **Launch DCS** and load your aircraft — the bridge detects it automatically and starts
 
 ## Requirements
 
@@ -26,43 +26,38 @@ This console application bridges DCS World with some of the WinCtrl hardware, en
 - .NET 8.0 runtime
 
 At least one of these devices.
-- WinCtrl CDU hardware (MCDU / PFP3N / PFP7 / PFP4)
-- WinCtrl FCU and EFIS ( tested with Left Efis )
-- WinCtrl PAP3 (or PAP3Mag )
+- Winctrl CDU hardware (MCDU / PFP3N / PFP7 / PFP4)
+- Winctrl FCU and EFIS ( tested with Left Efis )
+- Winctrl PAP3 (or PAP3Mag )
+- Winctrl AGP32 Metal
 
 
 ## Supported Aircraft
 
-| Aircraft | Support Level | Features |
-|----------|---------------|----------|
-| **A10C** | Full | Complete CDU functionality, LED indicators, brightness control , FCU display (VS , Alt, Speed, HDG , Qnh on Efis ) |
-| **AH-64D** | Basic | UFD information, keyboard display |
-| **FA-18C** | Basic | UFC fields display |
-| **CH-47F** | Basic | Pilot or CoPilot CDU (requires DCS-BIOS nightly build) |
-| **OH-58D** | Basic | MPD/TGT/TRQ/CMWS CDU display support |
-| **F15E** | Basic | UFC Lines 1-6 by smreki |
-| **M2K** | Basic | see documentation in docs/ |
+Each aircraft has its own page describing the supported devices, CDU display, LEDs,
+brightness, and any front-panel output. Click an aircraft for details.
 
-### LED Mappings (A10C)
+| Aircraft | Support | Highlights |
+|----------|---------|------------|
+| [A-10C](docs/A-10C.md) | Full | CDU + CMS overlay, LEDs, brightness, full front panel (flight data, gear, baro) and AGP32 clock |
+| [AH-64D](docs/AH-64D.md) | Basic | Pilot EUFD + keyboard display |
+| [F/A-18C](docs/FA-18C.md) | Basic | UFC and IFEI pages |
+| [CH-47F](docs/CH-47F.md) | Basic | Pilot or co-pilot CDU (requires DCS-BIOS v0.11.0+) |
+| [OH-58D](docs/OH-58D.md) | Basic | MPD/TGT/TRQ/CMWS/RFI CDU display, AGP32 UTC clock |
+| [F-15E](docs/F-15E.md) | Basic | UFC lines 1-6 (by smreki) |
+| [F-16C](docs/F-16C.md) | Basic | Switchable DED / NAV / RWR CDU pages |
+| [M-2000C](docs/M-2000C.md) | Basic | PCN display and caution-light panel |
 
-| MCDU LED | DCS Indicator |
-|----------|---------------|
-| Fail | Master Caution |
-| FM1 | Gun Ready |
-| IND | NWS Indicator |
-| FM2 | Cockpit Indicator |
-
-### LED Mappings other aircraft
-| MCDU LED | DCS Indicator |
-|----------|---------------|
-| CDU LED | DCS Indicator |
-| Fail | Master Caution |
+**Front panels** (FCU/EFIS, PAP3, AGP32) render whatever the active aircraft publishes.
+Today the **A-10C** drives the full set (flight data, gear LEDs, and the chrono/UTC/ET
+clock on the AGP32), and the **OH-58D** drives the AGP32 UTC clock. See each aircraft's page
+for specifics.
 
 ## Installation
 
 ### DCS-BIOS Setup
 
-1. **Download** the latest DCS-BIOS release (min v0.11.0):
+1. **Download** the latest DCS-BIOS release (min v0.11.0 , 0.11.4 recommended as it updates the ch47 cdu pages):
    - Standard: https://github.com/DCS-Skunkworks/dcs-bios/releases
 
 2. **Extract** the DCS-BIOS folder to your DCS saved games Scripts directory:
@@ -91,10 +86,20 @@ if no config.json is found, it will create a default one and show you a dialog b
 
 ## Usage
 
+### Automatic Aircraft Detection
+
+You no longer pick the aircraft yourself. While the bridge is running, the CDU shows a **"Waiting for DCS... / Aircraft detection"** screen and watches DCS-BIOS for the loaded module:
+
+- When a **supported** aircraft is loaded, the bridge starts automatically.
+- An **unsupported** module is shown in red as **"Not supported"**, and the bridge keeps waiting.
+- When you **switch or exit** the aircraft, the bridge resets and returns to the waiting screen on its own — **no restart needed**.
+
+The only manual choice left is the **seat** for the CH-47F when two or more CDUs are connected (see below).
+
 ### Controls
 
 - **CDU Keys:** Map them in DCS.
-- **Aircraft Selection:** Use line select keys on startup screen
+- **Seat selection (CH-47F with 2+ CDUs):** when prompted, press the line-select key next to **PILOT** or **COPILOT**. See the [CH-47F documentation](docs/CH-47F.md).
 
 ## Troubleshooting
 
@@ -105,8 +110,9 @@ if no config.json is found, it will create a default one and show you a dialog b
 - You need version 0.11.0 or later
   
 **"Connection failed" or CDU not responding**
-- Ensure your WinCtrl CDU is properly connected
+- Ensure your Winctrl CDU is properly connected
 - Try unplugging and reconnecting the device
+- Restart the application ( application does not detect devices plugged after start )
 - Check that no other applications are using the CDU
 
 **"No data appearing on CDU"**
@@ -114,9 +120,10 @@ if no config.json is found, it will create a default one and show you a dialog b
 - Check that DCS-BIOS is working (look for network traffic) - you can use Bort tools from DCSSkunkworks to verify DCS-BIOS is sending data
 - Verify Export.lua is configured correctly
 
-**Aircraft change not working**
-- Restart the application when switching aircraft
-- Each aircraft requires a separate application instance
+**Aircraft not detected / stuck on "Waiting for DCS..."**
+- Make sure an aircraft is loaded in the cockpit and DCS-BIOS is exporting (check `Export.lua`)
+- Unsupported aircraft are shown in red as "Not supported" — the bridge keeps waiting for a supported one
+- You do **not** need to restart when switching aircraft; the bridge detects the change automatically
 
 **Start bridge is greyed**
 - You probably launched the app before plugging your devices.
@@ -139,7 +146,6 @@ Report issues [here](https://github.com/landre-cerp/WWCduDcsBiosBridge/issues), 
 
 ## Known Limitations
 
-- **Aircraft switching:** Requires application restart
 - **Cursor behavior:** May appear erratic during waypoint entry (reflects DCS-BIOS data)
 - **CH-47F support:** Requires DCS-BIOS nightly build (0.11.0 or later)
 - **Brightness sync:** May not perfectly match aircraft state
@@ -148,7 +154,7 @@ Report issues [here](https://github.com/landre-cerp/WWCduDcsBiosBridge/issues), 
 
 This project is written in C# and targets .NET 8.0. It uses:
 - **DCS-BIOS** for DCS communication
-- **ww-devices-dotnet** for WinCtrl hardware interface
+- **ww-devices-dotnet** for Winctrl hardware interface
 - **NLog** for logging
 - **System.CommandLine** for command-line parsing
 

@@ -22,22 +22,17 @@ public class BridgeManager : IDisposable
     private FrontpanelHub? frontpanelHub;
     private AircraftListener? headlessListener;
     private bool _disposed = false;
-    private TaskCompletionSource<AircraftSelection>? _globalAircraftSelectionTcs;
-    private AircraftSelection? _pendingGlobalAircraftSelection;
+
+    /// <summary>
+    /// Raised every time the detected aircraft changes (including on exit → null).
+    /// The string is the raw DCS-BIOS name, or <c>null</c> when the user leaves a module.
+    /// </summary>
+    public event Action<string?>? DetectedAircraftChanged;
 
     /// <summary>
     /// Gets the number of devices the bridge is driving (CDUs + frontpanels)
     /// </summary>
     public int ActiveDeviceCount => (Contexts?.Count ?? 0) + (frontpanelHub?.Count ?? 0);
-
-    /// <summary>
-    /// Sets the global aircraft selection (used when no CDU is present)
-    /// </summary>
-    public void SetGlobalAircraftSelection(AircraftSelection selection)
-    {
-        _pendingGlobalAircraftSelection = selection;
-        _globalAircraftSelectionTcs?.TrySetResult(selection);
-    }
 
     /// <summary>
     /// Starts the bridge with the specified devices and configuration
@@ -58,10 +53,12 @@ public class BridgeManager : IDisposable
             var options = userOptions ?? new UserOptions();
             var cduDevices = devices.Where(d => d.Cdu != null).ToList();
 
-            // With a single CDU the CH-47F uses seat-switch mode: one menu entry,
-            // the CDU display follows the seat position at runtime.
-            var singleCdu = cduDevices.Count == 1;
-            var ch47SwitchWithSeat = singleCdu;
+            // Zero or one CDU behave the same: no pilot/copilot prompt, and the
+            // CH-47F uses seat-switch mode (follows the seat position at runtime).
+            // Only multiple CDUs each pick a seat. A frontpanel-only setup (no CDU)
+            // is driven by a headless listener using this same single-CDU logic.
+            var multipleCdus = cduDevices.Count > 1;
+            var ch47SwitchWithSeat = !multipleCdus;
 
             // One context per CDU; frontpanel devices are driven by the hub below.
             Contexts = cduDevices.Select(d => new DeviceContext(d.Cdu!, options, ch47SwitchWithSeat)).ToList();
@@ -74,70 +71,111 @@ public class BridgeManager : IDisposable
                 throw new InvalidOperationException("No valid devices found.");
             }
 
-            // Wait for aircraft selection
-            AircraftSelection firstSelection;
-            if (Contexts.Any())
-            {
-                foreach (var ctx in Contexts)
-                    ctx.ShowStartupScreen();
-
-                // Each CDU makes its own selection
-                // (important for CH47F with pilot and copilot CDUs)
-                Logger.Info($"Waiting for aircraft selection on {Contexts.Count} CDU device(s)...");
-                await Task.WhenAll(Contexts.Select(c => c.SelectionTask.WaitAsync(cancellationToken)));
-
-                for (int i = 0; i < Contexts.Count; i++)
-                {
-                    var selection = Contexts[i].SelectedAircraft;
-                    Logger.Info($"  CDU {i + 1}: Aircraft={selection!.AircraftId}, IsPilot={selection.IsPilot}");
-                }
-
-                firstSelection = Contexts[0].SelectedAircraft!;
-            }
-            else
-            {
-                // No CDU devices - wait for global UI selection
-                Logger.Info("No CDU devices found. Waiting for global aircraft selection from UI...");
-                _globalAircraftSelectionTcs = new TaskCompletionSource<AircraftSelection>(TaskCreationOptions.RunContinuationsAsynchronously);
-                if (_pendingGlobalAircraftSelection != null)
-                {
-                    _globalAircraftSelectionTcs.TrySetResult(_pendingGlobalAircraftSelection);
-                }
-                firstSelection = await _globalAircraftSelectionTcs.Task.WaitAsync(cancellationToken);
-                Logger.Info($"Global aircraft selection received from UI: {firstSelection.AircraftId}, IsPilot: {firstSelection.IsPilot}");
-            }
-
-            // Global DCS-BIOS metadata initialization, once for all listeners
+            // Global DCS-BIOS metadata initialization — needed before aircraft
+            // detection AND before any listener can create its outputs.
             DCSAircraft.Init();
             DCSAircraft.FillModulesListFromDcsBios(config.DcsBiosJsonLocation, true);
             DCSBIOSControlLocator.JSONDirectory = config.DcsBiosJsonLocation;
 
-            // Initialize DCS-BIOS
+            // Start the UDP connection so we can receive metadata.
             InitializeDcsBios(config);
 
-            foreach (var ctx in Contexts)
-            {
-                ctx.StartBridge();
-            }
+            // The detector lives for the entire bridge lifecycle so it can
+            // signal both aircraft detection and module exit.
+            using var detector = new AircraftDetector();
+            detector.StartListening();
 
-            // Frontpanels are rendered from one listener's FlightDeck model:
-            // the first CDU listener, or a headless listener when no CDU is present.
-            if (frontpanelHub.HasFrontpanels)
+            // Detection loop: wait for a SUPPORTED aircraft → start listeners →
+            // wait for the aircraft to change (exit or switch) → reset → repeat.
+            // Unsupported aircraft keep the bridge in the waiting state with the
+            // detected name shown in red.
+            while (!cancellationToken.IsCancellationRequested)
             {
-                var modelSource = Contexts.FirstOrDefault(c => c.Listener != null)?.Listener;
-                if (modelSource == null)
+                foreach (var ctx in Contexts)
+                    ctx.ShowWaitingScreen();
+                DetectedAircraftChanged?.Invoke(null);
+
+                // Stay in the waiting state until a supported aircraft is loaded.
+                AircraftDescriptor? descriptor = null;
+                while (descriptor == null)
                 {
-                    Logger.Info($"Starting headless listener for frontpanels: {firstSelection.AircraftId}");
-                    headlessListener = new AircraftListenerFactory().CreateListener(firstSelection, null, options, ch47SwitchWithSeat);
-                    headlessListener.Start();
-                    modelSource = headlessListener;
+                    var name = await detector.WaitForChangeAsync(cancellationToken);
+                    DetectedAircraftChanged?.Invoke(name);
+
+                    if (name == null)
+                    {
+                        foreach (var ctx in Contexts)
+                            ctx.ShowWaitingScreen();
+                        continue;
+                    }
+
+                    descriptor = AircraftRegistry.FindByDcsBiosName(name);
+                    Logger.Info($"DCS-BIOS: '{name}' -> {descriptor?.DisplayName ?? "unsupported"}");
+
+                    if (descriptor == null)
+                    {
+                        foreach (var ctx in Contexts)
+                            ctx.ShowWaitingScreen(name);
+                    }
                 }
 
-                frontpanelHub.Attach(modelSource.FlightDeck);
-            }
+                // One change waiter for this whole cycle: reused for the seat-
+                // selection race below AND the running-phase wait further down.
+                // The detector only supports a single pending waiter, so creating
+                // it once here (instead of a second WaitForChangeAsync later)
+                // avoids orphaning a waiter and corrupting its acknowledgment state.
+                var changeTask = detector.WaitForChangeAsync(cancellationToken);
 
-            IsStarted = true;
-            Logger.Info($"Bridge started successfully with {ActiveDeviceCount} device(s) ({Contexts.Count} CDU, {frontpanelHub.Count} Frontpanel)");
+                if (descriptor.HasSeatSelection && multipleCdus)
+                {
+                    foreach (var ctx in Contexts)
+                        ctx.ShowSeatSelectionScreen(descriptor);
+
+                    // Race the seat choice against an aircraft change. If the user
+                    // leaves the module before picking a seat, abandon the selection
+                    // and return to the detection state instead of blocking forever.
+                    var selectionTask = Task.WhenAny(
+                        Contexts.Select(c => c.SelectionTask.WaitAsync(cancellationToken)));
+
+                    var winner = await Task.WhenAny(selectionTask, changeTask);
+                    if (winner == changeTask)
+                    {
+                        Logger.Info("Aircraft changed during seat selection, resetting bridge.");
+                        foreach (var ctx in Contexts)
+                            ctx.ResetForNewCycle();
+                        continue;
+                    }
+
+                    var firstDone = await selectionTask;
+                    var firstChoice = await firstDone;
+
+                    var oppositeSeat = !firstChoice.IsPilot;
+                    foreach (var ctx in Contexts.Where(c => !c.IsSelectedAircraft))
+                        ctx.SetAircraftSelection(new AircraftSelection(descriptor.ModuleId, oppositeSeat));
+                }
+                else
+                {
+                    foreach (var ctx in Contexts)
+                        ctx.SetAircraftSelection(new AircraftSelection(descriptor.ModuleId, true));
+                }
+
+                foreach (var ctx in Contexts)
+                    ctx.StartBridge();
+
+                AttachFrontpanels(Contexts, new AircraftSelection(descriptor.ModuleId, true), options, ch47SwitchWithSeat);
+
+                IsStarted = true;
+                Logger.Info($"Bridge running with {ActiveDeviceCount} device(s)");
+
+                // Block here until the aircraft changes in DCS (module exit or
+                // switch), reusing the waiter created above.
+                await changeTask;
+                Logger.Info("Aircraft changed, resetting bridge.");
+
+                StopListeners();
+                foreach (var ctx in Contexts)
+                    ctx.ResetForNewCycle();
+            }
         }
         catch (Exception ex)
         {
@@ -173,6 +211,42 @@ public class BridgeManager : IDisposable
             Logger.Error(ex, "Error occurred while stopping bridge");
             throw;
         }
+    }
+
+    /// <summary>
+    /// Stops aircraft listeners and detaches frontpanels, but keeps the
+    /// DCS-BIOS connection and device contexts alive for the next cycle.
+    /// </summary>
+    private void StopListeners()
+    {
+        frontpanelHub?.Detach();
+
+        headlessListener?.Dispose();
+        headlessListener = null;
+
+        //IsStarted = false;
+    }
+
+    /// <summary>
+    /// Drives the frontpanels from a CDU listener's FlightDeck model when one is
+    /// present, otherwise from a headless listener created for <paramref name="fallback"/>
+    /// (e.g. a frontpanel-only setup with no CDU).
+    /// </summary>
+    private void AttachFrontpanels(List<DeviceContext> contexts, AircraftSelection fallback, UserOptions options, bool ch47SwitchWithSeat)
+    {
+        if (frontpanelHub == null || !frontpanelHub.HasFrontpanels) return;
+
+        var modelSource = contexts.FirstOrDefault(c => c.Listener != null)?.Listener;
+        if (modelSource == null)
+        {
+            var selection = contexts.FirstOrDefault()?.SelectedAircraft ?? fallback;
+            headlessListener = new AircraftListenerFactory().CreateListener(selection, null, options, ch47SwitchWithSeat);
+            headlessListener.Start();
+            modelSource = headlessListener;
+        }
+
+        if (modelSource != null)
+            frontpanelHub.Attach(modelSource.FlightDeck);
     }
 
     private void InitializeDcsBios(DcsBiosConfig config)
