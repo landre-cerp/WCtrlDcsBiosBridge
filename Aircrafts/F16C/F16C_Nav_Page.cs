@@ -1,5 +1,4 @@
 using DCS_BIOS.ControlLocator;
-using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
 using System.Globalization;
 using WwDevicesDotNet;
@@ -131,213 +130,202 @@ internal class F16C_Nav_Page
         _CLOCK_ELAPSED_S = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CLOCK_ELAPSED_TIME_SEC");
     }
 
-    public bool ProcessData(DCSBIOSDataEventArgs e)
+    public void RegisterControls(
+        Action<DCSBIOSOutput?, Action<uint>> register,
+        Action<DCSBIOSOutput?, Action<string>> registerString,
+        Func<Compositor> compositor)
     {
-        bool refreshDisplay = false;
+        void Refresh() => Render(compositor());
 
-        if (_STANDBY_COMPASS_HEADING != null && e.Address == _STANDBY_COMPASS_HEADING.Address)
+        register(_STANDBY_COMPASS_HEADING, v =>
         {
-            uint raw = _STANDBY_COMPASS_HEADING.GetUIntValue(e.Data);
-            _currentHeadingDeg = (int)Math.Round(raw * 360.0 / 65536.0, MidpointRounding.AwayFromZero) % 360;
-            refreshDisplay = true;
-        }
+            _currentHeadingDeg = (int)Math.Round(v * 360.0 / 65536.0, MidpointRounding.AwayFromZero) % 360;
+            Refresh();
+        });
 
-        if (_EHSI_RANGE_INVALID != null && e.Address == _EHSI_RANGE_INVALID.Address)
+        register(_EHSI_HDG_SET_KNB, v =>
         {
-            _rangeInvalid = _EHSI_RANGE_INVALID.GetUIntValue(e.Data) == 1;
-        }
-
-        if (_EHSI_HDG_SET_KNB != null && e.Address == _EHSI_HDG_SET_KNB.Address)
-        {
-            uint newVal = _EHSI_HDG_SET_KNB.GetUIntValue(e.Data);
-            int delta = (int)newVal - (int)_lastHdgKnobValue;
+            int delta = (int)v - (int)_lastHdgKnobValue;
             if (Math.Abs(delta) < 32768)
             {
                 _hdgBugDeg = (_hdgBugDeg + Math.Sign(delta) + 360) % 360;
             }
 
-            _lastHdgKnobValue = newVal;
-        }
+            _lastHdgKnobValue = v;
+        });
 
-        if (_EHSI_RANGE_INVALID != null && e.Address == _EHSI_RANGE_INVALID.Address)
+        register(_EHSI_RANGE_INVALID, v =>
         {
-            _ehsiRangeInvalid = _EHSI_RANGE_INVALID.GetUIntValue(e.Data) == 1;
-            refreshDisplay = true;
-        }
+            _ehsiRangeInvalid = v == 1;
+            _rangeInvalid = v == 1;
+            Refresh();
+        });
 
-        if (_EHSI_CRS_SET_KNB != null && e.Address == _EHSI_CRS_SET_KNB.Address)
+        register(_EHSI_CRS_SET_KNB, v =>
         {
-            _selectedCourseDeg = KnobToDegrees(_EHSI_CRS_SET_KNB.GetUIntValue(e.Data));
-            refreshDisplay = true;
-        }
+            _selectedCourseDeg = KnobToDegrees(v);
+            Refresh();
+        });
 
-        if (_ALT_10000 != null && e.Address == _ALT_10000.Address)
+        register(_ALT_10000, v =>
         {
-            _altD10k = DecodeDrumDigit(_ALT_10000, e.Data);
+            _altD10k = DecodeDrumDigit(v, _ALT_10000!.MaxValue);
             _altFt = _altD10k * 10000 + _altD1k * 1000 + _altLowFt;
-            refreshDisplay = true;
-        }
+            Refresh();
+        });
 
-        if (_ALT_1000 != null && e.Address == _ALT_1000.Address)
+        register(_ALT_1000, v =>
         {
-            _altD1k = DecodeDrumDigit(_ALT_1000, e.Data);
+            _altD1k = DecodeDrumDigit(v, _ALT_1000!.MaxValue);
             _altFt = _altD10k * 10000 + _altD1k * 1000 + _altLowFt;
-            refreshDisplay = true;
-        }
+            Refresh();
+        });
 
-        if (_ALT_100 != null && e.Address == _ALT_100.Address)
+        register(_ALT_100, v =>
         {
-            _altLowFt = DecodeSubThousandValue(_ALT_100, e.Data, 1);
+            _altLowFt = DecodeSubThousandValue(v, _ALT_100!.MaxValue, 1);
             _altFt = _altD10k * 10000 + _altD1k * 1000 + _altLowFt;
-            refreshDisplay = true;
-        }
+            Refresh();
+        });
 
-        if (_ALT_PNEU != null && e.Address == _ALT_PNEU.Address)
+        register(_ALT_PNEU, v =>
         {
-            _pneuFail = _ALT_PNEU.GetUIntValue(e.Data) > 32767;
-            refreshDisplay = true;
-        }
+            _pneuFail = v > 32767;
+            Refresh();
+        });
 
-        if (_QNH_D0 != null && e.Address == _QNH_D0.Address) { _qnhD0 = DecodeDrumDigit(_QNH_D0, e.Data); refreshDisplay = true; }
-        if (_QNH_D1 != null && e.Address == _QNH_D1.Address) { _qnhD1 = DecodeDrumDigit(_QNH_D1, e.Data); refreshDisplay = true; }
-        if (_QNH_D2 != null && e.Address == _QNH_D2.Address) { _qnhD2 = DecodeDrumDigit(_QNH_D2, e.Data); refreshDisplay = true; }
-        if (_QNH_D3 != null && e.Address == _QNH_D3.Address) { _qnhD3 = DecodeDrumDigit(_QNH_D3, e.Data); refreshDisplay = true; }
+        register(_QNH_D0, v => { _qnhD0 = DecodeDrumDigit(v, _QNH_D0!.MaxValue); Refresh(); });
+        register(_QNH_D1, v => { _qnhD1 = DecodeDrumDigit(v, _QNH_D1!.MaxValue); Refresh(); });
+        register(_QNH_D2, v => { _qnhD2 = DecodeDrumDigit(v, _QNH_D2!.MaxValue); Refresh(); });
+        register(_QNH_D3, v => { _qnhD3 = DecodeDrumDigit(v, _QNH_D3!.MaxValue); Refresh(); });
 
-        if (_AIRSPEED != null && e.Address == _AIRSPEED.Address)
+        register(_AIRSPEED, v =>
         {
-            _iasKts = (int)Math.Round(_AIRSPEED.GetUIntValue(e.Data) * 1000.0 / 65535.0);
-            refreshDisplay = true;
-        }
+            _iasKts = (int)Math.Round(v * 1000.0 / 65535.0);
+            Refresh();
+        });
 
-        if (_MACH != null && e.Address == _MACH.Address)
+        register(_MACH, v =>
         {
-            double rawMachNeedle = _MACH.GetUIntValue(e.Data) / (double)_MACH.MaxValue;
+            double rawMachNeedle = v / (double)_MACH!.MaxValue;
             _mach = DecodeMach(rawMachNeedle);
-            refreshDisplay = true;
-        }
+            Refresh();
+        });
 
-        if (_VVI != null && e.Address == _VVI.Address)
+        register(_VVI, v =>
         {
-            _vviFpm = (int)Math.Round((_VVI.GetUIntValue(e.Data) - 32768.0) * 6000.0 / 32767.0);
-            refreshDisplay = true;
-        }
+            _vviFpm = (int)Math.Round((v - 32768.0) * 6000.0 / 32767.0);
+            Refresh();
+        });
 
-        if (_FUEL_TOT_10K != null && e.Address == _FUEL_TOT_10K.Address)
+        register(_FUEL_TOT_10K, v =>
         {
-            _fuelTot10kDigit = DecodeDrumDigit(_FUEL_TOT_10K, e.Data);
+            _fuelTot10kDigit = DecodeDrumDigit(v, _FUEL_TOT_10K!.MaxValue);
             _fuelTotalLb = _fuelTot10kDigit * 10000 + _fuelTot1kDigit * 1000 + _fuelTot100Digit * 100;
-            refreshDisplay = true;
-        }
+            Refresh();
+        });
 
-        if (_FUEL_TOT_1K != null && e.Address == _FUEL_TOT_1K.Address)
+        register(_FUEL_TOT_1K, v =>
         {
-            _fuelTot1kDigit = DecodeDrumDigit(_FUEL_TOT_1K, e.Data);
+            _fuelTot1kDigit = DecodeDrumDigit(v, _FUEL_TOT_1K!.MaxValue);
             _fuelTotalLb = _fuelTot10kDigit * 10000 + _fuelTot1kDigit * 1000 + _fuelTot100Digit * 100;
-            refreshDisplay = true;
-        }
+            Refresh();
+        });
 
-        if (_FUEL_TOT_100 != null && e.Address == _FUEL_TOT_100.Address)
+        register(_FUEL_TOT_100, v =>
         {
-            _fuelTot100Digit = DecodeDrumDigit(_FUEL_TOT_100, e.Data);
+            _fuelTot100Digit = DecodeDrumDigit(v, _FUEL_TOT_100!.MaxValue);
             _fuelTotalLb = _fuelTot10kDigit * 10000 + _fuelTot1kDigit * 1000 + _fuelTot100Digit * 100;
-            refreshDisplay = true;
-        }
+            Refresh();
+        });
 
-        if (_FUEL_FF_10K != null && e.Address == _FUEL_FF_10K.Address)
+        register(_FUEL_FF_10K, v =>
         {
-            _fuelFf10kDigit = DecodeDrumDigit(_FUEL_FF_10K, e.Data);
+            _fuelFf10kDigit = DecodeDrumDigit(v, _FUEL_FF_10K!.MaxValue);
             _fuelFlowPph = ComposeFuelFlowPph(_fuelFf10kDigit, _fuelFf1kDigit, _fuelFf100Digit);
-            refreshDisplay = true;
-        }
+            Refresh();
+        });
 
-        if (_FUEL_FF_1K != null && e.Address == _FUEL_FF_1K.Address)
+        register(_FUEL_FF_1K, v =>
         {
-            _fuelFf1kDigit = DecodeDrumDigit(_FUEL_FF_1K, e.Data);
+            _fuelFf1kDigit = DecodeDrumDigit(v, _FUEL_FF_1K!.MaxValue);
             _fuelFlowPph = ComposeFuelFlowPph(_fuelFf10kDigit, _fuelFf1kDigit, _fuelFf100Digit);
-            refreshDisplay = true;
-        }
+            Refresh();
+        });
 
-        if (_FUEL_FF_100 != null && e.Address == _FUEL_FF_100.Address)
+        register(_FUEL_FF_100, v =>
         {
-            _fuelFf100Digit = DecodeSubThousandValue(_FUEL_FF_100, e.Data, 50);
+            _fuelFf100Digit = DecodeSubThousandValue(v, _FUEL_FF_100!.MaxValue, 50);
             _fuelFlowPph = ComposeFuelFlowPph(_fuelFf10kDigit, _fuelFf1kDigit, _fuelFf100Digit);
-            refreshDisplay = true;
-        }
+            Refresh();
+        });
 
-        if (_FUEL_AL != null && e.Address == _FUEL_AL.Address)
+        register(_FUEL_AL, v =>
         {
-            _fuelAlLb = (int)Math.Round(_FUEL_AL.GetUIntValue(e.Data) * 4000.0 / 65535.0);
-            refreshDisplay = true;
-        }
+            _fuelAlLb = (int)Math.Round(v * 4000.0 / 65535.0);
+            Refresh();
+        });
 
-        if (_FUEL_FR != null && e.Address == _FUEL_FR.Address)
+        register(_FUEL_FR, v =>
         {
-            _fuelFrLb = (int)Math.Round(_FUEL_FR.GetUIntValue(e.Data) * 4000.0 / 65535.0);
-            refreshDisplay = true;
-        }
+            _fuelFrLb = (int)Math.Round(v * 4000.0 / 65535.0);
+            Refresh();
+        });
 
-        if (_LIGHT_FUEL_LOW != null && e.Address == _LIGHT_FUEL_LOW.Address)
+        register(_LIGHT_FUEL_LOW, v =>
         {
-            _fuelLow = _LIGHT_FUEL_LOW.GetUIntValue(e.Data) == 1;
-            refreshDisplay = true;
-        }
+            _fuelLow = v == 1;
+            Refresh();
+        });
 
-        if (_CLOCK_H != null && e.Address == _CLOCK_H.Address)
+        register(_CLOCK_H, v =>
         {
-            uint rawHour = _CLOCK_H.GetUIntValue(e.Data);
-            int hour12 = (int)Math.Floor(rawHour * 12.0 / 65536.0) % 12;
+            int hour12 = (int)Math.Floor(v * 12.0 / 65536.0) % 12;
             int newClockH = hour12 == 0 ? 12 : hour12;
 
             if (newClockH != _clockH)
             {
                 App.Logger.Info(
-                    $"F16C CLOCK_H raw={rawHour} max={_CLOCK_H.MaxValue} " +
-                    $"norm={rawHour / 65536.0:F4} -> shown hour={newClockH}");
+                    $"F16C CLOCK_H raw={v} max={_CLOCK_H!.MaxValue} " +
+                    $"norm={v / 65536.0:F4} -> shown hour={newClockH}");
             }
 
             _clockH = newClockH;
-            refreshDisplay = true;
-        }
+            Refresh();
+        });
 
-        if (_CLOCK_MS != null && e.Address == _CLOCK_MS.Address)
+        register(_CLOCK_MS, v =>
         {
-            _clockMin = (int)Math.Floor(_CLOCK_MS.GetUIntValue(e.Data) * 60.0 / 65536.0);
-            refreshDisplay = true;
-        }
+            _clockMin = (int)Math.Floor(v * 60.0 / 65536.0);
+            Refresh();
+        });
 
-        if (_CLOCK_ELAPSED_M != null && e.Address == _CLOCK_ELAPSED_M.Address)
+        register(_CLOCK_ELAPSED_M, v =>
         {
-            _elapsedMin = (int)Math.Floor(_CLOCK_ELAPSED_M.GetUIntValue(e.Data) * 60.0 / 65536.0);
-            refreshDisplay = true;
-        }
+            _elapsedMin = (int)Math.Floor(v * 60.0 / 65536.0);
+            Refresh();
+        });
 
-        if (_CLOCK_ELAPSED_S != null && e.Address == _CLOCK_ELAPSED_S.Address)
+        register(_CLOCK_ELAPSED_S, v =>
         {
-            _elapsedSec = (int)Math.Floor(_CLOCK_ELAPSED_S.GetUIntValue(e.Data) * 60.0 / 65536.0);
-            refreshDisplay = true;
-        }
+            _elapsedSec = (int)Math.Floor(v * 60.0 / 65536.0);
+            Refresh();
+        });
 
-        return refreshDisplay;
-    }
-
-    public bool ProcessData(DCSBIOSStringDataEventArgs e)
-    {
-        bool hsiChanged = false;
-
-        if (_EHSI_COURSE != null && e.Address == _EHSI_COURSE.Address)
+        registerString(_EHSI_COURSE, s =>
         {
-            _ehsiCourse = e.StringData.Trim();
-            if (int.TryParse(e.StringData.Trim(), out int crs))
+            _ehsiCourse = s.Trim();
+            if (int.TryParse(s.Trim(), out int crs))
             {
                 _selectedCourseDeg = crs;
             }
 
-            hsiChanged = true;
-        }
+            Refresh();
+        });
 
-        if (_EHSI_RANGE != null && e.Address == _EHSI_RANGE.Address)
+        registerString(_EHSI_RANGE, s =>
         {
-            string raw = e.StringData.Replace("\0", "").Trim();
+            string raw = s.Replace("\0", "").Trim();
             string normalized = NormalizeRangeText(raw);
             if (int.TryParse(normalized, out int rangeRaw))
             {
@@ -352,22 +340,20 @@ internal class F16C_Nav_Page
                 _ehsiRange = normalized;
             }
 
-            hsiChanged = true;
-        }
+            Refresh();
+        });
 
-        if (_EHSI_MODE_LEFT != null && e.Address == _EHSI_MODE_LEFT.Address)
+        registerString(_EHSI_MODE_LEFT, s =>
         {
-            _ehsiModeLeft = e.StringData.Trim();
-            hsiChanged = true;
-        }
+            _ehsiModeLeft = s.Trim();
+            Refresh();
+        });
 
-        if (_EHSI_MODE_RIGHT != null && e.Address == _EHSI_MODE_RIGHT.Address)
+        registerString(_EHSI_MODE_RIGHT, s =>
         {
-            _ehsiModeRight = e.StringData.Trim();
-            hsiChanged = true;
-        }
-
-        return hsiChanged;
+            _ehsiModeRight = s.Trim();
+            Refresh();
+        });
     }
 
     public void Render(Compositor o)
@@ -419,14 +405,14 @@ internal class F16C_Nav_Page
     private static int KnobToDegrees(uint raw) =>
         (int)Math.Round(raw / 65535.0 * 359.0) % 360;
 
-    private static int DecodeDrumDigit(DCSBIOSOutput output, uint data)
+    private static int DecodeDrumDigit(uint value, int maxValue)
     {
-        if (output.MaxValue == 0)
+        if (maxValue == 0)
         {
             return 0;
         }
 
-        double normalized = output.GetUIntValue(data) / (double)output.MaxValue;
+        double normalized = value / (double)maxValue;
         int digit = (int)Math.Floor(normalized * 10.0 + 0.05);
         return digit == 10 ? 0 : Math.Clamp(digit, 0, 9);
     }
@@ -443,14 +429,14 @@ internal class F16C_Nav_Page
         return tenThousandsDigit * 10000 + thousandsDigit * 1000 + hundredsDigit;
     }
 
-    private static int DecodeSubThousandValue(DCSBIOSOutput output, uint data, int step)
+    private static int DecodeSubThousandValue(uint value, int maxValue, int step)
     {
-        if (output.MaxValue == 0 || step <= 0)
+        if (maxValue == 0 || step <= 0)
         {
             return 0;
         }
 
-        double scaled = output.GetUIntValue(data) * 1000.0 / output.MaxValue;
+        double scaled = value * 1000.0 / maxValue;
         int quantized = (int)Math.Round(scaled / step, MidpointRounding.AwayFromZero) * step;
         return Math.Clamp(quantized, 0, 1000 - step);
     }

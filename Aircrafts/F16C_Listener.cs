@@ -9,7 +9,8 @@ internal enum DisplayMode { DED, NAV, RWR }
 
 internal class F16C_Listener : AircraftListener
 {
-    private volatile DisplayMode _currentDisplay = DisplayMode.DED;
+    private const string NAV_PAGE = "NAV";
+    private const string RWR_PAGE = "RWR";
 
     private DCSBIOSOutput? _PRI_CONSOLES_BRT;
     private DCSBIOSOutput? _LIGHT_MASTER_CAUTION;
@@ -35,6 +36,9 @@ internal class F16C_Listener : AircraftListener
         _rwrDisplayKey = Enum.TryParse<Key>(options.F16CRwrDisplayKey, out var rwrKey)
             ? rwrKey
             : Key.LineSelectRight1;
+
+        AddNewPage(NAV_PAGE);
+        AddNewPage(RWR_PAGE);
     }
 
     ~F16C_Listener() => Dispose(false);
@@ -57,13 +61,22 @@ internal class F16C_Listener : AircraftListener
 
     public void SwitchDisplay(DisplayMode newMode)
     {
-        if (newMode == DisplayMode.DED)
+        switch (newMode)
         {
-            _dedPage.InvalidateCache();
+            case DisplayMode.DED:
+                _currentPage = DEFAULT_PAGE;
+                _dedPage.InvalidateCache();
+                _dedPage.Render(GetCompositor(DEFAULT_PAGE));
+                break;
+            case DisplayMode.NAV:
+                _currentPage = NAV_PAGE;
+                _navPage.Render(GetCompositor(NAV_PAGE));
+                break;
+            case DisplayMode.RWR:
+                _currentPage = RWR_PAGE;
+                _rwrPage.Render(GetCompositor(RWR_PAGE));
+                break;
         }
-
-        _currentDisplay = newMode;
-        RefreshActiveDisplay();
     }
 
     protected override void RegisterCduControls()
@@ -73,6 +86,20 @@ internal class F16C_Listener : AircraftListener
             CduDevice.KeyDown -= HandleKeyDown;
             CduDevice.KeyDown += HandleKeyDown;
         }
+
+        if (!options.DisableLightingManagement)
+        {
+            Register(_PRI_CONSOLES_BRT, v =>
+                SetBacklightBrightnessPercent((int)(v * 100 / _PRI_CONSOLES_BRT!.MaxValue)));
+            Register(_PRI_DATA_DISPLAY_BRT, v =>
+                SetDisplayBrightnessPercent((int)(v * 100 / _PRI_DATA_DISPLAY_BRT!.MaxValue)));
+        }
+
+        Register(_LIGHT_MASTER_CAUTION, v => SetCduLeds(fail: v == 1));
+
+        _dedPage.RegisterControls(Register, RegisterString, () => GetCompositor(DEFAULT_PAGE));
+        _navPage.RegisterControls(Register, RegisterString, () => GetCompositor(NAV_PAGE));
+        _rwrPage.RegisterControls(Register, RegisterString, () => GetCompositor(RWR_PAGE));
     }
 
     protected override void RegisterFrontpanelControls() { }
@@ -86,105 +113,6 @@ internal class F16C_Listener : AircraftListener
         _dedPage.InitializeControls();
         _navPage.InitializeControls();
         _rwrPage.InitializeControls();
-    }
-
-    public override void DcsBiosDataReceived(object sender, DCSBIOSDataEventArgs e)
-    {
-        try
-        {
-            UpdateCounter(e.Address, e.Data);
-
-            if (HasCdu && !options.DisableLightingManagement)
-            {
-                if (_PRI_CONSOLES_BRT != null && e.Address == _PRI_CONSOLES_BRT.Address)
-                {
-                    SetBacklightBrightnessPercent(
-                        (int)(_PRI_CONSOLES_BRT.GetUIntValue(e.Data) * 100 / _PRI_CONSOLES_BRT.MaxValue));
-                }
-
-                if (_PRI_DATA_DISPLAY_BRT != null && e.Address == _PRI_DATA_DISPLAY_BRT.Address)
-                {
-                    SetDisplayBrightnessPercent(
-                        (int)(_PRI_DATA_DISPLAY_BRT.GetUIntValue(e.Data) * 100 / _PRI_DATA_DISPLAY_BRT.MaxValue));
-                }
-            }
-
-            if (!options.DisableLightingManagement && _PRI_CONSOLES_BRT != null && e.Address == _PRI_CONSOLES_BRT.Address)
-            {
-                FlightDeck.ConsoleBrightness =
-                    (byte)(_PRI_CONSOLES_BRT.GetUIntValue(e.Data) * 255 / _PRI_CONSOLES_BRT.MaxValue);
-            }
-
-            if (HasCdu && _LIGHT_MASTER_CAUTION != null && e.Address == _LIGHT_MASTER_CAUTION.Address)
-            {
-                SetCduLeds(fail: _LIGHT_MASTER_CAUTION.GetUIntValue(e.Data) == 1);
-            }
-
-            bool navChanged = _navPage.ProcessData(e);
-            bool rwrChanged = _rwrPage.ProcessData(e);
-
-            if ((_currentDisplay == DisplayMode.NAV && navChanged) ||
-                (_currentDisplay == DisplayMode.RWR && rwrChanged))
-            {
-                RefreshActiveDisplay();
-            }
-        }
-        catch (Exception ex)
-        {
-            App.Logger.Error(ex, "F-16C: Failed to process DCS-BIOS data");
-        }
-    }
-
-    public override void DCSBIOSStringReceived(object sender, DCSBIOSStringDataEventArgs e)
-    {
-        try
-        {
-            switch (_currentDisplay)
-            {
-                case DisplayMode.DED:
-                    if (_dedPage.ProcessData(e))
-                    {
-                        _dedPage.Render(GetCompositor(DEFAULT_PAGE));
-                    }
-                    break;
-
-                case DisplayMode.NAV:
-                    if (_navPage.ProcessData(e))
-                    {
-                        _navPage.Render(GetCompositor(DEFAULT_PAGE));
-                    }
-                    break;
-
-                case DisplayMode.RWR:
-                    if (_rwrPage.ProcessData(e))
-                    {
-                        _rwrPage.Render(GetCompositor(DEFAULT_PAGE));
-                    }
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            App.Logger.Error(ex, "F-16C: Failed to process DCS-BIOS string data");
-        }
-    }
-
-    private void RefreshActiveDisplay()
-    {
-        var output = GetCompositor(DEFAULT_PAGE);
-
-        switch (_currentDisplay)
-        {
-            case DisplayMode.DED:
-                _dedPage.Render(output);
-                break;
-            case DisplayMode.NAV:
-                _navPage.Render(output);
-                break;
-            case DisplayMode.RWR:
-                _rwrPage.Render(output);
-                break;
-        }
     }
 
     protected override void Dispose(bool disposing)

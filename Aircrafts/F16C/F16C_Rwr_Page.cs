@@ -1,5 +1,4 @@
 using DCS_BIOS.ControlLocator;
-using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 
@@ -139,78 +138,50 @@ internal class F16C_Rwr_Page
         _LIGHT_CMDS_DISP = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_CMDS_DISP");
     }
 
-    public bool ProcessData(DCSBIOSDataEventArgs e)
+    public void RegisterControls(
+        Action<DCSBIOSOutput?, Action<uint>> register,
+        Action<DCSBIOSOutput?, Action<string>> registerString,
+        Func<Compositor> compositor)
     {
-        bool refreshDisplay = false;
+        void Light(DCSBIOSOutput? ctrl, Action<bool> set)
+            => register(ctrl, v => { set(v == 1); Render(compositor()); });
 
-        void L(DCSBIOSOutput? ctrl, ref bool field)
-        {
-            if (ctrl != null && ctrl.Address == e.Address)
-            {
-                field = ctrl.GetUIntValue(e.Data) == 1;
-                refreshDisplay = true;
-            }
-        }
+        Light(_LIGHT_RWR_POWER, b => _rwrPower = b);
+        Light(_LIGHT_RWR_ACTIVITY, b => _rwrActivity = b);
+        Light(_LIGHT_RWR_SEARCH, b => _rwrSearch = b);
+        Light(_LIGHT_RWR_ALT, b => _rwrAlt = b);
+        Light(_LIGHT_RWR_ALT_LOW, b => _rwrAltLow = b);
+        Light(_LIGHT_RWR_MSL_LAUNCH, b => _rwrMslLaunch = b);
+        Light(_LIGHT_RWR_MODE_PRI, b => _rwrModePri = b);
+        Light(_LIGHT_RWR_MODE_OPEN, b => _rwrModeOpen = b);
+        Light(_LIGHT_RWR_HANDOFF_H, b => _rwrHandoff = b);
+        Light(_LIGHT_RWR_SHIP_UNK, b => _rwrShipUnk = b);
+        Light(_LIGHT_RWR_TGTSEP_DN, b => _rwrTgtSepDn = b);
+        Light(_LIGHT_RWR_TGTSEP_UP, b => _rwrTgtSepUp = b);
+        Light(_LIGHT_RWR_SYSTEST, b => _rwrSysTest = b);
 
-        L(_LIGHT_RWR_POWER, ref _rwrPower);
-        L(_LIGHT_RWR_ACTIVITY, ref _rwrActivity);
-        L(_LIGHT_RWR_SEARCH, ref _rwrSearch);
-        L(_LIGHT_RWR_ALT, ref _rwrAlt);
-        L(_LIGHT_RWR_ALT_LOW, ref _rwrAltLow);
-        L(_LIGHT_RWR_MSL_LAUNCH, ref _rwrMslLaunch);
-        L(_LIGHT_RWR_MODE_PRI, ref _rwrModePri);
-        L(_LIGHT_RWR_MODE_OPEN, ref _rwrModeOpen);
-        L(_LIGHT_RWR_HANDOFF_H, ref _rwrHandoff);
-        L(_LIGHT_RWR_SHIP_UNK, ref _rwrShipUnk);
-        L(_LIGHT_RWR_TGTSEP_DN, ref _rwrTgtSepDn);
-        L(_LIGHT_RWR_TGTSEP_UP, ref _rwrTgtSepUp);
-        L(_LIGHT_RWR_SYSTEST, ref _rwrSysTest);
-        L(_LIGHT_ECM_1_A, ref _ecm1A); L(_LIGHT_ECM_1_F, ref _ecm1F);
-        L(_LIGHT_ECM_1_S, ref _ecm1S); L(_LIGHT_ECM_1_T, ref _ecm1T);
-        L(_LIGHT_ECM_2_A, ref _ecm2A); L(_LIGHT_ECM_2_F, ref _ecm2F);
-        L(_LIGHT_ECM_2_S, ref _ecm2S); L(_LIGHT_ECM_2_T, ref _ecm2T);
-        L(_LIGHT_ECM_3_A, ref _ecm3A); L(_LIGHT_ECM_3_F, ref _ecm3F);
-        L(_LIGHT_ECM_3_S, ref _ecm3S); L(_LIGHT_ECM_3_T, ref _ecm3T);
-        L(_LIGHT_ECM_4_A, ref _ecm4A); L(_LIGHT_ECM_4_F, ref _ecm4F);
-        L(_LIGHT_ECM_4_S, ref _ecm4S); L(_LIGHT_ECM_4_T, ref _ecm4T);
-        L(_LIGHT_ECM_5_A, ref _ecm5A); L(_LIGHT_ECM_5_F, ref _ecm5F);
-        L(_LIGHT_ECM_5_S, ref _ecm5S); L(_LIGHT_ECM_5_T, ref _ecm5T);
-        L(_LIGHT_CMDS_RDY, ref _cmdsRdy);
-        L(_LIGHT_CMDS_GO, ref _cmdsGo);
-        L(_LIGHT_CMDS_DISP, ref _cmdsDisp);
+        Light(_LIGHT_ECM_1_A, b => _ecm1A = b); Light(_LIGHT_ECM_1_F, b => _ecm1F = b);
+        Light(_LIGHT_ECM_1_S, b => _ecm1S = b); Light(_LIGHT_ECM_1_T, b => _ecm1T = b);
+        Light(_LIGHT_ECM_2_A, b => _ecm2A = b); Light(_LIGHT_ECM_2_F, b => _ecm2F = b);
+        Light(_LIGHT_ECM_2_S, b => _ecm2S = b); Light(_LIGHT_ECM_2_T, b => _ecm2T = b);
+        Light(_LIGHT_ECM_3_A, b => _ecm3A = b); Light(_LIGHT_ECM_3_F, b => _ecm3F = b);
+        Light(_LIGHT_ECM_3_S, b => _ecm3S = b); Light(_LIGHT_ECM_3_T, b => _ecm3T = b);
+        Light(_LIGHT_ECM_4_A, b => _ecm4A = b); Light(_LIGHT_ECM_4_F, b => _ecm4F = b);
+        Light(_LIGHT_ECM_4_S, b => _ecm4S = b); Light(_LIGHT_ECM_4_T, b => _ecm4T = b);
+        Light(_LIGHT_ECM_5_A, b => _ecm5A = b); Light(_LIGHT_ECM_5_F, b => _ecm5F = b);
+        Light(_LIGHT_ECM_5_S, b => _ecm5S = b); Light(_LIGHT_ECM_5_T, b => _ecm5T = b);
 
-        return refreshDisplay;
-    }
+        Light(_LIGHT_CMDS_RDY, b => _cmdsRdy = b);
+        Light(_LIGHT_CMDS_GO, b => _cmdsGo = b);
+        Light(_LIGHT_CMDS_DISP, b => _cmdsDisp = b);
 
-    public bool ProcessData(DCSBIOSStringDataEventArgs e)
-    {
-        bool rwrChanged = false;
+        void Amount(DCSBIOSOutput? ctrl, Action<string> set)
+            => registerString(ctrl, s => { set(s.Trim()); Render(compositor()); });
 
-        if (_CMDS_CH_AMOUNT != null && e.Address == _CMDS_CH_AMOUNT.Address)
-        {
-            _cmdsCh = e.StringData.Trim();
-            rwrChanged = true;
-        }
-
-        if (_CMDS_FL_AMOUNT != null && e.Address == _CMDS_FL_AMOUNT.Address)
-        {
-            _cmdsFl = e.StringData.Trim();
-            rwrChanged = true;
-        }
-
-        if (_CMDS_O1_AMOUNT != null && e.Address == _CMDS_O1_AMOUNT.Address)
-        {
-            _cmdsO1 = e.StringData.Trim();
-            rwrChanged = true;
-        }
-
-        if (_CMDS_O2_AMOUNT != null && e.Address == _CMDS_O2_AMOUNT.Address)
-        {
-            _cmdsO2 = e.StringData.Trim();
-            rwrChanged = true;
-        }
-
-        return rwrChanged;
+        Amount(_CMDS_CH_AMOUNT, s => _cmdsCh = s);
+        Amount(_CMDS_FL_AMOUNT, s => _cmdsFl = s);
+        Amount(_CMDS_O1_AMOUNT, s => _cmdsO1 = s);
+        Amount(_CMDS_O2_AMOUNT, s => _cmdsO2 = s);
     }
 
     public void Render(Compositor o)
