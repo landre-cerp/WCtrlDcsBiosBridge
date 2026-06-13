@@ -124,9 +124,24 @@ public class BridgeManager : IDisposable
                     foreach (var ctx in Contexts)
                         ctx.ShowSeatSelectionScreen(descriptor);
 
-                    var firstDone = await Task.WhenAny(
+                    using var seatWaitCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    var firstSelectionTask = Task.WhenAny(
                         Contexts.Select(c => c.SelectionTask.WaitAsync(cancellationToken)));
-                    var firstChoice = await firstDone;
+                    var aircraftChangedTask = detector.WaitForChangeAsync(seatWaitCts.Token);
+
+                    var completedTask = await Task.WhenAny(firstSelectionTask, aircraftChangedTask);
+                    if (completedTask == aircraftChangedTask)
+                    {
+                        var name = await aircraftChangedTask;
+                        DetectedAircraftChanged?.Invoke(name);
+                        Logger.Info("Aircraft changed before seat selection completed, restarting detection.");
+                        foreach (var ctx in Contexts)
+                            ctx.ResetForNewCycle();
+                        continue;
+                    }
+
+                    seatWaitCts.Cancel();
+                    var firstChoice = await await firstSelectionTask;
 
                     var oppositeSeat = !firstChoice.IsPilot;
                     foreach (var ctx in Contexts.Where(c => !c.IsSelectedAircraft))
