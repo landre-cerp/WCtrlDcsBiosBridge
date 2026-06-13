@@ -1,5 +1,4 @@
 using DCS_BIOS.ControlLocator;
-using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 
@@ -52,69 +51,75 @@ internal class FA18C_UFC_Page
         _scratchpadString2 = DCSBIOSControlLocator.GetStringDCSBIOSOutput("UFC_SCRATCHPAD_STRING_2_DISPLAY");
     }
 
-    public void ProcessData(DCSBIOSStringDataEventArgs e)
+    public void RegisterControls(Action<DCSBIOSOutput?, Action<string>> registerString, Action onUpdated)
     {
-        if (_scratchpadNumber != null && e.Address.Equals(_scratchpadNumber.Address))
+        registerString(_scratchpadNumber, s =>
         {
-            var incomingData = e.StringData;
-            if (string.Compare(incomingData, "   pww0w") == 0)
-            {
-                incomingData = "   ERROR";
-            }
-            if (string.Compare(incomingData, _scratchPadNumber) != 0)
-            {
-                _scratchPadNumber = incomingData;
-            }
-        }
-        if (_scratchpadString1 != null && e.Address.Equals(_scratchpadString1.Address))
+            if (string.Compare(s, "   pww0w") == 0) s = "   ERROR";
+            if (string.Compare(s, _scratchPadNumber) != 0) _scratchPadNumber = s;
+            onUpdated();
+        });
+        registerString(_scratchpadString1, s =>
         {
-            if (string.Compare(e.StringData, _scratchPad1) != 0) _scratchPad1 = e.StringData;
-        }
-        if (_scratchpadString2 != null && e.Address.Equals(_scratchpadString2.Address))
+            if (string.Compare(s, _scratchPad1) != 0) _scratchPad1 = s;
+            onUpdated();
+        });
+        registerString(_scratchpadString2, s =>
         {
-            if (string.Compare(e.StringData, _scratchPad2) != 0) _scratchPad2 = e.StringData;
-        }
+            if (string.Compare(s, _scratchPad2) != 0) _scratchPad2 = s;
+            onUpdated();
+        });
 
-        if (_optionDisplay1 != null && e.Address.Equals(_optionDisplay1.Address))
+        registerString(_optionDisplay1, s =>
         {
-            if (string.Compare(e.StringData, _option1) != 0) _option1 = e.StringData;
-        }
-        if (_optionCueing1 != null && e.Address.Equals(_optionCueing1.Address))
+            if (string.Compare(s, _option1) != 0) _option1 = s;
+            onUpdated();
+        });
+        registerString(_optionCueing1, s =>
         {
-            if (string.Compare(e.StringData, _cue1) != 0) _cue1 = e.StringData;
-        }
-        if (_optionDisplay2 != null && e.Address.Equals(_optionDisplay2.Address))
+            if (string.Compare(s, _cue1) != 0) _cue1 = s;
+            onUpdated();
+        });
+        registerString(_optionDisplay2, s =>
         {
-            if (string.Compare(e.StringData, _option2) != 0) _option2 = e.StringData;
-        }
-        if (_optionCueing2 != null && e.Address.Equals(_optionCueing2.Address))
+            if (string.Compare(s, _option2) != 0) _option2 = s;
+            onUpdated();
+        });
+        registerString(_optionCueing2, s =>
         {
-            if (string.Compare(e.StringData, _cue2) != 0) _cue2 = e.StringData;
-        }
-        if (_optionDisplay3 != null && e.Address.Equals(_optionDisplay3.Address))
+            if (string.Compare(s, _cue2) != 0) _cue2 = s;
+            onUpdated();
+        });
+        registerString(_optionDisplay3, s =>
         {
-            if (string.Compare(e.StringData, _option3) != 0) _option3 = e.StringData;
-        }
-        if (_optionCueing3 != null && e.Address.Equals(_optionCueing3.Address))
+            if (string.Compare(s, _option3) != 0) _option3 = s;
+            onUpdated();
+        });
+        registerString(_optionCueing3, s =>
         {
-            if (string.Compare(e.StringData, _cue3) != 0) _cue3 = e.StringData;
-        }
-        if (_optionDisplay4 != null && e.Address.Equals(_optionDisplay4.Address))
+            if (string.Compare(s, _cue3) != 0) _cue3 = s;
+            onUpdated();
+        });
+        registerString(_optionDisplay4, s =>
         {
-            if (string.Compare(e.StringData, _option4) != 0) _option4 = e.StringData;
-        }
-        if (_optionCueing4 != null && e.Address.Equals(_optionCueing4.Address))
+            if (string.Compare(s, _option4) != 0) _option4 = s;
+            onUpdated();
+        });
+        registerString(_optionCueing4, s =>
         {
-            if (string.Compare(e.StringData, _cue4) != 0) _cue4 = e.StringData;
-        }
-        if (_optionDisplay5 != null && e.Address.Equals(_optionDisplay5.Address))
+            if (string.Compare(s, _cue4) != 0) _cue4 = s;
+            onUpdated();
+        });
+        registerString(_optionDisplay5, s =>
         {
-            if (string.Compare(e.StringData, _option5) != 0) _option5 = e.StringData;
-        }
-        if (_optionCueing5 != null && e.Address.Equals(_optionCueing5.Address))
+            if (string.Compare(s, _option5) != 0) _option5 = s;
+            onUpdated();
+        });
+        registerString(_optionCueing5, s =>
         {
-            if (string.Compare(e.StringData, _cue5) != 0) _cue5 = e.StringData;
-        }
+            if (string.Compare(s, _cue5) != 0) _cue5 = s;
+            onUpdated();
+        });
     }
 
     public void Render(Compositor output)

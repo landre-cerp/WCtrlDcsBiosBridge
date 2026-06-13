@@ -201,20 +201,19 @@ internal class F16C_Nav_Page
 
         register(_AIRSPEED, v =>
         {
-            _iasKts = (int)Math.Round(v * 1000.0 / 65535.0);
+            _iasKts = (int)Math.Round(DecodeAirspeed(v / (double)_AIRSPEED!.MaxValue));
             Refresh();
         });
 
         register(_MACH, v =>
         {
-            double rawMachNeedle = v / (double)_MACH!.MaxValue;
-            _mach = DecodeMach(rawMachNeedle);
+            _mach = DecodeMach(v / (double)_MACH!.MaxValue);
             Refresh();
         });
 
         register(_VVI, v =>
         {
-            _vviFpm = (int)Math.Round((v - 32768.0) * 6000.0 / 32767.0);
+            _vviFpm = DecodeVviFpm(v);
             Refresh();
         });
 
@@ -373,7 +372,7 @@ internal class F16C_Nav_Page
         string vs = _vviFpm >= 0 ? $"+{_vviFpm,5}" : $"{_vviFpm,6}";
         o.Line(4).Green().WriteLine($"ALT:{_altFt,6}ft VS:{vs}");
 
-        o.Line(5).Green().WriteLine($"IAS:{_iasKts,6}kt MCH:{_mach:F2}");
+        o.Line(5).Green().WriteLine($"IAS:{_iasKts,6}kt MCH:{_mach,4:F2}");
 
         string qnh = $"{_qnhD3}{_qnhD2}.{_qnhD1}{_qnhD0}";
         string pneu = _pneuFail ? "FAIL" : " OK ";
@@ -387,7 +386,9 @@ internal class F16C_Nav_Page
         double endurH = _fuelFlowPph > 0 ? (double)_fuelTotalLb / _fuelFlowPph : 0;
         int endurMin = (int)(endurH * 60);
         int rangeNm = (int)(endurH * 300);
-        o.Line(10).Green().WriteLine($"END:{endurMin / 60,2}h{endurMin % 60,2}   RNG~{rangeNm,4}nm");
+        o.Line(10).ClearRow().Green().Write($"END:{endurMin / 60,2}h{endurMin % 60,2}").Column(12).WriteLine($"RNG~{rangeNm,4}nm");
+
+
 
         o.Line(11).Green().WriteLine(new string('-', 24));
         o.Line(12).Green().WriteLine($"Clock:{_clockH:D2}:{_clockMin:D2}  HACK:{_elapsedMin:D2}:{_elapsedSec:D2}");
@@ -405,6 +406,125 @@ internal class F16C_Nav_Page
     private static int KnobToDegrees(uint raw) =>
         (int)Math.Round(raw / 65535.0 * 359.0) % 360;
 
+    private static int DecodeVviFpm(uint raw)
+    {
+        // DCS-BIOS reports the VVI gauge needle position, not ft/min.
+        // Aircraft LUA: CreateGaugeLocal(16, {-10000, -6000, 0, 6000}, {-1.0, -0.77, 0.0, 1.0}).
+        // The gauge is asymmetric, so the raw value must be mapped back per segment.
+        double position = raw / 65535.0 * 2.0 - 1.0;
+
+        if (position <= -0.77)
+        {
+            return (int)Math.Round(Interpolate(position, -1.0, -0.77, -10000.0, -6000.0));
+        }
+
+        if (position < 0.0)
+        {
+            return (int)Math.Round(Interpolate(position, -0.77, 0.0, -6000.0, 0.0));
+        }
+
+        return (int)Math.Round(Interpolate(position, 0.0, 1.0, 0.0, 6000.0));
+    }
+
+    private static double Interpolate(double value, double fromLow, double fromHigh, double toLow, double toHigh)
+    {
+        if (fromHigh == fromLow)
+        {
+            return toLow;
+        }
+
+        double t = (value - fromLow) / (fromHigh - fromLow);
+        return toLow + t * (toHigh - toLow);
+    }
+
+    // Aircraft LUA: CreateGaugeLocal(49, {Mach...}, {needle...}, controllers.MachIndicator).
+    // DCS-BIOS reports the needle position, which decreases as Mach increases.
+    private static readonly double[] MachNeedlePositions =
+    {
+        1.0, 0.958, 0.921, 0.902, 0.885, 0.848, 0.812, 0.775, 0.741,
+        0.704, 0.668, 0.632, 0.596, 0.562, 0.528, 0.493, 0.459, 0.422, 0.387
+    };
+
+    private static readonly double[] MachNumbers =
+    {
+        0.0, 0.5, 1.0, 1.05, 1.1, 1.2, 1.3, 1.4, 1.5,
+        1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5
+    };
+
+    private static double DecodeMach(double needlePosition)
+    {
+        // Invert the asymmetric gauge mapping by locating the matching needle segment.
+        if (needlePosition >= MachNeedlePositions[0])
+        {
+            return MachNumbers[0];
+        }
+
+        int last = MachNeedlePositions.Length - 1;
+        if (needlePosition <= MachNeedlePositions[last])
+        {
+            return MachNumbers[last];
+        }
+
+        for (int i = 0; i < last; i++)
+        {
+            if (needlePosition <= MachNeedlePositions[i] && needlePosition >= MachNeedlePositions[i + 1])
+            {
+                return Interpolate(
+                    needlePosition,
+                    MachNeedlePositions[i],
+                    MachNeedlePositions[i + 1],
+                    MachNumbers[i],
+                    MachNumbers[i + 1]);
+            }
+        }
+
+        return MachNumbers[last];
+    }
+
+    // Aircraft LUA: CreateGaugeLocal(48, {knots...}, {needle...}, controllers.AirSpeedIndicator).
+    // DCS-BIOS reports the needle position, which increases with airspeed.
+    private static readonly double[] AirspeedNeedlePositions =
+    {
+        0.0, 0.042, 0.095, 0.152, 0.182, 0.199, 0.255, 0.303,
+        0.355, 0.402, 0.455, 0.653, 0.698, 0.750, 0.797, 0.850
+    };
+
+    private static readonly double[] AirspeedKnots =
+    {
+        0.0, 80.0, 100.0, 150.0, 170.0, 200.0, 250.0, 300.0,
+        350.0, 400.0, 450.0, 650.0, 700.0, 750.0, 800.0, 850.0
+    };
+
+    private static double DecodeAirspeed(double needlePosition)
+    {
+        // Invert the non-linear gauge mapping by locating the matching needle segment.
+        if (needlePosition <= AirspeedNeedlePositions[0])
+        {
+            return AirspeedKnots[0];
+        }
+
+        int last = AirspeedNeedlePositions.Length - 1;
+        if (needlePosition >= AirspeedNeedlePositions[last])
+        {
+            return AirspeedKnots[last];
+        }
+
+        for (int i = 0; i < last; i++)
+        {
+            if (needlePosition >= AirspeedNeedlePositions[i] && needlePosition <= AirspeedNeedlePositions[i + 1])
+            {
+                return Interpolate(
+                    needlePosition,
+                    AirspeedNeedlePositions[i],
+                    AirspeedNeedlePositions[i + 1],
+                    AirspeedKnots[i],
+                    AirspeedKnots[i + 1]);
+            }
+        }
+
+        return AirspeedKnots[last];
+    }
+
     private static int DecodeDrumDigit(uint value, int maxValue)
     {
         if (maxValue == 0)
@@ -415,13 +535,6 @@ internal class F16C_Nav_Page
         double normalized = value / (double)maxValue;
         int digit = (int)Math.Floor(normalized * 10.0 + 0.05);
         return digit == 10 ? 0 : Math.Clamp(digit, 0, 9);
-    }
-
-    private static double DecodeMach(double rawNeedle)
-    {
-        const double rawAtMachOne = 0.92;
-        double clamped = Math.Max(0.0, rawNeedle);
-        return clamped / rawAtMachOne;
     }
 
     private static int ComposeFuelFlowPph(int tenThousandsDigit, int thousandsDigit, int hundredsDigit)

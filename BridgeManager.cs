@@ -23,11 +23,24 @@ public class BridgeManager : IDisposable
     private AircraftListener? headlessListener;
     private bool _disposed = false;
 
+    // Coordinates CDU waiting-screen writes between the detection loop and the
+    // DCS-BIOS version callback (which arrives on a background thread).
+    private readonly object _waitingScreenLock = new();
+    private bool _isWaiting;
+    private string? _waitingUnsupportedName;
+    private string? _dcsBiosVersion;
+
     /// <summary>
     /// Raised every time the detected aircraft changes (including on exit → null).
     /// The string is the raw DCS-BIOS name, or <c>null</c> when the user leaves a module.
     /// </summary>
     public event Action<string?>? DetectedAircraftChanged;
+
+    /// <summary>
+    /// Raised whenever the DCS-BIOS exporter version reported by DCS changes.
+    /// The string is the version (e.g. "0.11.4"), or <c>null</c> when not yet known.
+    /// </summary>
+    public event Action<string?>? DcsBiosVersionChanged;
 
     /// <summary>
     /// Gets the number of devices the bridge is driving (CDUs + frontpanels)
@@ -85,14 +98,22 @@ public class BridgeManager : IDisposable
             using var detector = new AircraftDetector();
             detector.StartListening();
 
+            // The version provider also lives for the whole lifecycle: the
+            // DCS-BIOS exporter version is shown in the app title and on the CDU
+            // waiting screen. Its callback arrives on a DCS-BIOS thread, so it is
+            // serialized against the loop's waiting-screen writes.
+            using var versionProvider = new DcsBiosVersionProvider();
+            _dcsBiosVersion = versionProvider.CurrentVersion;
+            versionProvider.VersionChanged += OnDcsBiosVersionChanged;
+            versionProvider.StartListening();
+
             // Detection loop: wait for a SUPPORTED aircraft → start listeners →
             // wait for the aircraft to change (exit or switch) → reset → repeat.
             // Unsupported aircraft keep the bridge in the waiting state with the
             // detected name shown in red.
             while (!cancellationToken.IsCancellationRequested)
             {
-                foreach (var ctx in Contexts)
-                    ctx.ShowWaitingScreen();
+                ShowWaitingScreens(null);
                 DetectedAircraftChanged?.Invoke(null);
 
                 // Stay in the waiting state until a supported aircraft is loaded.
@@ -104,8 +125,7 @@ public class BridgeManager : IDisposable
 
                     if (name == null)
                     {
-                        foreach (var ctx in Contexts)
-                            ctx.ShowWaitingScreen();
+                        ShowWaitingScreens(null);
                         continue;
                     }
 
@@ -114,10 +134,13 @@ public class BridgeManager : IDisposable
 
                     if (descriptor == null)
                     {
-                        foreach (var ctx in Contexts)
-                            ctx.ShowWaitingScreen(name);
+                        ShowWaitingScreens(name);
                     }
                 }
+
+                // A supported aircraft is loaded: leave the waiting state so a
+                // late version update no longer redraws the waiting screen.
+                EndWaitingState();
 
                 // One change waiter for this whole cycle: reused for the seat-
                 // selection race below AND the running-phase wait further down.
@@ -183,6 +206,57 @@ public class BridgeManager : IDisposable
             Stop(); // Clean up on failure
             throw;
         }
+    }
+
+    /// <summary>
+    /// Renders the waiting screen on every CDU with the current DCS-BIOS version,
+    /// and records the waiting state so a background version update can redraw it.
+    /// Serialized via <see cref="_waitingScreenLock"/> against the version callback.
+    /// </summary>
+    private void ShowWaitingScreens(string? unsupportedName)
+    {
+        if (Contexts == null) return;
+
+        lock (_waitingScreenLock)
+        {
+            _isWaiting = true;
+            _waitingUnsupportedName = unsupportedName;
+            foreach (var ctx in Contexts)
+                ctx.ShowWaitingScreen(unsupportedName, _dcsBiosVersion);
+        }
+    }
+
+    /// <summary>
+    /// Leaves the waiting state so a late DCS-BIOS version update no longer
+    /// redraws the (now superseded) waiting screen.
+    /// </summary>
+    private void EndWaitingState()
+    {
+        lock (_waitingScreenLock)
+        {
+            _isWaiting = false;
+            _waitingUnsupportedName = null;
+        }
+    }
+
+    /// <summary>
+    /// Caches the latest DCS-BIOS version, forwards it to the UI, and—if a CDU is
+    /// still showing the waiting screen—redraws it so the version appears live.
+    /// </summary>
+    private void OnDcsBiosVersionChanged(string? version)
+    {
+        lock (_waitingScreenLock)
+        {
+            _dcsBiosVersion = version;
+
+            if (_isWaiting && Contexts != null)
+            {
+                foreach (var ctx in Contexts)
+                    ctx.ShowWaitingScreen(_waitingUnsupportedName, _dcsBiosVersion);
+            }
+        }
+
+        DcsBiosVersionChanged?.Invoke(version);
     }
 
     /// <summary>

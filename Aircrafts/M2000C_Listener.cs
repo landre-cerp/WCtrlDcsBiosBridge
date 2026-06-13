@@ -122,7 +122,68 @@ internal class M2000C_Listener : AircraftListener
     {
     }
 
-    protected override void RegisterCduControls() { }
+    protected override void RegisterCduControls()
+    {
+        RegisterRaw(PCN_LIGHTS_ADDRESS, data =>
+        {
+            ushort val = (ushort)data;
+            SetCduLeds(
+                fm1: (val & MASK_ALN) > 0,
+                rdy: (val & MASK_PRET) > 0,
+                fm: (val & MASK_NDEG) > 0,
+                ind: (val & MASK_MIP) > 0,
+                fm2: (val & MASK_SEC) > 0);
+        });
+
+        RegisterRaw(PCN_LIGHTS_ADDRESS_2, data =>
+        {
+            ushort val = (ushort)data;
+            SetCduLeds(fail: (val & MASK_UNI) > 0);
+        });
+
+        RegisterRaw(CLP_ADDR_1, data =>
+        {
+            ushort val = (ushort)data;
+            if (_clpValue1 != val) { _clpValue1 = val; UpdateCautionPanel(); }
+        });
+
+        RegisterRaw(CLP_ADDR_2, data =>
+        {
+            ushort val = (ushort)data;
+            if (_clpValue2 != val) { _clpValue2 = val; UpdateCautionPanel(); }
+        });
+
+        RegisterRaw(CLP_ADDR_3, data =>
+        {
+            ushort val = (ushort)data;
+            if (_clpValue3 != val) { _clpValue3 = val; UpdateCautionPanel(); }
+        });
+
+        RegisterString(PCN_DISP_L, s =>
+        {
+            _pcnDispL = s;
+            UpdateCombinedPCNDisplay(GetCompositor(DEFAULT_PAGE));
+        });
+
+        RegisterString(PCN_DISP_R, s =>
+        {
+            _pcnDispR = s;
+            UpdateCombinedPCNDisplay(GetCompositor(DEFAULT_PAGE));
+        });
+
+        RegisterString(PCN_DISP_PREP, s =>
+        {
+            _pcnPrep = s;
+            UpdateCombinedPrepDestDisplay(GetCompositor(DEFAULT_PAGE));
+        });
+
+        RegisterString(PCN_DISP_DEST, s =>
+        {
+            _pcnDest = s;
+            UpdateCombinedPrepDestDisplay(GetCompositor(DEFAULT_PAGE));
+        });
+    }
+
     protected override void RegisterFrontpanelControls() { }
 
     protected override void InitializeDcsBiosOutputs()
@@ -149,112 +210,6 @@ internal class M2000C_Listener : AircraftListener
         if (PCN_LIGHTS_REGISTER_2 != null) PCN_LIGHTS_REGISTER_2.Address = PCN_LIGHTS_ADDRESS_2;
     }
 
-    public override void DcsBiosDataReceived(object sender, DCSBIOSDataEventArgs e)
-    {
-        try
-        {
-            UpdateCounter(e.Address, e.Data);
-
-            if (HasCdu)
-            {
-                bool refreshDisplay = false;
-
-                if (e.Address == PCN_LIGHTS_ADDRESS)
-                {
-                    ushort val = (ushort)e.Data;
-                    SetCduLeds(
-                        fm1: (val & MASK_ALN) > 0,
-                        rdy: (val & MASK_PRET) > 0,
-                        fm: (val & MASK_NDEG) > 0,
-                        ind: (val & MASK_MIP) > 0,
-                        fm2: (val & MASK_SEC) > 0);
-                }
-
-                if (e.Address == PCN_LIGHTS_ADDRESS_2)
-                {
-                    ushort val = (ushort)e.Data;
-                    SetCduLeds(fail: (val & MASK_UNI) > 0);
-                }
-
-                if (e.Address == CLP_ADDR_1) {
-                    ushort val = (ushort)e.Data;
-                    if (_clpValue1 != val) { _clpValue1 = val; refreshDisplay = true; }
-                }
-                if (e.Address == CLP_ADDR_2) {
-                    ushort val = (ushort)e.Data;
-                    if (_clpValue2 != val) { _clpValue2 = val; refreshDisplay = true; }
-                }
-                if (e.Address == CLP_ADDR_3) {
-                    ushort val = (ushort)e.Data;
-                    if (_clpValue3 != val) { _clpValue3 = val; refreshDisplay = true; }
-                }
-
-                if (refreshDisplay) UpdateCautionPanel();
-            }
-        }
-        catch (Exception ex)
-        {
-            // Instrumentation: include raw data, address, current register snapshot
-            App.Logger.Error(ex,
-                "M2000C_Listener.DcsBiosDataReceived failed | addr=0x{Address:X4} data=0x{Data:X4} clp1=0x{Clp1:X4} clp2=0x{Clp2:X4} clp3=0x{Clp3:X4} leds=[Ind={Ind},Rdy={Rdy},Fail={Fail}]",
-                new {
-                    Address = e.Address,
-                    Data = e.Data,
-                    Clp1 = _clpValue1,
-                    Clp2 = _clpValue2,
-                    Clp3 = _clpValue3,
-                    Ind = CduDevice?.Leds?.Ind,
-                    Rdy = CduDevice?.Leds?.Rdy,
-                    Fail = CduDevice?.Leds?.Fail
-                });
-        }
-    }
-
-    public override void DCSBIOSStringReceived(object sender, DCSBIOSStringDataEventArgs e)
-    {
-        if (HasCdu)
-        {
-            var output = GetCompositor(DEFAULT_PAGE);
-            try
-            {
-                if (PCN_DISP_L != null && e.Address == PCN_DISP_L.Address)
-                {
-                    _pcnDispL = e.StringData; 
-                    UpdateCombinedPCNDisplay(output);
-                }
-                else if (PCN_DISP_R != null && e.Address == PCN_DISP_R.Address)
-                {
-                    _pcnDispR = e.StringData; 
-                    UpdateCombinedPCNDisplay(output);
-                }
-                else if (PCN_DISP_PREP != null && e.Address == PCN_DISP_PREP.Address)
-                {
-                    _pcnPrep = e.StringData;
-                    UpdateCombinedPrepDestDisplay(output);
-                }
-                else if (PCN_DISP_DEST != null && e.Address == PCN_DISP_DEST.Address)
-                {
-                    _pcnDest = e.StringData;
-                    UpdateCombinedPrepDestDisplay(output);
-                }
-            }
-            catch (Exception ex)
-            {
-                App.Logger.Error(ex,
-                    "Failed to process DCS-BIOS string data | addr=0x{Address:X4} len={Len} value='{Val}' pcnL='{PCNL}' pcnR='{PCNR}' prep='{Prep}' dest='{Dest}'",
-                    new {
-                        Address = e.Address,
-                        Len = e.StringData?.Length ?? -1,
-                        Val = e.StringData,
-                        PCNL = _pcnDispL,
-                        PCNR = _pcnDispR,
-                        Prep = _pcnPrep,
-                        Dest = _pcnDest
-                    });
-            }
-        }
-    }
-    
     private void UpdateCautionPanel()
     {
         if (!HasCdu) return;

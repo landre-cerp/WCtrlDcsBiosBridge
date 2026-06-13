@@ -1,5 +1,4 @@
 using DCS_BIOS.ControlLocator;
-using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 
@@ -55,6 +54,19 @@ internal class FA18C_Listener : AircraftListener
             CduDevice.KeyDown -= HandleKeyDown;
             CduDevice.KeyDown += HandleKeyDown;
         }
+
+        Register(_cockpitLightModeSw, v => _lightMode = v);
+        Register(MASTER_CAUTION_LT, v =>
+        {
+            if (_masterCaution != v)
+            {
+                _masterCaution = v;
+                SetCduLeds(fail: _masterCaution != 0);
+            }
+        });
+
+        _ufcPage.RegisterControls(RegisterString, () => _ufcPage.Render(GetCompositor(DEFAULT_PAGE)));
+        _ifeiPage.RegisterControls(RegisterString, () => _ifeiPage.Render(GetCompositor(IFEI_PAGE), _lightMode));
     }
     protected override void RegisterFrontpanelControls() { }
 
@@ -65,54 +77,6 @@ internal class FA18C_Listener : AircraftListener
 
         _ufcPage.InitializeControls();
         _ifeiPage.InitializeControls();
-    }
-
-    public override void DcsBiosDataReceived(object sender, DCSBIOSDataEventArgs e)
-    {
-        try
-        {
-            UpdateCounter(e.Address, e.Data);
-
-            if (_cockpitLightModeSw != null && e.Address.Equals(_cockpitLightModeSw.Address))
-            {
-                _lightMode = _cockpitLightModeSw.GetUIntValue(e.Data);
-            }
-
-            if (MASTER_CAUTION_LT != null && e.Address.Equals(MASTER_CAUTION_LT.Address))
-            {
-                uint newMasterCaution = MASTER_CAUTION_LT.GetUIntValue(e.Data);
-                if (_masterCaution != newMasterCaution)
-                {
-                    _masterCaution = newMasterCaution;
-                    SetCduLeds(fail: _masterCaution != 0);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            App.Logger.Error(ex, "Failed to process DCS-BIOS data");
-        }
-    }
-
-    public override void DCSBIOSStringReceived(object sender, DCSBIOSStringDataEventArgs e)
-    {
-        try
-        {
-            if (_currentPage == DEFAULT_PAGE)
-            {
-                _ufcPage.ProcessData(e);
-                _ufcPage.Render(GetCompositor(DEFAULT_PAGE));
-            }
-            else if (_currentPage == IFEI_PAGE)
-            {
-                _ifeiPage.ProcessData(e);
-                _ifeiPage.Render(GetCompositor(IFEI_PAGE), _lightMode);
-            }
-        }
-        catch (Exception ex)
-        {
-            App.Logger.Error(ex, "Failed to process DCS-BIOS string data");
-        }
     }
 
     protected override void Dispose(bool disposing)

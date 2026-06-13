@@ -57,9 +57,10 @@ internal class DeviceContext : IDisposable
     /// Displays the "Waiting for DCS..." screen while the bridge watches DCS-BIOS
     /// metadata for a supported aircraft. The aircraft line is blank until a module
     /// is detected; an unsupported module shows its raw name and an error in red
-    /// (the bridge keeps waiting for a supported one). The version stays white.
+    /// (the bridge keeps waiting for a supported one). The app version stays white
+    /// on the bottom line, with the live DCS-BIOS exporter version just above it.
     /// </summary>
-    public void ShowWaitingScreen(string? unsupportedName = null)
+    public void ShowWaitingScreen(string? unsupportedName = null, string? dcsBiosVersion = null)
     {
         if (!options.DisableLightingManagement)
         {
@@ -67,6 +68,7 @@ internal class DeviceContext : IDisposable
         }
 
         var version = AppVersionProvider.GetAppVersion();
+        var dcsBios = string.IsNullOrEmpty(dcsBiosVersion) ? "--.--" : dcsBiosVersion;
         var output = Mcdu.Output.Clear().Green()
             .Line(0).Centered("DCSbios/WW Bridge")
             .NewLine().Large().Yellow().Centered("by Cerppo")
@@ -85,6 +87,8 @@ internal class DeviceContext : IDisposable
                 .Centered("Not supported");
         }
 
+        // DCS-BIOS exporter version on the line just above the app version.
+        output.White().Line(-1).Centered($"DCS-BIOS {dcsBios}");
         output.White().BottomLine().WriteLine($"v{version}");
         Mcdu.RefreshDisplay(skipDuplicateCheck: true);
     }
