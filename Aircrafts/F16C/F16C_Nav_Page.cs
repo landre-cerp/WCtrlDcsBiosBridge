@@ -284,8 +284,18 @@ internal class F16C_Nav_Page
 
         if (_CLOCK_H != null && e.Address == _CLOCK_H.Address)
         {
-            int rawHour = (int)Math.Floor(_CLOCK_H.GetUIntValue(e.Data) * 24.0 / (_CLOCK_H.MaxValue + 1.0));
-            _clockH = (rawHour + 23) % 24;
+            uint rawHour = _CLOCK_H.GetUIntValue(e.Data);
+            int hour12 = (int)Math.Floor(rawHour * 12.0 / 65536.0) % 12;
+            int newClockH = hour12 == 0 ? 12 : hour12;
+
+            if (newClockH != _clockH)
+            {
+                App.Logger.Info(
+                    $"F16C CLOCK_H raw={rawHour} max={_CLOCK_H.MaxValue} " +
+                    $"norm={rawHour / 65536.0:F4} -> shown hour={newClockH}");
+            }
+
+            _clockH = newClockH;
             refreshDisplay = true;
         }
 
@@ -394,7 +404,7 @@ internal class F16C_Nav_Page
         o.Line(10).Green().WriteLine($"END:{endurMin / 60,2}h{endurMin % 60,2}   RNG~{rangeNm,4}nm");
 
         o.Line(11).Green().WriteLine(new string('-', 24));
-        o.Line(12).Green().WriteLine($"TIME:{_clockH:D2}:{_clockMin:D2}Z  HACK:{_elapsedMin:D2}:{_elapsedSec:D2}");
+        o.Line(12).Green().WriteLine($"Clock:{_clockH:D2}:{_clockMin:D2}  HACK:{_elapsedMin:D2}:{_elapsedSec:D2}");
 
         if (_fuelLow)
         {
