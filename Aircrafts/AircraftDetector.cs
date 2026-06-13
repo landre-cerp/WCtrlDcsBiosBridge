@@ -77,8 +77,9 @@ internal sealed class AircraftDetector : IDCSBIOSStringListener, IDcsBiosDataLis
             }
 
             _changeTcs = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
-            cancellationToken.Register(() => _changeTcs.TrySetCanceled(cancellationToken));
-            return _changeTcs.Task;
+            return cancellationToken.CanBeCanceled
+                ? _changeTcs.Task.WaitAsync(cancellationToken)
+                : _changeTcs.Task;
         }
     }
 
