@@ -200,6 +200,13 @@ public class BridgeManager : IDisposable
                     ctx.ResetForNewCycle();
             }
         }
+        catch (OperationCanceledException)
+        {
+            // Normal shutdown via the cancellation token: the owner (MainWindow)
+            // already cancelled and calls Stop()/Dispose() itself, so this is not a
+            // failure — don't log an error or stop twice, just unwind.
+            throw;
+        }
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to start bridge");
