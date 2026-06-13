@@ -12,11 +12,11 @@ We welcome all contributions, whether it’s bug reports, feature requests, code
 - Visual Studio
 - .NET 8 SDK
 - DCS-BIOS installed in your DCS World Saved Games folder. ( check project README for details)
-https://github.com/DCS-Skunkworks/dcs-bios (nightly build required for CH-47F)
+https://github.com/DCS-Skunkworks/dcs-bios (v0.11.0 or later for CH-47F)
 
 ### Recommended Tools
 Bort https://github.com/DCS-Skunkworks/Bort or any other Dcsbios Reference tool to help you find the right addresses and values.
-This is where you get "CDU_BRT" you use in 
+This is where you get "CDU_BRT" you use as a parameter to DCSBIOSControlLocator.Get...
 ```csharp
 _CDU_BRT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CDU_BRT");
 ```
@@ -41,7 +41,7 @@ _CDU_BRT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CDU_BRT");
   - `improve-documentation`
 
 or commitize style like:
-  - `feat/add-new-feature`
+  - `feat(aircraft)/add-new-feature`
   - `fix/issue-123`
   - `docs/update-readme`
 
@@ -51,8 +51,113 @@ or commitize style like:
 - For C# code, target `.NET 8`
 
 ### Add a new Aircraft
-- Find the Aircraft number in dcs-bios_modules.txt (For Example: F-14 = 16))
-- Add a menu entry in DeviceContext.cs and handle the ReadMenu
+Aircraft are now driven by a single registry and detected automatically from the DCS-BIOS `MetadataStart/_ACFT_NAME` value — there is no CDU menu to edit anymore.
+
+#### 1. Find the module id and name
+Look up the aircraft's module number in `dcs-bios_modules.txt` (for example: F-14 = 16) and its `_ACFT_NAME` value (use Bort, or run the program and start the aircraft in DCS — the wait screen shows the name as "unsupported").
+
+#### 2. Create a listener
+Add a class in `Aircrafts/` deriving from `AircraftListener`. You implement three methods: resolve the DCS-BIOS outputs, wire the CDU, and wire the frontpanels. (See the existing `Aircrafts/*_Listener.cs` for real examples.)
+
+```csharp
+using DCS_BIOS.ControlLocator;
+using DCS_BIOS.Serialized;
+using WwDevicesDotNet;
+
+namespace WWCduDcsBiosBridge.Aircrafts;
+
+internal class F14_Listener : AircraftListener
+{
+    // DCS-BIOS outputs (names come from Bort / the module JSON)
+    private DCSBIOSOutput? _PLT_CAP_DISPLAY;   // a string display line
+    private DCSBIOSOutput? _MASTER_CAUTION;     // an integer light
+    private DCSBIOSOutput? _CONSOLE_BRT;        // a brightness knob
+
+    // The registry factory passes UserOptions; forward it with the matching
+    // descriptor to the base class.
+    public F14_Listener(UserOptions options)
+        : base(AircraftRegistry.F14, options)
+    {
+    }
+
+    // 1) Resolve every DCS-BIOS output you need, by name.
+    protected override void InitializeDcsBiosOutputs()
+    {
+        _PLT_CAP_DISPLAY = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PLT_CAP_DISPLAY");
+        _MASTER_CAUTION  = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("MASTER_CAUTION");
+        _CONSOLE_BRT     = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CONSOLE_BRT");
+    }
+
+    // 2) Wire CDU outputs. Runs only when a CDU is connected.
+    protected override void RegisterCduControls()
+    {
+        // String output -> a CDU line. GetCompositor builds the page.
+        RegisterString(_PLT_CAP_DISPLAY, s =>
+            GetCompositor(DEFAULT_PAGE).Line(0).Green().WriteLine(s));
+
+        // Integer output -> a CDU status LED.
+        Register(_MASTER_CAUTION, v => SetCduLeds(fail: v == 1));
+
+        // Optional: follow a cockpit brightness knob (respect the user option).
+        if (!options.DisableLightingManagement)
+        {
+            Register(_CONSOLE_BRT, v =>
+            {
+                int percent = (int)(v * 100 / _CONSOLE_BRT!.MaxValue);
+                SetBacklightBrightnessPercent(percent);
+                SetDisplayBrightnessPercent(percent);
+                SetLedBrightnessPercent(percent);
+            });
+        }
+    }
+
+    // 3) Wire frontpanel outputs (FCU/EFIS, PAP3, AGP32...). Always runs, even
+    //    with no CDU, because a frontpanel-only setup still needs the data.
+    //    Write semantic values into FlightDeck; renderers show what they can.
+    protected override void RegisterFrontpanelControls()
+    {
+        // Leave empty if the aircraft has no frontpanel data, or populate
+        // FlightDeck like the A-10C does, e.g.:
+        // Register(_IAS, v => FlightDeck.Speed = (int)v);
+    }
+}
+```
+
+#### 3. Register one descriptor
+Add an `AircraftDescriptor` in `Aircrafts/AircraftRegistry.cs` and include it in the `All` list (registry order = menu order). Provide the module id, display name, JSON and font files, the `HasSeatSelection` flag, the DCS-BIOS name(s) used for automatic detection, and the listener factory.
+
+```csharp
+public static readonly AircraftDescriptor F14 = new(
+    16,                                   // module id (dcs-bios_modules.txt)
+    "F-14",                               // display name
+    "F-14.json",                          // DCS-BIOS json file for this module
+    "resources/a10c-font-21x31.json",     // a font from resources/
+    false,                                // HasSeatSelection (true only for CH-47F today)
+    new[] { "F-14B", "F-14A-135-GR" },    // _ACFT_NAME value(s) for auto-detection
+    c => new F14_Listener(c.Options));    // listener factory
+
+// ...then add it to the All list:
+public static readonly IReadOnlyList<AircraftDescriptor> All = new[]
+{
+    A10C, AH64D, FA18C, CH47, F15E, M2000C, F16C, OH58D, F14,
+};
+```
+
+> **Dual-seat aircraft:** set `HasSeatSelection: true` and give the listener an `isPilot` parameter, like the CH-47F: `c => new CH47F_Listener(c.Options, c.IsPilot, c.Ch47SwitchWithSeat)`.
+
+> **Font:** start by reusing an existing resource — `resources/a10c-font-21x31.json` or `resources/ah64d-font-21x31.json`. A font file maps a **fixed** character set to bitmap glyphs; if every character you render already looks correct, there is **no point duplicating** a font just to give it a new name. Create a dedicated font only when you need to **design a special bitmap** for a character code (e.g. a custom symbol drawn when a given char code is sent). You change the glyph's bitmap (the drawing) for an existing char code — you cannot add new characters, the charset in the file is fixed.
+
+#### Helpers available from `AircraftListener`
+
+| Helper | Use |
+|--------|-----|
+| `Register(output, v => ...)` | Handle an integer output (`v` is the decoded `uint`). |
+| `RegisterString(output, s => ...)` | Handle a string output. |
+| `GetCompositor(DEFAULT_PAGE).Line(n)...` | Write a CDU line (`.Green()`, `.White()`, `.WriteLine(...)`, ...). |
+| `SetCduLeds(fail:, fm1:, fm2:, fm:, ind:, rdy:)` | Set CDU status LEDs. |
+| `SetDisplayBrightnessPercent` / `SetBacklightBrightnessPercent` / `SetLedBrightnessPercent` | CDU brightness (0-100). |
+| `FlightDeck` | Semantic frontpanel state (`Speed`, `Heading`, `Altitude`, gear, AGP32 clock...). |
+| `HasCdu`, `CduDevice` | Whether a CDU is connected / the underlying device. |
 
 ### 4. Test Your Changes
 - There's no automated test suite (as most of the tests are using the physical device), please ensure to:

@@ -1,5 +1,16 @@
-# CH-47F
+# CH-47F Chinook
 
+Basic support: the pilot or co-pilot CDU pages are mirrored to the device. No front panel
+feed. The CH-47F is the only aircraft with a **seat choice** (see below).
+
+## Supported devices
+
+| Device | What it shows |
+|--------|---------------|
+| CDU (MCDU / PFP3N / PFP7 / PFP4) | Pilot or co-pilot CDU pages |
+
+**Requires DCS-BIOS v0.11.0 or later (v0.11.4 recommended)** for the CH-47F CDU pages and
+seat-position support.
 
 ## Single vs Multiple CDUs
 
@@ -7,17 +18,17 @@ The application automatically detects how many CDUs are connected and adjusts be
 
 ### Single CDU Setup
 If you only have **1 CDU connected**, the application will:
-- Display a single **"Ch-47F"** option in the aircraft selection menu (no PLT/CPLT choice)
+- Start automatically as soon as the CH-47F is detected (no seat prompt)
 - Automatically switch the CDU display between pilot and co-pilot based on your seat position in DCS
 - Monitor the DCS seat position to seamlessly update the CDU display
 
-**YOU ABSOLUTELY NEED TO INSTALL DCS BIOS VERSION DCS-BIOS Nightly 2025-09-21 and Later**
+**YOU ABSOLUTELY NEED TO INSTALL DCS BIOS VERSION v0.11.0 or later (v0.11.4 recommended)**
 as the seat position is not handled in previous versions.
 
 ### Multiple CDU Setup  
 If you have **2 or more CDUs connected**, the application will:
-- Display both **"Ch-47F (PLT)"** and **"Ch-47F (CPLT)"** options in the aircraft selection menu
-- Require you to manually select the role for each CDU
+- Show a **"Select your seat"** screen on each CDU once the CH-47F is detected — press the line-select key next to **PILOT** or **COPILOT**
+- Assign the opposite seat to the remaining CDU(s) automatically as soon as one CDU picks a seat
 - Keep each CDU fixed to its selected role (pilot or co-pilot) without automatic switching
 
 No configuration is needed - the behavior is entirely automatic based on detection at startup.
