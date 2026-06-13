@@ -254,16 +254,7 @@ internal class F16C_Nav_Page
         register(_CLOCK_H, v =>
         {
             int hour12 = (int)Math.Floor(v * 12.0 / 65536.0) % 12;
-            int newClockH = hour12 == 0 ? 12 : hour12;
-
-            if (newClockH != _clockH)
-            {
-                App.Logger.Info(
-                    $"F16C CLOCK_H raw={v} max={_CLOCK_H!.MaxValue} " +
-                    $"norm={v / 65536.0:F4} -> shown hour={newClockH}");
-            }
-
-            _clockH = newClockH;
+            _clockH = hour12 == 0 ? 12 : hour12;
             Refresh();
         });
 
