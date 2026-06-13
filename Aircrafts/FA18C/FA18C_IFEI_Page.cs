@@ -1,5 +1,4 @@
 using DCS_BIOS.ControlLocator;
-using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 
@@ -64,42 +63,25 @@ internal class FA18C_IFEI_Page
         _ifeiTimerS = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_TIMER_S");
     }
 
-    public void ProcessData(DCSBIOSStringDataEventArgs e)
+    public void RegisterControls(Action<DCSBIOSOutput?, Action<string>> registerString, Action onUpdated)
     {
-        if (_ifeiFuelUp != null && e.Address.Equals(_ifeiFuelUp.Address))
-            _fuelUp = e.StringData;
-        if (_ifeiFuelDown != null && e.Address.Equals(_ifeiFuelDown.Address))
-            _fuelDown = e.StringData;
-        if (_ifeiBingo != null && e.Address.Equals(_ifeiBingo.Address))
-            _bingo = e.StringData;
-        if (_ifeiFfL != null && e.Address.Equals(_ifeiFfL.Address))
-            _ffL = e.StringData;
-        if (_ifeiFfR != null && e.Address.Equals(_ifeiFfR.Address))
-            _ffR = e.StringData;
-        if (_ifeiRpmL != null && e.Address.Equals(_ifeiRpmL.Address))
-            _rpmL = e.StringData;
-        if (_ifeiRpmR != null && e.Address.Equals(_ifeiRpmR.Address))
-            _rpmR = e.StringData;
-        if (_ifeiTempL != null && e.Address.Equals(_ifeiTempL.Address))
-            _tempL = e.StringData;
-        if (_ifeiTempR != null && e.Address.Equals(_ifeiTempR.Address))
-            _tempR = e.StringData;
-        if (_ifeiOilPressL != null && e.Address.Equals(_ifeiOilPressL.Address))
-            _oilPressL = e.StringData;
-        if (_ifeiOilPressR != null && e.Address.Equals(_ifeiOilPressR.Address))
-            _oilPressR = e.StringData;
-        if (_ifeiClockH != null && e.Address.Equals(_ifeiClockH.Address))
-            _clockH = e.StringData;
-        if (_ifeiClockM != null && e.Address.Equals(_ifeiClockM.Address))
-            _clockM = e.StringData;
-        if (_ifeiClockS != null && e.Address.Equals(_ifeiClockS.Address))
-            _clockS = e.StringData;
-        if (_ifeiTimerH != null && e.Address.Equals(_ifeiTimerH.Address))
-            _timerH = e.StringData;
-        if (_ifeiTimerM != null && e.Address.Equals(_ifeiTimerM.Address))
-            _timerM = e.StringData;
-        if (_ifeiTimerS != null && e.Address.Equals(_ifeiTimerS.Address))
-            _timerS = e.StringData;
+        registerString(_ifeiFuelUp, s => { _fuelUp = s; onUpdated(); });
+        registerString(_ifeiFuelDown, s => { _fuelDown = s; onUpdated(); });
+        registerString(_ifeiBingo, s => { _bingo = s; onUpdated(); });
+        registerString(_ifeiFfL, s => { _ffL = s; onUpdated(); });
+        registerString(_ifeiFfR, s => { _ffR = s; onUpdated(); });
+        registerString(_ifeiRpmL, s => { _rpmL = s; onUpdated(); });
+        registerString(_ifeiRpmR, s => { _rpmR = s; onUpdated(); });
+        registerString(_ifeiTempL, s => { _tempL = s; onUpdated(); });
+        registerString(_ifeiTempR, s => { _tempR = s; onUpdated(); });
+        registerString(_ifeiOilPressL, s => { _oilPressL = s; onUpdated(); });
+        registerString(_ifeiOilPressR, s => { _oilPressR = s; onUpdated(); });
+        registerString(_ifeiClockH, s => { _clockH = s; onUpdated(); });
+        registerString(_ifeiClockM, s => { _clockM = s; onUpdated(); });
+        registerString(_ifeiClockS, s => { _clockS = s; onUpdated(); });
+        registerString(_ifeiTimerH, s => { _timerH = s; onUpdated(); });
+        registerString(_ifeiTimerM, s => { _timerM = s; onUpdated(); });
+        registerString(_ifeiTimerS, s => { _timerS = s; onUpdated(); });
     }
 
     public void Render(Compositor output, uint lightMode)

@@ -1,6 +1,7 @@
 using ClassLibraryCommon;
 using DCS_BIOS.ControlLocator;
 using DCS_BIOS.EventArgs;
+using DCS_BIOS.Interfaces;
 using DCS_BIOS.Serialized;
 using Newtonsoft.Json;
 using System.IO;
@@ -49,6 +50,15 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         list.Add(data => handler(output.GetUIntValue(data)));
     }
 
+    // Enregistre un handler pour une adresse brute (valeur non décodée).
+    // Utile pour les registres bitfield lus tels quels, sans masque/décalage.
+    protected void RegisterRaw(uint address, Action<uint> handler)
+    {
+        if (!_dataHandlers.TryGetValue(address, out var list))
+            _dataHandlers[address] = list = new();
+        list.Add(handler);
+    }
+
     // Enregistre un handler pour un output string
     protected void RegisterString(DCSBIOSOutput? output, Action<string> handler)
     {
@@ -58,9 +68,9 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         list.Add(handler);
     }
 
-    // Dispatch unique, plus de if-chains dans les classes filles.
-    // virtual : les aircrafts non encore migrés vers Register continuent à override.
-    public virtual void DcsBiosDataReceived(object sender, DCSBIOSDataEventArgs e)
+    // Dispatch unique : implémentation explicite des interfaces pour que les
+    // classes filles ne puissent plus l'override. Elles passent par Register/RegisterString.
+    void IDcsBiosDataListener.DcsBiosDataReceived(object sender, DCSBIOSDataEventArgs e)
     {
         try
         {
@@ -74,7 +84,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         }
     }
 
-    public virtual void DCSBIOSStringReceived(object sender, DCSBIOSStringDataEventArgs e)
+    void IDCSBIOSStringListener.DCSBIOSStringReceived(object sender, DCSBIOSStringDataEventArgs e)
     {
         try
         {

@@ -45,6 +45,9 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
     public string AppVersion { get; }
 
+    // Live DCS-BIOS exporter version reported by DCS; null until received.
+    private string? _dcsBiosVersion;
+
     public event PropertyChangedEventHandler? PropertyChanged;
     private void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
@@ -54,7 +57,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         InitializeComponent();
 
         AppVersion = AppVersionProvider.GetAppVersion();
-        Title = $"WWCduDcsBiosBridge v{AppVersion}";
+        UpdateTitle();
 
         // Wire up event handlers for new UserControls
         OptionsPanel.SettingsChanged += (sender, args) => SaveUserSettings();
@@ -265,6 +268,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         {
             bridgeManager = new BridgeManager();
             bridgeManager.DetectedAircraftChanged += OnDetectedAircraftChanged;
+            bridgeManager.DcsBiosVersionChanged += OnDcsBiosVersionChanged;
             OnPropertyChanged(nameof(IsBridgeRunning));
             OnPropertyChanged(nameof(CanEdit));
 
@@ -319,8 +323,25 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     {
         StartButton.IsEnabled = !IsBridgeRunning && devices.Count > 0 && IsConfigValid();
         StartButton.Content = "Start Bridge";
+        _dcsBiosVersion = null;
+        UpdateTitle();
         OnPropertyChanged(nameof(IsBridgeRunning));
         OnPropertyChanged(nameof(CanEdit));
+    }
+
+    private void OnDcsBiosVersionChanged(string? dcsBiosVersion)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            _dcsBiosVersion = dcsBiosVersion;
+            UpdateTitle();
+        });
+    }
+
+    private void UpdateTitle()
+    {
+        var dcsBios = string.IsNullOrEmpty(_dcsBiosVersion) ? "--.--" : _dcsBiosVersion;
+        Title = $"WWCduDcsBiosBridge v{AppVersion} | DCS-BIOS {dcsBios}";
     }
 
     private void LoadUserSettings()
@@ -381,7 +402,10 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
                 }
 
                 bridgeManager.Dispose();
+                bridgeManager.DcsBiosVersionChanged -= OnDcsBiosVersionChanged;
                 bridgeManager = null;
+                _dcsBiosVersion = null;
+                UpdateTitle();
                 OnPropertyChanged(nameof(IsBridgeRunning));
                 OnPropertyChanged(nameof(CanEdit));
             }
