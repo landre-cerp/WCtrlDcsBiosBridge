@@ -119,13 +119,34 @@ public class BridgeManager : IDisposable
                     }
                 }
 
+                // One change waiter for this whole cycle: reused for the seat-
+                // selection race below AND the running-phase wait further down.
+                // The detector only supports a single pending waiter, so creating
+                // it once here (instead of a second WaitForChangeAsync later)
+                // avoids orphaning a waiter and corrupting its acknowledgment state.
+                var changeTask = detector.WaitForChangeAsync(cancellationToken);
+
                 if (descriptor.HasSeatSelection && multipleCdus)
                 {
                     foreach (var ctx in Contexts)
                         ctx.ShowSeatSelectionScreen(descriptor);
 
-                    var firstDone = await Task.WhenAny(
+                    // Race the seat choice against an aircraft change. If the user
+                    // leaves the module before picking a seat, abandon the selection
+                    // and return to the detection state instead of blocking forever.
+                    var selectionTask = Task.WhenAny(
                         Contexts.Select(c => c.SelectionTask.WaitAsync(cancellationToken)));
+
+                    var winner = await Task.WhenAny(selectionTask, changeTask);
+                    if (winner == changeTask)
+                    {
+                        Logger.Info("Aircraft changed during seat selection, resetting bridge.");
+                        foreach (var ctx in Contexts)
+                            ctx.ResetForNewCycle();
+                        continue;
+                    }
+
+                    var firstDone = await selectionTask;
                     var firstChoice = await firstDone;
 
                     var oppositeSeat = !firstChoice.IsPilot;
@@ -146,8 +167,9 @@ public class BridgeManager : IDisposable
                 IsStarted = true;
                 Logger.Info($"Bridge running with {ActiveDeviceCount} device(s)");
 
-                // Block here until the aircraft changes in DCS (module exit or switch).
-                await detector.WaitForChangeAsync(cancellationToken);
+                // Block here until the aircraft changes in DCS (module exit or
+                // switch), reusing the waiter created above.
+                await changeTask;
                 Logger.Info("Aircraft changed, resetting bridge.");
 
                 StopListeners();
@@ -202,7 +224,7 @@ public class BridgeManager : IDisposable
         headlessListener?.Dispose();
         headlessListener = null;
 
-        IsStarted = false;
+        //IsStarted = false;
     }
 
     /// <summary>

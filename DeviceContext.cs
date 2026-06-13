@@ -36,6 +36,7 @@ internal class DeviceContext : IDisposable
     private readonly AircraftCduContext cduContext;
     private AircraftListener? listener;
     private bool isSelectedAircraft = false;
+    private EventHandler<KeyEventArgs>? _seatKeyHandler;
 
     /// <summary>
     /// Creates a context for a CDU device.
@@ -111,7 +112,10 @@ internal class DeviceContext : IDisposable
             .BottomLine().WriteLine($"v{version}");
         Mcdu.RefreshDisplay(skipDuplicateCheck: true);
 
-        Mcdu.KeyDown += SeatKeyHandler;
+        // Replace any previous handler (e.g. a prior selection that was abandoned).
+        DetachSeatKeyHandler();
+        _seatKeyHandler = SeatKeyHandler;
+        Mcdu.KeyDown += _seatKeyHandler;
 
         void SeatKeyHandler(object? sender, KeyEventArgs e)
         {
@@ -124,8 +128,22 @@ internal class DeviceContext : IDisposable
 
             if (isPilot == null) return;
 
-            Mcdu.KeyDown -= SeatKeyHandler;
+            DetachSeatKeyHandler();
             SetAircraftSelection(new AircraftSelection(descriptor.ModuleId, isPilot.Value));
+        }
+    }
+
+    /// <summary>
+    /// Detaches the seat-selection key handler if one is attached, so an
+    /// abandoned selection (e.g. the aircraft was exited before a seat was
+    /// chosen) leaves no stale subscription on the device.
+    /// </summary>
+    private void DetachSeatKeyHandler()
+    {
+        if (_seatKeyHandler != null)
+        {
+            Mcdu.KeyDown -= _seatKeyHandler;
+            _seatKeyHandler = null;
         }
     }
 
@@ -162,6 +180,7 @@ internal class DeviceContext : IDisposable
     /// </summary>
     public void ResetForNewCycle()
     {
+        DetachSeatKeyHandler();
         listener?.Dispose();
         listener = null;
         isSelectedAircraft = false;
