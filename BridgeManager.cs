@@ -305,7 +305,9 @@ public class BridgeManager : IDisposable
         headlessListener?.Dispose();
         headlessListener = null;
 
-        //IsStarted = false;
+        // IsStarted stays true on purpose: between two aircraft (module exit or
+        // switch) the bridge is still live and the UI should keep showing
+        // "running". It is only cleared by Stop().
     }
 
     /// <summary>
