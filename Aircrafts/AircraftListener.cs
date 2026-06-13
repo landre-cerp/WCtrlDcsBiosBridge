@@ -1,4 +1,5 @@
 using ClassLibraryCommon;
+using System.Collections.Concurrent;
 using DCS_BIOS.ControlLocator;
 using DCS_BIOS.EventArgs;
 using DCS_BIOS.Interfaces;
@@ -98,9 +99,13 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     }
 
 
-    protected Dictionary<string, Screen> pages = new()
+    // Concurrent because the display timer reads pages[_currentPage] on a
+    // thread-pool thread while DCS-BIOS handlers may add a page via
+    // GetCompositor/AddNewPage on the receive thread. Pages should still be
+    // created before Start() so the very first ticks have something to render.
+    protected ConcurrentDictionary<string, Screen> pages = new()
         {
-              {DEFAULT_PAGE, new Screen() }
+              [DEFAULT_PAGE] = new Screen()
         };
 
     public AircraftListener(AircraftDescriptor descriptor, UserOptions options)
@@ -270,21 +275,12 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
 
     protected Compositor GetCompositor(string pageName)
     {
-        if (!pages.ContainsKey(pageName))
-        {
-            pages[pageName] = new Screen();
-        }
-        return new Compositor(pages[pageName]);
+        return new Compositor(pages.GetOrAdd(pageName, _ => new Screen()));
     }
 
     protected Screen AddNewPage(string pageName)
     {
-        if (!pages.ContainsKey(pageName))
-        {
-            pages[pageName] = new Screen();
-        }
-
-        return pages[pageName];
+        return pages.GetOrAdd(pageName, _ => new Screen());
     }
 
     public void Dispose()

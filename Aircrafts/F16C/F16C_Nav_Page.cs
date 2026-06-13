@@ -14,7 +14,7 @@ internal class F16C_Nav_Page
 
     private DCSBIOSOutput? _EHSI_RANGE_INVALID;
     private DCSBIOSOutput? _EHSI_CRS_SET_KNB;
-    private DCSBIOSOutput? _EHSI_HDG_SET_KNB;
+
     private DCSBIOSOutput? _STANDBY_COMPASS_HEADING;
 
     private DCSBIOSOutput? _ALT_10000;
@@ -55,8 +55,7 @@ internal class F16C_Nav_Page
 
     private int _currentHeadingDeg;
     private int _selectedCourseDeg;
-    private int _hdgBugDeg;
-    private uint _lastHdgKnobValue;
+    
     private bool _rangeInvalid;
 
     private int _altFt;
@@ -96,7 +95,7 @@ internal class F16C_Nav_Page
 
         _EHSI_RANGE_INVALID = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("EHSI_RANGE_INVALID");
         _EHSI_CRS_SET_KNB = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("EHSI_CRS_SET_KNB");
-        _EHSI_HDG_SET_KNB = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("EHSI_HDG_SET_KNB");
+        
         _STANDBY_COMPASS_HEADING = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("STANDBY_COMPASS_HEADING");
 
         _ALT_10000 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_10000_FT_CNT");
@@ -143,17 +142,6 @@ internal class F16C_Nav_Page
             Refresh();
         });
 
-        register(_EHSI_HDG_SET_KNB, v =>
-        {
-            int delta = (int)v - (int)_lastHdgKnobValue;
-            if (Math.Abs(delta) < 32768)
-            {
-                _hdgBugDeg = (_hdgBugDeg + Math.Sign(delta) + 360) % 360;
-            }
-
-            _lastHdgKnobValue = v;
-        });
-
         register(_EHSI_RANGE_INVALID, v =>
         {
             _ehsiRangeInvalid = v == 1;
@@ -170,21 +158,21 @@ internal class F16C_Nav_Page
         register(_ALT_10000, v =>
         {
             _altD10k = DecodeDrumDigit(v, _ALT_10000!.MaxValue);
-            _altFt = _altD10k * 10000 + _altD1k * 1000 + _altLowFt;
+            RecomputeAltitude();
             Refresh();
         });
 
         register(_ALT_1000, v =>
         {
             _altD1k = DecodeDrumDigit(v, _ALT_1000!.MaxValue);
-            _altFt = _altD10k * 10000 + _altD1k * 1000 + _altLowFt;
+            RecomputeAltitude();
             Refresh();
         });
 
         register(_ALT_100, v =>
         {
             _altLowFt = DecodeSubThousandValue(v, _ALT_100!.MaxValue, 1);
-            _altFt = _altD10k * 10000 + _altD1k * 1000 + _altLowFt;
+            RecomputeAltitude();
             Refresh();
         });
 
@@ -220,21 +208,21 @@ internal class F16C_Nav_Page
         register(_FUEL_TOT_10K, v =>
         {
             _fuelTot10kDigit = DecodeDrumDigit(v, _FUEL_TOT_10K!.MaxValue);
-            _fuelTotalLb = _fuelTot10kDigit * 10000 + _fuelTot1kDigit * 1000 + _fuelTot100Digit * 100;
+            RecomputeFuelTotal();
             Refresh();
         });
 
         register(_FUEL_TOT_1K, v =>
         {
             _fuelTot1kDigit = DecodeDrumDigit(v, _FUEL_TOT_1K!.MaxValue);
-            _fuelTotalLb = _fuelTot10kDigit * 10000 + _fuelTot1kDigit * 1000 + _fuelTot100Digit * 100;
+            RecomputeFuelTotal();
             Refresh();
         });
 
         register(_FUEL_TOT_100, v =>
         {
             _fuelTot100Digit = DecodeDrumDigit(v, _FUEL_TOT_100!.MaxValue);
-            _fuelTotalLb = _fuelTot10kDigit * 10000 + _fuelTot1kDigit * 1000 + _fuelTot100Digit * 100;
+            RecomputeFuelTotal();
             Refresh();
         });
 
@@ -280,16 +268,7 @@ internal class F16C_Nav_Page
         register(_CLOCK_H, v =>
         {
             int hour12 = (int)Math.Floor(v * 12.0 / 65536.0) % 12;
-            int newClockH = hour12 == 0 ? 12 : hour12;
-
-            if (newClockH != _clockH)
-            {
-                App.Logger.Info(
-                    $"F16C CLOCK_H raw={v} max={_CLOCK_H!.MaxValue} " +
-                    $"norm={v / 65536.0:F4} -> shown hour={newClockH}");
-            }
-
-            _clockH = newClockH;
+            _clockH = hour12 == 0 ? 12 : hour12;
             Refresh();
         });
 
@@ -536,6 +515,12 @@ internal class F16C_Nav_Page
         int digit = (int)Math.Floor(normalized * 10.0 + 0.05);
         return digit == 10 ? 0 : Math.Clamp(digit, 0, 9);
     }
+
+    private void RecomputeAltitude() =>
+        _altFt = _altD10k * 10000 + _altD1k * 1000 + _altLowFt;
+
+    private void RecomputeFuelTotal() =>
+        _fuelTotalLb = _fuelTot10kDigit * 10000 + _fuelTot1kDigit * 1000 + _fuelTot100Digit * 100;
 
     private static int ComposeFuelFlowPph(int tenThousandsDigit, int thousandsDigit, int hundredsDigit)
     {

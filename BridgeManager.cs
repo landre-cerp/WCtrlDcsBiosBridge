@@ -200,6 +200,22 @@ public class BridgeManager : IDisposable
                     ctx.ResetForNewCycle();
             }
         }
+        catch (OperationCanceledException)
+        {
+            // Normal shutdown via the cancellation token — not a failure, so don't
+            // log it as an error. We must still release resources here: if the
+            // cancellation arrived before IsStarted became true (e.g. exit from the
+            // waiting screen), the owner's Dispose() skips Stop() (it is guarded by
+            // IsStarted), so dcsBios / frontpanelHub / Contexts would otherwise leak.
+            // dcsBios is non-null only when we have not been stopped yet, so this
+            // also avoids stopping twice when the owner already did.
+            if (dcsBios != null)
+            {
+                try { Stop(); }
+                catch (Exception ex) { Logger.Error(ex, "Error stopping bridge after cancellation"); }
+            }
+            throw;
+        }
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to start bridge");
@@ -298,7 +314,9 @@ public class BridgeManager : IDisposable
         headlessListener?.Dispose();
         headlessListener = null;
 
-        //IsStarted = false;
+        // IsStarted stays true on purpose: between two aircraft (module exit or
+        // switch) the bridge is still live and the UI should keep showing
+        // "running". It is only cleared by Stop().
     }
 
     /// <summary>
