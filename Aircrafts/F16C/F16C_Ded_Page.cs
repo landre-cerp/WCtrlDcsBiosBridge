@@ -1,5 +1,4 @@
 using DCS_BIOS.ControlLocator;
-using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
 using System.Text;
 using WwDevicesDotNet;
@@ -79,26 +78,17 @@ internal class F16C_Ded_Page
         _dedFormats[4] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L5_FORMAT");
     }
 
-    public bool ProcessData(DCSBIOSDataEventArgs e)
+    public void RegisterControls(
+        Action<DCSBIOSOutput?, Action<uint>> register,
+        Action<DCSBIOSOutput?, Action<string>> registerString,
+        Func<Compositor> compositor)
     {
-        return false;
-    }
-
-    public bool ProcessData(DCSBIOSStringDataEventArgs e)
-    {
-        if (TryMatchArray(_dedMainLines, e.Address, out int mainIdx))
+        for (int i = 0; i < 5; i++)
         {
-            _dedMainText[mainIdx] = e.StringData;
-            return true;
+            int idx = i;
+            registerString(_dedMainLines[idx], s => { _dedMainText[idx] = s; Render(compositor()); });
+            registerString(_dedFormats[idx], s => { _dedFormatText[idx] = s; Render(compositor()); });
         }
-
-        if (TryMatchArray(_dedFormats, e.Address, out int fmtIdx))
-        {
-            _dedFormatText[fmtIdx] = e.StringData;
-            return true;
-        }
-
-        return false;
     }
 
     public void Render(Compositor output)
@@ -166,21 +156,6 @@ internal class F16C_Ded_Page
                 output.Green().BGBlack().Write(segment);
             }
         }
-    }
-
-    private static bool TryMatchArray(DCSBIOSOutput?[] outputs, uint address, out int index)
-    {
-        for (int i = 0; i < outputs.Length; i++)
-        {
-            if (outputs[i] != null && outputs[i]!.Address == address)
-            {
-                index = i;
-                return true;
-            }
-        }
-
-        index = -1;
-        return false;
     }
 
     private static string ApplyDedCharacterMap(string raw)
