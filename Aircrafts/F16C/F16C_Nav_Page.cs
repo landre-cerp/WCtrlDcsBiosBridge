@@ -13,8 +13,6 @@ internal class F16C_Nav_Page
     private DCSBIOSOutput? _EHSI_MODE_RIGHT;
 
     private DCSBIOSOutput? _EHSI_RANGE_INVALID;
-    private DCSBIOSOutput? _EHSI_CRS_SET_KNB;
-    private DCSBIOSOutput? _EHSI_HDG_SET_KNB;
     private DCSBIOSOutput? _STANDBY_COMPASS_HEADING;
 
     private DCSBIOSOutput? _ALT_10000;
@@ -54,10 +52,6 @@ internal class F16C_Nav_Page
     private bool _ehsiRangeInvalid;
 
     private int _currentHeadingDeg;
-    private int _selectedCourseDeg;
-    private int _hdgBugDeg;
-    private uint _lastHdgKnobValue;
-    private bool _rangeInvalid;
 
     private int _altFt;
     private int _altD10k;
@@ -95,8 +89,6 @@ internal class F16C_Nav_Page
         _EHSI_MODE_RIGHT = DCSBIOSControlLocator.GetStringDCSBIOSOutput("EHSI_MODE_RIGHT");
 
         _EHSI_RANGE_INVALID = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("EHSI_RANGE_INVALID");
-        _EHSI_CRS_SET_KNB = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("EHSI_CRS_SET_KNB");
-        _EHSI_HDG_SET_KNB = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("EHSI_HDG_SET_KNB");
         _STANDBY_COMPASS_HEADING = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("STANDBY_COMPASS_HEADING");
 
         _ALT_10000 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_10000_FT_CNT");
@@ -143,27 +135,9 @@ internal class F16C_Nav_Page
             Refresh();
         });
 
-        register(_EHSI_HDG_SET_KNB, v =>
-        {
-            int delta = (int)v - (int)_lastHdgKnobValue;
-            if (Math.Abs(delta) < 32768)
-            {
-                _hdgBugDeg = (_hdgBugDeg + Math.Sign(delta) + 360) % 360;
-            }
-
-            _lastHdgKnobValue = v;
-        });
-
         register(_EHSI_RANGE_INVALID, v =>
         {
             _ehsiRangeInvalid = v == 1;
-            _rangeInvalid = v == 1;
-            Refresh();
-        });
-
-        register(_EHSI_CRS_SET_KNB, v =>
-        {
-            _selectedCourseDeg = KnobToDegrees(v);
             Refresh();
         });
 
@@ -314,11 +288,6 @@ internal class F16C_Nav_Page
         registerString(_EHSI_COURSE, s =>
         {
             _ehsiCourse = s.Trim();
-            if (int.TryParse(s.Trim(), out int crs))
-            {
-                _selectedCourseDeg = crs;
-            }
-
             Refresh();
         });
 
@@ -402,9 +371,6 @@ internal class F16C_Nav_Page
             o.Line(13).Green().WriteLine($"{"(NAV)",24}");
         }
     }
-
-    private static int KnobToDegrees(uint raw) =>
-        (int)Math.Round(raw / 65535.0 * 359.0) % 360;
 
     private static int DecodeVviFpm(uint raw)
     {
