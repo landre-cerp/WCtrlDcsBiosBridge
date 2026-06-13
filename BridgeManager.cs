@@ -126,7 +126,7 @@ public class BridgeManager : IDisposable
 
                     using var seatWaitCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                     var firstSelectionTask = Task.WhenAny(
-                        Contexts.Select(c => c.SelectionTask.WaitAsync(cancellationToken)));
+                        Contexts.Select(c => c.SelectionTask.WaitAsync(cancellationToken))).Unwrap();
                     var aircraftChangedTask = detector.WaitForChangeAsync(seatWaitCts.Token);
 
                     var completedTask = await Task.WhenAny(firstSelectionTask, aircraftChangedTask);
@@ -141,7 +141,7 @@ public class BridgeManager : IDisposable
                     }
 
                     seatWaitCts.Cancel();
-                    var firstChoice = await await firstSelectionTask;
+                    var firstChoice = await firstSelectionTask;
 
                     var oppositeSeat = !firstChoice.IsPilot;
                     foreach (var ctx in Contexts.Where(c => !c.IsSelectedAircraft))
