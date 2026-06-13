@@ -28,44 +28,105 @@ internal class DeviceContext : IDisposable
     /// </summary>
     public Task<AircraftSelection> SelectionTask => _selectionTcs.Task;
 
-    private readonly TaskCompletionSource<AircraftSelection> _selectionTcs =
+    private TaskCompletionSource<AircraftSelection> _selectionTcs =
         new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     private readonly UserOptions options;
     private readonly bool ch47SwitchWithSeat;
-    private readonly AircraftSelectionMenu menu;
     private readonly AircraftCduContext cduContext;
     private AircraftListener? listener;
     private bool isSelectedAircraft = false;
 
     /// <summary>
-    /// Creates a context for a CDU device with aircraft selection menu
+    /// Creates a context for a CDU device.
     /// </summary>
     /// <param name="ch47SwitchWithSeat">
-    /// True when a single CDU is connected: the CH-47F menu shows one entry and the
-    /// CDU display follows the seat position at runtime.
+    /// True when a single CDU is connected: the CH-47F display follows the
+    /// seat position at runtime.
     /// </param>
     public DeviceContext(ICdu mcdu, UserOptions options, bool ch47SwitchWithSeat)
     {
         Mcdu = mcdu;
         this.options = options;
         this.ch47SwitchWithSeat = ch47SwitchWithSeat;
-        menu = new AircraftSelectionMenu(mcdu, ch47SwitchWithSeat);
         cduContext = new AircraftCduContext(mcdu);
-        menu.AircraftSelected += OnAircraftSelected;
     }
 
-    public void ShowStartupScreen()
+    /// <summary>
+    /// Displays the "Waiting for DCS..." screen while the bridge watches DCS-BIOS
+    /// metadata for a supported aircraft. The aircraft line is blank until a module
+    /// is detected; an unsupported module shows its raw name and an error in red
+    /// (the bridge keeps waiting for a supported one). The version stays white.
+    /// </summary>
+    public void ShowWaitingScreen(string? unsupportedName = null)
     {
-        // The CDU keeps brightness/display state across app restarts. If a previous
-        // session ended uncleanly (or Cleanup() zeroed the brightness), the menu
-        // would render invisibly — return to the known-good state first.
         if (!options.DisableLightingManagement)
         {
             cduContext.Reset();
         }
 
-        menu.Show();
+        var version = AppVersionProvider.GetAppVersion();
+        var output = Mcdu.Output.Clear().Green()
+            .Line(0).Centered("DCSbios/WW Bridge")
+            .NewLine().Large().Yellow().Centered("by Cerppo")
+            .NewLine().NewLine().White()
+            .Centered("Waiting for DCS...")
+            .NewLine()
+            .Centered("Aircraft detection");
+
+        // Reserved aircraft line (blank until a module is detected).
+        output.NewLine().NewLine();
+        if (!string.IsNullOrEmpty(unsupportedName))
+        {
+            output.Red()
+                .Centered(unsupportedName)
+                .NewLine()
+                .Centered("Not supported");
+        }
+
+        output.White().BottomLine().WriteLine($"v{version}");
+        Mcdu.RefreshDisplay(skipDuplicateCheck: true);
+    }
+
+    /// <summary>
+    /// Shows a pilot / copilot seat selection screen for the given aircraft.
+    /// Used when a dual-seat aircraft (e.g. CH-47F) is detected and multiple
+    /// CDUs are connected — each CDU picks a seat.
+    /// </summary>
+    public void ShowSeatSelectionScreen(AircraftDescriptor descriptor)
+    {
+        if (!options.DisableLightingManagement)
+        {
+            cduContext.Reset();
+        }
+
+        var version = AppVersionProvider.GetAppVersion();
+        Mcdu.Output.Clear().Green()
+            .Line(0).Centered("DCSbios/WW Bridge")
+            .NewLine().Large().Yellow().Centered(descriptor.DisplayName)
+            .NewLine().NewLine().White()
+            .Centered("Select your seat:")
+            .LeftLabel(3, "PILOT")
+            .RightLabel(3, "COPILOT")
+            .BottomLine().WriteLine($"v{version}");
+        Mcdu.RefreshDisplay(skipDuplicateCheck: true);
+
+        Mcdu.KeyDown += SeatKeyHandler;
+
+        void SeatKeyHandler(object? sender, KeyEventArgs e)
+        {
+            bool? isPilot = e.Key switch
+            {
+                Key.LineSelectLeft3 => true,
+                Key.LineSelectRight3 => false,
+                _ => null
+            };
+
+            if (isPilot == null) return;
+
+            Mcdu.KeyDown -= SeatKeyHandler;
+            SetAircraftSelection(new AircraftSelection(descriptor.ModuleId, isPilot.Value));
+        }
     }
 
     /// <summary>
@@ -76,11 +137,6 @@ internal class DeviceContext : IDisposable
         isSelectedAircraft = true;
         SelectedAircraft = selection;
         _selectionTcs.TrySetResult(selection);
-    }
-
-    private void OnAircraftSelected(object? sender, AircraftSelectedEventArgs e)
-    {
-        SetAircraftSelection(e.Selection);
     }
 
     public void StartBridge()
@@ -100,9 +156,21 @@ internal class DeviceContext : IDisposable
         }
     }
 
+    /// <summary>
+    /// Stops the current listener and clears selection state so this context
+    /// can be re-used for a new aircraft detection cycle.
+    /// </summary>
+    public void ResetForNewCycle()
+    {
+        listener?.Dispose();
+        listener = null;
+        isSelectedAircraft = false;
+        SelectedAircraft = null;
+        _selectionTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    }
+
     public void Dispose()
     {
-        menu.Dispose();
         listener?.Dispose();
     }
 }

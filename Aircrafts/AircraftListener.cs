@@ -168,13 +168,16 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
 
     public void Stop()
     {
+        var capturedCdu = cdu;
+        cdu = null;   // prevent any thread-pool timer tick queued before Stop() from rendering
+
         _DisplayCDUTimer.Stop();
 
         BIOSEventHandler.DetachConnectionListener(this);
         BIOSEventHandler.DetachDataListener(this);
         BIOSEventHandler.DetachStringListener(this);
 
-        cdu?.Cleanup();
+        capturedCdu?.Cleanup();
     }
 
     protected bool HasCdu => cdu != null;

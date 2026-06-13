@@ -70,6 +70,16 @@ public class FrontpanelHub : IDisposable
     }
 
     /// <summary>
+    /// Stops the render loop and detaches the model so a new one can be
+    /// attached later (e.g. after an aircraft module change).
+    /// </summary>
+    internal void Detach()
+    {
+        _renderTimer.Stop();
+        _model = null;
+    }
+
+    /// <summary>
     /// Attaches the semantic model to render and starts the render loop.
     /// </summary>
     internal void Attach(FlightDeckState model)

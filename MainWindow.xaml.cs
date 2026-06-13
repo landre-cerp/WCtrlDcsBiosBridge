@@ -24,7 +24,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private BridgeManager? bridgeManager;
     private CancellationTokenSource? _detectCts;
     private readonly CancellationTokenSource _shutdownCts = new();
-    private AircraftSelection? _selectedAircraft;
 
     private const string GitHubOwner = "landre-cerp";
     private const string GitHubRepo = "WWCduDcsBiosBridge";
@@ -58,7 +57,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         Title = $"WWCduDcsBiosBridge v{AppVersion}";
 
         // Wire up event handlers for new UserControls
-        AircraftPanel.AircraftSelected += (sender, selection) => OnGlobalAircraftSelected(selection);
         OptionsPanel.SettingsChanged += (sender, args) => SaveUserSettings();
 
         LoadConfig();
@@ -66,15 +64,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         _ = DetectDevicesAsync();
         UpdateState();
         Loaded += MainWindow_Loaded;
-    }
-
-    private void OnGlobalAircraftSelected(AircraftSelection selection)
-    {
-        _selectedAircraft = selection;
-
-        // Forward the selection to the bridge manager
-        bridgeManager?.SetGlobalAircraftSelection(selection);
-        Logger.Info($"Global aircraft selected: {selection.AircraftId}, IsPilot: {selection.IsPilot}");
     }
 
     private bool IsConfigValid() => !string.IsNullOrWhiteSpace(config.DcsBiosJsonLocation);
@@ -139,19 +128,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
                 statusParts.Add($"{frontpanelCount} Frontpanel device{(frontpanelCount != 1 ? "s" : "")}");
             
             ShowStatus($"Detected {string.Join(" and ", statusParts)}", false);
-            
-            // Show global aircraft selection UI only if NO CDU devices
-            if (cduCount == 0)
-            {
-                AircraftPanel.Visibility = Visibility.Visible;
-                ShowStatus("No CDU detected. Select aircraft before starting bridge.", false);
-                UpdateAircraftButtonState();
-            }
-            else
-            {
-                AircraftPanel.Visibility = Visibility.Collapsed;
-            }
-            
+
             foreach (var deviceInfo in devices)
             {
                 var deviceTab = UI.DeviceTabFactory.CreateDeviceTab(deviceInfo, IsBridgeRunning);
@@ -270,7 +247,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
         if (devices.Count == 0)
         {
-            ShowStatus("No CDU devices found. Please ensure your device is connected and refresh.", true);
+            ShowStatus("No devices found. Please ensure your device is connected and refresh.", true);
             await DetectDevicesAsync();
             UpdateState();
             if (devices.Count == 0) return;
@@ -280,57 +257,62 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
         // Clear any previous error messages when starting
         ShowStatus("Starting bridge...", false);
-        
+
         StartButton.IsEnabled = false;
         StartButton.Content = "Starting...";
 
         try
         {
             bridgeManager = new BridgeManager();
+            bridgeManager.DetectedAircraftChanged += OnDetectedAircraftChanged;
             OnPropertyChanged(nameof(IsBridgeRunning));
             OnPropertyChanged(nameof(CanEdit));
-            
-            var hasCdu = devices.Any(d => d.Cdu != null);
-            if (!hasCdu)
-            {
-                if (_selectedAircraft == null)
-                {
-                    ShowStatus("Please select an aircraft before starting the bridge.", true);
-                    ResetStartButton();
-                    return;
-                }
 
-                bridgeManager.SetGlobalAircraftSelection(_selectedAircraft);
-            }
-
+            // StartAsync runs the detection loop and never returns until
+            // cancelled or an error occurs.
             await bridgeManager.StartAsync(devices, userOptions, config, _shutdownCts.Token);
-
-            ShowStatus($"Bridge started successfully with {bridgeManager.ActiveDeviceCount} device(s)!", false);
-            StartButton.Content = "Bridge Running";
-            StartButton.IsEnabled = false;
-            OnPropertyChanged(nameof(IsBridgeRunning));
-            OnPropertyChanged(nameof(CanEdit));
-            Logger.Info("Bridge started successfully from WPF interface");
-            
-            UpdateAircraftButtonState();
-            
-            if (userOptions.MinimizeOnStart)
-            {
-                WindowState = WindowState.Minimized;
-                Logger.Info("Window minimized on bridge start as per user settings");
-            }
         }
         catch (OperationCanceledException)
         {
-            Logger.Info("Bridge start cancelled by application shutdown");
+            Logger.Info("Bridge cancelled by application shutdown");
         }
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to start bridge");
             ShowStatus($"Failed to start bridge: {ex.Message}", true);
             ResetStartButton();
-            ResetAircraftSelection();
         }
+    }
+
+    private void OnDetectedAircraftChanged(string? dcsBiosName)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            if (dcsBiosName == null)
+            {
+                ShowStatus("Waiting for DCS aircraft...", false);
+                StartButton.Content = "Detecting...";
+            }
+            else if (AircraftRegistry.FindByDcsBiosName(dcsBiosName) is not { } descriptor)
+            {
+                // Unsupported module — keep waiting for a supported one.
+                ShowStatus($"Unsupported aircraft: {dcsBiosName} — waiting...", false);
+                StartButton.Content = "Detecting...";
+            }
+            else
+            {
+                ShowStatus($"Detected: {descriptor.DisplayName}", false);
+                StartButton.Content = "Bridge Running";
+                StartButton.IsEnabled = false;
+                OnPropertyChanged(nameof(IsBridgeRunning));
+                OnPropertyChanged(nameof(CanEdit));
+
+                if (userOptions.MinimizeOnStart)
+                {
+                    WindowState = WindowState.Minimized;
+                }
+            }
+        });
     }
 
     private void ResetStartButton()
@@ -339,21 +321,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         StartButton.Content = "Start Bridge";
         OnPropertyChanged(nameof(IsBridgeRunning));
         OnPropertyChanged(nameof(CanEdit));
-    }
-
-    private void ResetAircraftSelection()
-    {
-        _selectedAircraft = null;
-        AircraftPanel.Reset();
-        UpdateAircraftButtonState();
-    }
-
-    private void UpdateAircraftButtonState()
-    {
-        var hasCdu = devices.Any(d => d.Cdu != null);
-        var shouldEnableButtons = !IsBridgeRunning && !hasCdu;
-
-        AircraftPanel.ButtonsEnabled = shouldEnableButtons;
     }
 
     private void LoadUserSettings()

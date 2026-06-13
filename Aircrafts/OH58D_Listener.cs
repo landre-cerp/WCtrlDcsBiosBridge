@@ -176,11 +176,6 @@ internal class OH58D_Listener : AircraftListener
 
         RegisterString(_TGT_DISPLAY, v => { _tgt = v; UpdateTgtTrq(); });
         RegisterString(_TRQ_DISPLAY, v => { _trq = v;UpdateTgtTrq(); } );
-
-        RegisterString(_CLOCK_HOURS, v => { _clockHh = FormatValue(v, 2, "00"); UpdateClock(); });
-        RegisterString(_CLOCK_MINUTES, v => { _clockMm = FormatValue(v, 2, "00"); UpdateClock(); });
-        RegisterString(_CLOCK_SECONDS, v => { _clockSs = FormatValue(v, 2, "00"); UpdateClock(); });
-
     }
 
     private void UpdateClock()
@@ -188,7 +183,15 @@ internal class OH58D_Listener : AircraftListener
         FlightDeck.Agp32UtcTime = _clockHh+_clockMm+_clockSs;
     }
 
-    protected override void RegisterFrontpanelControls() { }
+    // The clock drives the AGP32 chrono, so it is frontpanel data: register it
+    // here (always runs) rather than in RegisterCduControls (CDU-only), otherwise
+    // a frontpanel-only setup never gets the clock.
+    protected override void RegisterFrontpanelControls()
+    {
+        RegisterString(_CLOCK_HOURS, v => { _clockHh = FormatValue(v, 2, "00"); UpdateClock(); });
+        RegisterString(_CLOCK_MINUTES, v => { _clockMm = FormatValue(v, 2, "00"); UpdateClock(); });
+        RegisterString(_CLOCK_SECONDS, v => { _clockSs = FormatValue(v, 2, "00"); UpdateClock(); });
+    }
 
 
     private void UpdateTgtTrq()
