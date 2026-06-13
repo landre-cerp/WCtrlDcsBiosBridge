@@ -144,21 +144,21 @@ internal class F16C_Nav_Page
         register(_ALT_10000, v =>
         {
             _altD10k = DecodeDrumDigit(v, _ALT_10000!.MaxValue);
-            _altFt = _altD10k * 10000 + _altD1k * 1000 + _altLowFt;
+            RecomputeAltitude();
             Refresh();
         });
 
         register(_ALT_1000, v =>
         {
             _altD1k = DecodeDrumDigit(v, _ALT_1000!.MaxValue);
-            _altFt = _altD10k * 10000 + _altD1k * 1000 + _altLowFt;
+            RecomputeAltitude();
             Refresh();
         });
 
         register(_ALT_100, v =>
         {
             _altLowFt = DecodeSubThousandValue(v, _ALT_100!.MaxValue, 1);
-            _altFt = _altD10k * 10000 + _altD1k * 1000 + _altLowFt;
+            RecomputeAltitude();
             Refresh();
         });
 
@@ -194,21 +194,21 @@ internal class F16C_Nav_Page
         register(_FUEL_TOT_10K, v =>
         {
             _fuelTot10kDigit = DecodeDrumDigit(v, _FUEL_TOT_10K!.MaxValue);
-            _fuelTotalLb = _fuelTot10kDigit * 10000 + _fuelTot1kDigit * 1000 + _fuelTot100Digit * 100;
+            RecomputeFuelTotal();
             Refresh();
         });
 
         register(_FUEL_TOT_1K, v =>
         {
             _fuelTot1kDigit = DecodeDrumDigit(v, _FUEL_TOT_1K!.MaxValue);
-            _fuelTotalLb = _fuelTot10kDigit * 10000 + _fuelTot1kDigit * 1000 + _fuelTot100Digit * 100;
+            RecomputeFuelTotal();
             Refresh();
         });
 
         register(_FUEL_TOT_100, v =>
         {
             _fuelTot100Digit = DecodeDrumDigit(v, _FUEL_TOT_100!.MaxValue);
-            _fuelTotalLb = _fuelTot10kDigit * 10000 + _fuelTot1kDigit * 1000 + _fuelTot100Digit * 100;
+            RecomputeFuelTotal();
             Refresh();
         });
 
@@ -493,6 +493,12 @@ internal class F16C_Nav_Page
         int digit = (int)Math.Floor(normalized * 10.0 + 0.05);
         return digit == 10 ? 0 : Math.Clamp(digit, 0, 9);
     }
+
+    private void RecomputeAltitude() =>
+        _altFt = _altD10k * 10000 + _altD1k * 1000 + _altLowFt;
+
+    private void RecomputeFuelTotal() =>
+        _fuelTotalLb = _fuelTot10kDigit * 10000 + _fuelTot1kDigit * 1000 + _fuelTot100Digit * 100;
 
     private static int ComposeFuelFlowPph(int tenThousandsDigit, int thousandsDigit, int hundredsDigit)
     {
