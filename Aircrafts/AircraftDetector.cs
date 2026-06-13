@@ -76,6 +76,15 @@ internal sealed class AircraftDetector : IDCSBIOSStringListener, IDcsBiosDataLis
                 return Task.FromResult(_current);
             }
 
+            // Only one waiter is supported. If one is somehow already pending,
+            // complete it with the current value instead of dropping it, so the
+            // previous caller can never hang forever on an orphaned TCS.
+            if (_changeTcs != null)
+            {
+                Logger.Warn("WaitForChangeAsync called while a waiter was already pending; completing the previous one.");
+                _changeTcs.TrySetResult(_current);
+            }
+
             _changeTcs = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
             return cancellationToken.CanBeCanceled
                 ? _changeTcs.Task.WaitAsync(cancellationToken)
