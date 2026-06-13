@@ -16,7 +16,7 @@ internal class DeviceContext : IDisposable
     public ICdu Mcdu { get; }
 
     public AircraftSelection? SelectedAircraft { get; private set; }
-    public bool IsSelectedAircraft { get => isSelectedAircraft; }
+    public bool IsSelectedAircraft => isSelectedAircraft;
 
     /// <summary>
     /// The aircraft listener, available after <see cref="StartBridge"/> succeeded.
@@ -54,6 +54,18 @@ internal class DeviceContext : IDisposable
     }
 
     /// <summary>
+    /// Resets the CDU (clears managed lighting state) unless the user disabled
+    /// lighting management. Shared by the waiting and seat-selection screens.
+    /// </summary>
+    private void ResetIfLightingManaged()
+    {
+        if (!options.DisableLightingManagement)
+        {
+            cduContext.Reset();
+        }
+    }
+
+    /// <summary>
     /// Displays the "Waiting for DCS..." screen while the bridge watches DCS-BIOS
     /// metadata for a supported aircraft. The aircraft line is blank until a module
     /// is detected; an unsupported module shows its raw name and an error in red
@@ -62,10 +74,7 @@ internal class DeviceContext : IDisposable
     /// </summary>
     public void ShowWaitingScreen(string? unsupportedName = null, string? dcsBiosVersion = null)
     {
-        if (!options.DisableLightingManagement)
-        {
-            cduContext.Reset();
-        }
+        ResetIfLightingManaged();
 
         var version = AppVersionProvider.GetAppVersion();
         var dcsBios = string.IsNullOrEmpty(dcsBiosVersion) ? "--.--" : dcsBiosVersion;
@@ -100,10 +109,7 @@ internal class DeviceContext : IDisposable
     /// </summary>
     public void ShowSeatSelectionScreen(AircraftDescriptor descriptor)
     {
-        if (!options.DisableLightingManagement)
-        {
-            cduContext.Reset();
-        }
+        ResetIfLightingManaged();
 
         var version = AppVersionProvider.GetAppVersion();
         Mcdu.Output.Clear().Green()
