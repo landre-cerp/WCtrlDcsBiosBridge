@@ -1,14 +1,19 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Named resource keys used via DynamicResource in XAML -->
-    <SolidColorBrush x:Key="CardBorderBrush"    Color="#CCCCCC"/>
-    <SolidColorBrush x:Key="InfoBoxBackground"  Color="#FFF9F0"/>
-    <SolidColorBrush x:Key="InfoBoxBorderBrush" Color="#DDC080"/>
-    <SolidColorBrush x:Key="InfoBoxForeground"  Color="#664400"/>
-    <SolidColorBrush x:Key="EventLogBackground" Color="#F5F5F5"/>
-    <SolidColorBrush x:Key="HelpTextForeground" Color="#555555"/>
-    <SolidColorBrush x:Key="StepBorderBrush"    Color="#BBBBBB"/>
-    <SolidColorBrush x:Key="StepForeground"     Color="#888888"/>
+    <!-- Named resource keys referenced via DynamicResource in XAML -->
+    <SolidColorBrush x:Key="WindowBackground"        Color="#F2F2F2"/>
+    <SolidColorBrush x:Key="CardBorderBrush"         Color="#CCCCCC"/>
+    <SolidColorBrush x:Key="SubtleTextForeground"    Color="#777777"/>
+    <SolidColorBrush x:Key="InfoBoxBackground"       Color="#FFF9F0"/>
+    <SolidColorBrush x:Key="InfoBoxBorderBrush"      Color="#DDC080"/>
+    <SolidColorBrush x:Key="InfoBoxForeground"       Color="#664400"/>
+    <SolidColorBrush x:Key="EventLogBackground"      Color="#F5F5F5"/>
+    <SolidColorBrush x:Key="HelpTextForeground"      Color="#555555"/>
+    <SolidColorBrush x:Key="StepBorderBrush"         Color="#BBBBBB"/>
+    <SolidColorBrush x:Key="StepForeground"          Color="#888888"/>
+    <SolidColorBrush x:Key="UpdateBannerBackground"  Color="#FDF5D7"/>
+    <SolidColorBrush x:Key="UpdateBannerBorderBrush" Color="#E6C200"/>
+    <SolidColorBrush x:Key="UpdateBannerForeground"  Color="#664400"/>
 
 </ResourceDictionary>

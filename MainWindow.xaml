@@ -9,6 +9,7 @@
         MinWidth="580"
         ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WindowBackground}"
         DataContext="{Binding RelativeSource={RelativeSource Self}}">
 
     <Window.Resources>
@@ -72,7 +73,7 @@
                                                FontSize="13"/>
                                     <TextBlock x:Name="BridgeStatusSub"
                                                Text="Aircraft is detected automatically when DCS is running"
-                                               Foreground="Gray"
+                                               Foreground="{DynamicResource SubtleTextForeground}"
                                                FontSize="11"
                                                Margin="0,2,0,0"/>
                                 </StackPanel>
@@ -83,7 +84,7 @@
                     <TextBlock Grid.Row="1"
                                Text="Start the bridge, then load into a supported aircraft in DCS World. The CDU or FCU/EFIS display will sync automatically."
                                TextWrapping="Wrap"
-                               Foreground="Gray"
+                               Foreground="{DynamicResource SubtleTextForeground}"
                                FontSize="12"/>
 
                     <!-- Status bar (moved here from footer) -->
@@ -92,10 +93,10 @@
                                          Margin="0,12,0,0"
                                          HorizontalAlignment="Left"/>
 
-                    <!-- Update Notification Banner (moved here from footer) -->
+                    <!-- Update Notification Banner -->
                     <Border Grid.Row="4"
-                            Background="#FFFDF5D7"
-                            BorderBrush="#FFE6C200"
+                            Background="{DynamicResource UpdateBannerBackground}"
+                            BorderBrush="{DynamicResource UpdateBannerBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="4"
                             Padding="8"
@@ -105,7 +106,7 @@
                             <TextBlock Text="{Binding UpdateMessage}"
                                        VerticalAlignment="Center"
                                        Margin="0,0,10,0"
-                                       Foreground="#664400"/>
+                                       Foreground="{DynamicResource UpdateBannerForeground}"/>
                             <Button Content="Open release"
                                     Click="OpenUpdateLink_Click"
                                     Margin="0,0,6,0"
@@ -180,7 +181,7 @@
                                 Click="DiagnosticsClear_Click"/>
                         <TextBlock Text="Real-time button presses, releases, and rotary encoder events from connected FCU/EFIS devices."
                                    FontSize="11"
-                                   Foreground="Gray"
+                                   Foreground="{DynamicResource SubtleTextForeground}"
                                    TextWrapping="Wrap"
                                    VerticalAlignment="Center"/>
                     </DockPanel>
