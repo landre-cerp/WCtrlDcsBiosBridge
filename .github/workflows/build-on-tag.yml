@@ -98,14 +98,14 @@ jobs:
         shell: powershell
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: wctrl-dcsbios-bridge-${{ github.ref_name }}
           path: ./publish/
           retention-days: 90
 
       - name: Upload release zip
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: wctrl-dcsbios-bridge-${{ github.ref_name }}-zip
           path: wctrl-dcsbios-bridge-${{ github.ref_name }}.zip
@@ -124,12 +124,12 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Download artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: wctrl-dcsbios-bridge-${{ github.ref_name }}-zip
           path: .
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: wctrl-dcsbios-bridge-${{ github.ref_name }}.zip
           generate_release_notes: true

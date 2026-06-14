@@ -29,6 +29,7 @@
     <None Include=".github\ISSUE_TEMPLATE\enhancement.md" />
     <None Include=".github\workflows\build-on-push.yml" />
     <None Include=".github\workflows\build-on-tag.yml" />
+    <None Include=".github\workflows\codeql.yml" />
   </ItemGroup>
 
   <ItemGroup>
