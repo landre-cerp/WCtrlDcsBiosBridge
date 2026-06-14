@@ -1,6 +1,5 @@
 using DCS_BIOS.ControlLocator;
 using DCS_BIOS.Serialized;
-using Theraot;
 using WwDevicesDotNet;
 
 namespace WWCduDcsBiosBridge.Aircrafts;
