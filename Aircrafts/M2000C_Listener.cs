@@ -21,11 +21,21 @@ internal class M2000C_Listener : AircraftListener
     // (CLP_ADDR_1..3) and the PCN lights registers (PCN_LIGHTS_ADDRESS / PCN_LIGHTS_ADDRESS_2) is a 16-bit bitfield; individual
     // bits are translated using the masks defined below. If the upstream DCS-BIOS definitions are fixed later, this indirection
     // can be removed and replaced by direct named output resolution.
+    private const uint LANDING_GEAR_LEVER_ADDR = 0x72a4;
+    private const uint GEAR_CONF_AUX_ADDR = 0x7244;
+
     private const uint PCN_LIGHTS_ADDRESS = 29380;
     private const uint PCN_LIGHTS_ADDRESS_2 = 29384;
     private const uint CLP_ADDR_1 = 29248; 
     private const uint CLP_ADDR_2 = 29238;
     private const uint CLP_ADDR_3 = 29250;
+
+    // --- Gear lever light mask ---
+    private const uint MASK_GEAR_LEVER_LIGHT  = 0x0400; 
+    private const uint MASK_GEAR_CONF_ROUGE = 0x0200;  
+    private const uint MASK_GEAR_CONF_G     = 0x0400;  
+    private const uint MASK_GEAR_CONF_AUX   = 0x0800;  
+    private const uint MASK_GEAR_CONF_D     = 0x1000;  
 
     // --- PCN lights masks (bit flags in PCN_LIGHTS_ADDRESS register) ---
     private const uint MASK_ALN = 4096;
@@ -82,11 +92,13 @@ internal class M2000C_Listener : AircraftListener
 
 
     // --- DCS-BIOS controls (string outputs used as placeholders, addresses overridden) ---
-    private DCSBIOSOutput? PCN_LIGHTS_REGISTER; 
-    private DCSBIOSOutput? CLP_REGISTER_1; 
-    private DCSBIOSOutput? CLP_REGISTER_2; 
-    private DCSBIOSOutput? CLP_REGISTER_3; 
+    private DCSBIOSOutput? PCN_LIGHTS_REGISTER;
+    private DCSBIOSOutput? CLP_REGISTER_1;
+    private DCSBIOSOutput? CLP_REGISTER_2;
+    private DCSBIOSOutput? CLP_REGISTER_3;
     private DCSBIOSOutput? PCN_LIGHTS_REGISTER_2;
+    private DCSBIOSOutput? GEAR_CONF_REGISTER;
+    private DCSBIOSOutput? GEAR_LEVER_REGISTER;
 
     private DCSBIOSOutput? PCN_DISP_L;
     private DCSBIOSOutput? PCN_DISP_R;
@@ -184,7 +196,24 @@ internal class M2000C_Listener : AircraftListener
         });
     }
 
-    protected override void RegisterFrontpanelControls() { }
+    protected override void RegisterFrontpanelControls()
+    {
+        FlightDeck.SegmentBrightnessPercent = 100; // Default to full brightness until we get a DCS-BIOS update with the brightness control
+
+        RegisterRaw(LANDING_GEAR_LEVER_ADDR, data =>
+        {
+            FlightDeck.GearWarning = ((ushort)data & MASK_GEAR_LEVER_LIGHT) != 0;
+        });
+
+        RegisterRaw(GEAR_CONF_AUX_ADDR, data =>
+        {
+            ushort val = (ushort)data;
+            FlightDeck.GearWarning   = (val & MASK_GEAR_CONF_ROUGE) != 0;
+            FlightDeck.GearLeftDown  = (val & MASK_GEAR_CONF_G)     != 0;
+            FlightDeck.GearNoseDown  = (val & MASK_GEAR_CONF_AUX)   != 0;
+            FlightDeck.GearRightDown = (val & MASK_GEAR_CONF_D)     != 0;
+        });
+    }
 
     protected override void InitializeDcsBiosOutputs()
     {
@@ -208,6 +237,12 @@ internal class M2000C_Listener : AircraftListener
 
         PCN_LIGHTS_REGISTER_2 = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_DEST");
         if (PCN_LIGHTS_REGISTER_2 != null) PCN_LIGHTS_REGISTER_2.Address = PCN_LIGHTS_ADDRESS_2;
+
+        GEAR_CONF_REGISTER = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_L");
+        if (GEAR_CONF_REGISTER != null) GEAR_CONF_REGISTER.Address = GEAR_CONF_AUX_ADDR;
+
+        GEAR_LEVER_REGISTER = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_R");
+        if (GEAR_LEVER_REGISTER != null) GEAR_LEVER_REGISTER.Address = LANDING_GEAR_LEVER_ADDR;
     }
 
     private void UpdateCautionPanel()
