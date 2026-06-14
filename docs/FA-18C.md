@@ -8,6 +8,7 @@ display) — that you flip between with the page keys. No front panel feed.
 | Device | What it shows |
 |--------|---------------|
 | CDU (MCDU / PFP3N / PFP7 / PFP4) | UFC scratchpad/options page, IFEI page, Master Caution LED |
+| AGP32 | Gear position lights + warning |
 
 ## CDU display
 
@@ -30,10 +31,20 @@ The page keys are configurable in the options.
 
 - No dedicated brightness control; the IFEI colour tracks the cockpit DAY/NITE/NVG switch.
 
+## AGP32
+
+The AGP32 gear panel receives live gear-position and warning data from DCS-BIOS:
+
+| AGP32 LED | DCS indicator |
+|-----------|---------------|
+| Gear 1 (left) green | Left main gear down-and-locked (`FLP_LG_LEFT_GEAR_LT`) |
+| Gear 2 (nose) green | Nose gear down-and-locked (`FLP_LG_NOSE_GEAR_LT`) |
+| Gear 3 (right) green | Right main gear down-and-locked (`FLP_LG_RIGHT_GEAR_LT`) |
+| UNLK triangles (all three) + red arrow | Gear handle warning light (`LANDING_GEAR_HANDLE_LT`) |
+
 ## Front panels
 
-None — the F/A-18C does not publish flight-deck data, so FCU/EFIS, PAP3, and AGP32 panels
-stay idle.
+FCU/EFIS and PAP3 stay idle — the F/A-18C does not publish speed, heading, or altitude.
 
 ## Notes
 
