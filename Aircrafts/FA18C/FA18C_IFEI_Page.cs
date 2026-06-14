@@ -1,5 +1,6 @@
 using DCS_BIOS.ControlLocator;
 using DCS_BIOS.Serialized;
+using Theraot;
 using WwDevicesDotNet;
 
 namespace WWCduDcsBiosBridge.Aircrafts;
@@ -41,6 +42,7 @@ internal class FA18C_IFEI_Page
     string _timerH = "  ";
     string _timerM = "  ";
     string _timerS = "  ";
+
 
     public void InitializeControls()
     {
@@ -136,4 +138,35 @@ internal class FA18C_IFEI_Page
             .Line(13)
             .WriteLine(string.Format("OIL            {0,3}   {1,3}", _oilPressL, _oilPressR));
     }
+
+
+    internal void RegisterFrontPanelControls(Action<DCSBIOSOutput?, Action<string>> registerString, FlightDeckState flightDeck)
+    {
+        registerString(_ifeiClockH, s => { _clockH = s; combineClock(flightDeck); });
+        registerString(_ifeiClockM, s => { _clockM = s; combineClock(flightDeck); });
+        registerString(_ifeiClockS, s => { _clockS = s; combineClock(flightDeck); });
+
+        registerString(_ifeiTimerH, s => { _timerH = s; combineTimer(flightDeck); });
+        registerString(_ifeiTimerM, s => { _timerM = s; combineTimer(flightDeck); });
+        registerString(_ifeiTimerS, s => { _timerS = s; combineTimer(flightDeck); });
+    }
+
+    internal void combineClock(FlightDeckState flightDeck)
+    {
+        flightDeck.Agp32UtcTime = $"{_clockH}{_clockM}{_clockS}";
+
+    }
+
+    internal void combineTimer(FlightDeckState flightDeck)
+    {
+
+        flightDeck.Agp32Et = $"{_timerM}{_timerS}";
+        if (_timerH != " 0" && _timerH != "  ")
+        {
+            flightDeck.Agp32Chrono = $"{_timerH}{_timerM}";
+        }
+        
+
+    }
+
 }

@@ -21,6 +21,19 @@ internal class FlightDeckState
     public bool? GearNoseDown { get; set; }
     public bool? GearRightDown { get; set; }
 
+    public bool? LedAutoBrkLoOn { get; set; }
+    public bool? LedAutoBrkMedOn { get; set; }
+    public bool? LedAutoBrkMaxOn { get; set; }
+
+    public bool? LedAutoBrkLoDecel { get; set; }
+    public bool? LedAutoBrkMedDecel { get; set; }
+    public bool? LedAutoBrkMaxDecel { get; set; }
+
+    public bool? LedTerrOnNd { get; set; }
+
+    public bool? LedBrkFanOn { get; set; }
+    public bool? LedBrkFanHot { get; set; }
+
     /// <summary>Gear handle warning light (red).</summary>
     public bool? GearWarning { get; set; }
 
