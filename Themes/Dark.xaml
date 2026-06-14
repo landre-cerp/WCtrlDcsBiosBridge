@@ -358,9 +358,15 @@
                             <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource DarkAccent}"/>
                             <Setter Property="Foreground" Value="{StaticResource DarkTextPrimary}"/>
                         </Trigger>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="{StaticResource DarkSurfaceHover}"/>
-                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True"/>
+                                <Condition Property="IsSelected" Value="False"/>
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.Setters>
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource DarkSurfaceHover}"/>
+                            </MultiTrigger.Setters>
+                        </MultiTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
