@@ -24,6 +24,8 @@ public class BridgeManager : IDisposable
     private DCSBIOS? dcsBios;
     private FrontpanelHub? frontpanelHub;
     private AircraftListener? headlessListener;
+    private bool _manageLighting;
+    private CloseResetOptions _closeReset = new(true, true);
     private bool _disposed = false;
 
     // Coordinates CDU waiting-screen writes between the detection loop and the
@@ -67,6 +69,8 @@ public class BridgeManager : IDisposable
         try
         {
             var options = userOptions ?? new UserOptions();
+            _manageLighting = !options.DisableLightingManagement;
+            _closeReset = CloseResetOptions.From(options);
             var cduDevices = devices.Where(d => d.Cdu != null).ToList();
 
             // Zero or one CDU behave the same: no pilot/copilot prompt, and the
@@ -79,7 +83,7 @@ public class BridgeManager : IDisposable
             // One context per CDU; frontpanel devices are driven by the hub below.
             Contexts = cduDevices.Select(d => new CduDeviceContext(d.Cdu!, options, ch47SwitchWithSeat)).ToList();
 
-            frontpanelHub = BuildFrontpanelHub(devices, manageLighting: !options.DisableLightingManagement);
+            frontpanelHub = BuildFrontpanelHub(devices, manageLighting: _manageLighting);
             Logger.Info($"Created {Contexts.Count} CDU context(s); frontpanel hub has {frontpanelHub.Count} device(s)");
 
             if (Contexts.Count == 0 && !frontpanelHub.HasFrontpanels)
@@ -288,11 +292,27 @@ public class BridgeManager : IDisposable
             dcsBios?.Shutdown();
             dcsBios = null;
 
+            if (_manageLighting)
+                frontpanelHub?.ApplyCloseReset(_closeReset);
+
             frontpanelHub?.Dispose();
             frontpanelHub = null;
 
             headlessListener?.Dispose();
             headlessListener = null;
+
+            if (_manageLighting && Contexts != null)
+            {
+                foreach (var ctx in Contexts)
+                {
+                    try
+                    {
+                        var b = _closeReset.BrightnessPercent;
+                        ctx?.Mcdu?.Cleanup(b, b, _closeReset.Markers ? 0 : 100);
+                    }
+                    catch (Exception ex) { Logger.Warn(ex, "Failed to reset CDU on stop"); }
+                }
+            }
 
             DisposeContexts();
 
