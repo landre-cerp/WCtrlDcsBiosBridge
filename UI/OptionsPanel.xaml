@@ -60,7 +60,7 @@
 
         <!-- F/A-18C — disabled while F/A-18C is the active aircraft -->
         <StackPanel IsEnabled="{Binding IsFA18COptionsEnabled, RelativeSource={RelativeSource AncestorType=Window}}">
-            <DockPanel Margin="0,0,0,6">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                 <TextBlock Text="F/A-18C" FontWeight="SemiBold" FontSize="13"
                            Foreground="{DynamicResource SubtleTextForeground}"
                            VerticalAlignment="Center"/>
@@ -77,9 +77,9 @@
                             </Style.Triggers>
                         </Style>
                     </Border.Style>
-                    <TextBlock Text="in use" FontSize="10" Foreground="#E65100"/>
+                    <TextBlock Text="Disabled while in use" FontSize="10" Foreground="#E65100"/>
                 </Border>
-            </DockPanel>
+            </StackPanel>
 
             <TextBlock Text="IFEI page navigation keys"
                       Foreground="{DynamicResource SubtleTextForeground}"
@@ -102,7 +102,7 @@
 
         <!-- F-16C — disabled while F-16C is the active aircraft -->
         <StackPanel IsEnabled="{Binding IsF16COptionsEnabled, RelativeSource={RelativeSource AncestorType=Window}}">
-            <DockPanel Margin="0,0,0,6">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                 <TextBlock Text="F-16C" FontWeight="SemiBold" FontSize="13"
                            Foreground="{DynamicResource SubtleTextForeground}"
                            VerticalAlignment="Center"/>
@@ -119,9 +119,9 @@
                             </Style.Triggers>
                         </Style>
                     </Border.Style>
-                    <TextBlock Text="in use" FontSize="10" Foreground="#E65100"/>
+                    <TextBlock Text="Disabled while in use" FontSize="10" Foreground="#E65100"/>
                 </Border>
-            </DockPanel>
+            </StackPanel>
 
             <TextBlock Text="DED / NAV / RWR page keys"
                       Foreground="{DynamicResource SubtleTextForeground}"
