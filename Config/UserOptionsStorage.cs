@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using WWCduDcsBiosBridge.Common;
 
 namespace WWCduDcsBiosBridge.Config;
 

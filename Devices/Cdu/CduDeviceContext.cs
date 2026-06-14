@@ -1,9 +1,9 @@
 using WwDevicesDotNet;
 using WWCduDcsBiosBridge.Aircrafts;
 using WWCduDcsBiosBridge.Config;
-using WWCduDcsBiosBridge.Devices.Cdu;
+using WWCduDcsBiosBridge.Services;
 
-namespace WWCduDcsBiosBridge;
+namespace WWCduDcsBiosBridge.Devices.Cdu;
 
 /// <summary>
 /// Represents the context for a CDU device within the bridge: it shows the aircraft
@@ -11,7 +11,7 @@ namespace WWCduDcsBiosBridge;
 /// Frontpanel devices are not contexts — they are rendered by the FrontpanelHub
 /// from one listener's FlightDeck model.
 /// </summary>
-internal class DeviceContext : IDisposable
+internal class CduDeviceContext : IDisposable
 {
     public ICdu Mcdu { get; }
 
@@ -45,7 +45,7 @@ internal class DeviceContext : IDisposable
     /// True when a single CDU is connected: the CH-47F display follows the
     /// seat position at runtime.
     /// </param>
-    public DeviceContext(ICdu mcdu, UserOptions options, bool ch47SwitchWithSeat)
+    public CduDeviceContext(ICdu mcdu, UserOptions options, bool ch47SwitchWithSeat)
     {
         Mcdu = mcdu;
         this.options = options;

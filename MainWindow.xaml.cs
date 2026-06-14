@@ -8,6 +8,7 @@ using System.Windows.Shapes;
 using WwDevicesDotNet;
 using WWCduDcsBiosBridge.Config;
 using System.Diagnostics;
+using WWCduDcsBiosBridge.Devices;
 using WWCduDcsBiosBridge.Services;
 using WWCduDcsBiosBridge.Aircrafts;
 using Microsoft.Win32;

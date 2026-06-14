@@ -4,7 +4,10 @@ using DCS_BIOS.ControlLocator;
 using NLog;
 using WWCduDcsBiosBridge.Config;
 using WWCduDcsBiosBridge.Aircrafts;
+using WWCduDcsBiosBridge.Devices;
+using WWCduDcsBiosBridge.Devices.Cdu;
 using WWCduDcsBiosBridge.Devices.Frontpanels;
+using WWCduDcsBiosBridge.Services;
 
 namespace WWCduDcsBiosBridge;
 
@@ -16,7 +19,7 @@ public class BridgeManager : IDisposable
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public bool IsStarted { get; private set; }
-    internal List<DeviceContext>? Contexts { get; private set; }
+    internal List<CduDeviceContext>? Contexts { get; private set; }
 
     private DCSBIOS? dcsBios;
     private FrontpanelHub? frontpanelHub;
@@ -74,7 +77,7 @@ public class BridgeManager : IDisposable
             var ch47SwitchWithSeat = !multipleCdus;
 
             // One context per CDU; frontpanel devices are driven by the hub below.
-            Contexts = cduDevices.Select(d => new DeviceContext(d.Cdu!, options, ch47SwitchWithSeat)).ToList();
+            Contexts = cduDevices.Select(d => new CduDeviceContext(d.Cdu!, options, ch47SwitchWithSeat)).ToList();
 
             frontpanelHub = BuildFrontpanelHub(devices, manageLighting: !options.DisableLightingManagement);
             Logger.Info($"Created {Contexts.Count} CDU context(s); frontpanel hub has {frontpanelHub.Count} device(s)");
@@ -95,7 +98,7 @@ public class BridgeManager : IDisposable
 
             // The detector lives for the entire bridge lifecycle so it can
             // signal both aircraft detection and module exit.
-            using var detector = new AircraftDetector();
+            using var detector = new DcsBiosAircraftDetector();
             detector.StartListening();
 
             // The version provider also lives for the whole lifecycle: the
@@ -324,7 +327,7 @@ public class BridgeManager : IDisposable
     /// present, otherwise from a headless listener created for <paramref name="fallback"/>
     /// (e.g. a frontpanel-only setup with no CDU).
     /// </summary>
-    private void AttachFrontpanels(List<DeviceContext> contexts, AircraftSelection fallback, UserOptions options, bool ch47SwitchWithSeat)
+    private void AttachFrontpanels(List<CduDeviceContext> contexts, AircraftSelection fallback, UserOptions options, bool ch47SwitchWithSeat)
     {
         if (frontpanelHub == null || !frontpanelHub.HasFrontpanels) return;
 
