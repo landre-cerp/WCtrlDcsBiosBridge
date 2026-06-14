@@ -133,14 +133,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             var cduCount = devices.Count(d => d.Cdu != null);
             var frontpanelCount = devices.Count(d => d.Frontpanel != null);
 
-            var statusParts = new List<string>();
-            if (cduCount > 0)
-                statusParts.Add($"{cduCount} CDU device{(cduCount != 1 ? "s" : "")}");
-            if (frontpanelCount > 0)
-                statusParts.Add($"{frontpanelCount} Frontpanel device{(frontpanelCount != 1 ? "s" : "")}");
-
-            ShowStatus($"Detected {string.Join(" and ", statusParts)}", false);
-
             bool multipleDevices = devices.Count > 1;
             DeviceListPanel.Children.Clear();
 
