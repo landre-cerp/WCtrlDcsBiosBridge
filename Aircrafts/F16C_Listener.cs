@@ -16,6 +16,11 @@ internal class F16C_Listener : AircraftListener
     private DCSBIOSOutput? _LIGHT_MASTER_CAUTION;
     private DCSBIOSOutput? _PRI_DATA_DISPLAY_BRT;
 
+    private DCSBIOSOutput? _LIGHT_GEAR_L;
+    private DCSBIOSOutput? _LIGHT_GEAR_N;
+    private DCSBIOSOutput? _LIGHT_GEAR_R;
+    private DCSBIOSOutput? _LIGHT_GEAR_WARN;
+
     private readonly Key _dedDisplayKey;
     private readonly Key _navDisplayKey;
     private readonly Key _rwrDisplayKey;
@@ -102,7 +107,14 @@ internal class F16C_Listener : AircraftListener
         _rwrPage.RegisterControls(Register, RegisterString, () => GetCompositor(RWR_PAGE));
     }
 
-    protected override void RegisterFrontpanelControls() { }
+    protected override void RegisterFrontpanelControls() {
+
+        Register(_LIGHT_GEAR_L, v => FlightDeck.GearLeftDown = v == 1);
+        Register(_LIGHT_GEAR_N, v => FlightDeck.GearNoseDown = v == 1);
+        Register(_LIGHT_GEAR_R, v => FlightDeck.GearRightDown = v == 1);
+
+        Register(_LIGHT_GEAR_WARN, v => FlightDeck.GearWarning = v == 1);
+    }
 
     protected override void InitializeDcsBiosOutputs()
     {
@@ -110,6 +122,12 @@ internal class F16C_Listener : AircraftListener
         _LIGHT_MASTER_CAUTION = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_MASTER_CAUTION");
         _PRI_DATA_DISPLAY_BRT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("PRI_DATA_DISPLAY_BRT_KNB");
 
+        _LIGHT_GEAR_L = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_GEAR_L");
+        _LIGHT_GEAR_N = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_GEAR_N");
+        _LIGHT_GEAR_R = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_GEAR_R");
+
+        _LIGHT_GEAR_WARN = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_GEAR_WARN");
+            
         _dedPage.InitializeControls();
         _navPage.InitializeControls();
         _rwrPage.InitializeControls();
