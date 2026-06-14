@@ -2,8 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:WWCduDcsBiosBridge.UI"
-        Title="MCDU DCS-BIOS Bridge Configuration" 
-        Height="650" 
+        Title="MCDU DCS-BIOS Bridge Configuration"
+        Height="650"
         MinHeight="600"
         Width="640"
         MinWidth="600"
@@ -24,23 +24,205 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <TextBlock Grid.Row="0" 
-                   Text="Winwing Devices DCS-BIOS Bridge" 
-                   FontSize="16" 
-                   FontWeight="Bold" 
-                   Margin="0,0,0,15"
-                   HorizontalAlignment="Center"/>
+        <!-- Header: title left, connected device pills right -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,15" VerticalAlignment="Center">
+            <WrapPanel x:Name="DevicePillsPanel" DockPanel.Dock="Right" VerticalAlignment="Center"/>
+            <TextBlock Text="Winwing DCS-BIOS Bridge"
+                       FontSize="16"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center"/>
+        </DockPanel>
 
         <!-- Tab Control -->
         <TabControl x:Name="MainTabControl" Grid.Row="1" Margin="0,0,0,15">
+
+            <!-- Dashboard Tab -->
+            <TabItem Header="Dashboard">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Bridge status card -->
+                    <Border Grid.Row="0"
+                            BorderBrush="#CCCCCC"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Padding="12,10"
+                            Margin="0,0,0,12">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse x:Name="BridgeStatusDot"
+                                     Width="10" Height="10"
+                                     Fill="#888888"
+                                     VerticalAlignment="Center"
+                                     Margin="0,0,10,0"/>
+                            <StackPanel>
+                                <TextBlock x:Name="BridgeStatusLabel"
+                                           Text="Bridge stopped"
+                                           FontWeight="SemiBold"
+                                           FontSize="13"/>
+                                <TextBlock x:Name="BridgeStatusSub"
+                                           Text="Aircraft is detected automatically when DCS is running"
+                                           Foreground="Gray"
+                                           FontSize="11"
+                                           Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Grid.Row="1"
+                               Text="Start the bridge using the button below, then load into a supported aircraft in DCS World. The CDU or FCU/EFIS display will sync automatically — no manual aircraft selection needed."
+                               TextWrapping="Wrap"
+                               Foreground="Gray"
+                               FontSize="12"
+                               VerticalAlignment="Top"/>
+                </Grid>
+            </TabItem>
+
+            <!-- Configuration Tab -->
             <TabItem Header="Configuration" x:Name="ConfigurationTab">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <ui:OptionsPanel x:Name="OptionsPanel" 
-                                     Margin="10" 
+                    <ui:OptionsPanel x:Name="OptionsPanel"
+                                     Margin="10"
                                      IsEnabled="{Binding CanEdit, RelativeSource={RelativeSource AncestorType=Window}}"/>
                 </ScrollViewer>
             </TabItem>
+
+            <!-- Diagnostics Tab -->
+            <TabItem Header="Diagnostics">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0"
+                               Text="Event log"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,6"/>
+
+                    <TextBox x:Name="DiagnosticsEventLog"
+                             Grid.Row="1"
+                             IsReadOnly="True"
+                             VerticalScrollBarVisibility="Auto"
+                             TextWrapping="Wrap"
+                             FontFamily="Consolas"
+                             FontSize="11"
+                             Background="#F5F5F5"
+                             Margin="0,0,0,6"/>
+
+                    <DockPanel Grid.Row="2">
+                        <Button Content="Clear"
+                                DockPanel.Dock="Right"
+                                Padding="10,3"
+                                Margin="8,0,0,0"
+                                Click="DiagnosticsClear_Click"/>
+                        <TextBlock Text="Real-time button presses, releases, and rotary encoder events from connected FCU/EFIS devices."
+                                   FontSize="11"
+                                   Foreground="Gray"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- Help Tab -->
+            <TabItem Header="Help">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="12,10">
+
+                        <TextBlock Text="Quick start" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                        <DockPanel Margin="0,3">
+                            <Border DockPanel.Dock="Left" Width="22" Height="22" CornerRadius="11"
+                                    BorderThickness="1" BorderBrush="#BBBBBB" Margin="0,0,8,0" VerticalAlignment="Top">
+                                <TextBlock Text="1" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#888"/>
+                            </Border>
+                            <TextBlock Text="Connect your Winwing device(s) via USB. They appear as pills next to the window title once detected."
+                                       TextWrapping="Wrap" FontSize="12" Foreground="#555" VerticalAlignment="Center"/>
+                        </DockPanel>
+
+                        <DockPanel Margin="0,3">
+                            <Border DockPanel.Dock="Left" Width="22" Height="22" CornerRadius="11"
+                                    BorderThickness="1" BorderBrush="#BBBBBB" Margin="0,0,8,0" VerticalAlignment="Top">
+                                <TextBlock Text="2" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#888"/>
+                            </Border>
+                            <TextBlock Text="Click Start Bridge in the footer below."
+                                       TextWrapping="Wrap" FontSize="12" Foreground="#555" VerticalAlignment="Center"/>
+                        </DockPanel>
+
+                        <DockPanel Margin="0,3">
+                            <Border DockPanel.Dock="Left" Width="22" Height="22" CornerRadius="11"
+                                    BorderThickness="1" BorderBrush="#BBBBBB" Margin="0,0,8,0" VerticalAlignment="Top">
+                                <TextBlock Text="3" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#888"/>
+                            </Border>
+                            <TextBlock Text="Load into a mission in DCS World. The aircraft module is detected automatically — no manual selection needed."
+                                       TextWrapping="Wrap" FontSize="12" Foreground="#555" VerticalAlignment="Center"/>
+                        </DockPanel>
+
+                        <DockPanel Margin="0,3">
+                            <Border DockPanel.Dock="Left" Width="22" Height="22" CornerRadius="11"
+                                    BorderThickness="1" BorderBrush="#BBBBBB" Margin="0,0,8,0" VerticalAlignment="Top">
+                                <TextBlock Text="4" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#888"/>
+                            </Border>
+                            <TextBlock Text="Your CDU or FCU/EFIS will sync with the in-game cockpit. The Dashboard tab shows the current bridge status."
+                                       TextWrapping="Wrap" FontSize="12" Foreground="#555" VerticalAlignment="Center"/>
+                        </DockPanel>
+
+                        <Separator Margin="0,12"/>
+
+                        <TextBlock Text="DCS-BIOS network" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <Border Background="#FFF9F0" BorderBrush="#DDC080" BorderThickness="1" CornerRadius="3" Padding="10,7">
+                            <TextBlock FontSize="12" Foreground="#664400" TextWrapping="Wrap">
+                                Default receive: <Run FontWeight="SemiBold">239.255.50.10:5010</Run>&#160; · &#160;Default send: <Run FontWeight="SemiBold">127.0.0.1:7778</Run><LineBreak/>
+                                Only change these if your DCS-BIOS installation uses non-default ports. Use <Run FontStyle="Italic">Edit DCS-BIOS Configuration</Run> in the footer.
+                            </TextBlock>
+                        </Border>
+
+                        <Separator Margin="0,12"/>
+
+                        <TextBlock Text="Supported aircraft" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <TextBlock Text="A-10C · AH-64D · F/A-18C · F-15E · F-16C · CH-47F (pilot &amp; copilot) · M-2000C"
+                                   FontSize="12" Foreground="#555" TextWrapping="Wrap"/>
+
+                        <Separator Margin="0,12"/>
+
+                        <TextBlock Text="Troubleshooting" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                        <DockPanel Margin="0,3">
+                            <TextBlock DockPanel.Dock="Left" Text="?" FontSize="11" Foreground="#888" Width="22" VerticalAlignment="Top"/>
+                            <TextBlock FontSize="12" Foreground="#555" TextWrapping="Wrap">
+                                <Run FontWeight="SemiBold">Device not shown in title bar:</Run> unplug and replug the USB cable, then restart the app.
+                            </TextBlock>
+                        </DockPanel>
+
+                        <DockPanel Margin="0,3">
+                            <TextBlock DockPanel.Dock="Left" Text="?" FontSize="11" Foreground="#888" Width="22" VerticalAlignment="Top"/>
+                            <TextBlock FontSize="12" Foreground="#555" TextWrapping="Wrap">
+                                <Run FontWeight="SemiBold">CDU screen blank in-game:</Run> confirm the DCS-BIOS export script is installed and DCS World is running.
+                            </TextBlock>
+                        </DockPanel>
+
+                        <DockPanel Margin="0,3">
+                            <TextBlock DockPanel.Dock="Left" Text="?" FontSize="11" Foreground="#888" Width="22" VerticalAlignment="Top"/>
+                            <TextBlock FontSize="12" Foreground="#555" TextWrapping="Wrap">
+                                <Run FontWeight="SemiBold">Wrong aircraft data:</Run> ensure DCS-BIOS is up to date and the correct module is loaded in DCS.
+                            </TextBlock>
+                        </DockPanel>
+
+                        <DockPanel Margin="0,3">
+                            <TextBlock DockPanel.Dock="Left" Text="?" FontSize="11" Foreground="#888" Width="22" VerticalAlignment="Top"/>
+                            <TextBlock FontSize="12" Foreground="#555" TextWrapping="Wrap">
+                                <Run FontWeight="SemiBold">SimApp Pro lighting conflict:</Run> enable <Run FontStyle="Italic">Disable Lighting Management</Run> in the Configuration tab.
+                            </TextBlock>
+                        </DockPanel>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
         </TabControl>
 
         <!-- Update Notification Banner -->
@@ -84,9 +266,9 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <Button x:Name="ConfigButton" 
-                    Content="Edit DCS-BIOS Configuration" 
-                    Width="200" 
+            <Button x:Name="ConfigButton"
+                    Content="Edit DCS-BIOS Configuration"
+                    Width="200"
                     Height="30"
                     HorizontalAlignment="Left"
                     Click="ConfigButton_Click"
@@ -94,15 +276,15 @@
                     IsEnabled="{Binding CanEdit}"/>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1">
-                <Button x:Name="StartButton" 
+                <Button x:Name="StartButton"
                         Content="Start Bridge"
                         Width="100"
                         Height="30"
                         Margin="0,0,10,0"
                         Click="StartButton_Click"/>
-                <Button x:Name="ExitButton" 
-                        Content="Exit" 
-                        Width="100" 
+                <Button x:Name="ExitButton"
+                        Content="Exit"
+                        Width="100"
                         Height="30"
                         Click="ExitButton_Click"/>
             </StackPanel>

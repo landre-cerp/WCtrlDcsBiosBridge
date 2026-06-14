@@ -3,6 +3,9 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Shapes;
+using WwDevicesDotNet;
 using WWCduDcsBiosBridge.Config;
 using System.Diagnostics;
 using WWCduDcsBiosBridge.Services;
@@ -87,7 +90,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             var detected = await DeviceManager.DetectAndConnectDevicesAsync(progress, _detectCts.Token,
                 resetDevices: !userOptions.DisableLightingManagement);
             devices.AddRange(detected);
-            BuildDeviceTabs();
+            BuildDeviceUI();
             UpdateStartButtonState();
             
             if (CanStartBridge() && userOptions.AutoStart)
@@ -112,7 +115,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         return IsConfigValid() && devices.Count > 0 && !IsBridgeRunning;
     }
 
-    private void BuildDeviceTabs()
+    private void BuildDeviceUI()
     {
         if (devices.Count == 0)
         {
@@ -123,26 +126,112 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         {
             var cduCount = devices.Count(d => d.Cdu != null);
             var frontpanelCount = devices.Count(d => d.Frontpanel != null);
-            
+
             var statusParts = new List<string>();
             if (cduCount > 0)
                 statusParts.Add($"{cduCount} CDU device{(cduCount != 1 ? "s" : "")}");
             if (frontpanelCount > 0)
                 statusParts.Add($"{frontpanelCount} Frontpanel device{(frontpanelCount != 1 ? "s" : "")}");
-            
+
             ShowStatus($"Detected {string.Join(" and ", statusParts)}", false);
+
+            bool multipleDevices = devices.Count > 1;
+            DevicePillsPanel.Children.Clear();
 
             foreach (var deviceInfo in devices)
             {
-                var deviceTab = UI.DeviceTabFactory.CreateDeviceTab(deviceInfo, IsBridgeRunning);
-                MainTabControl.Items.Add(deviceTab);
+                DevicePillsPanel.Children.Add(CreateDevicePill(deviceInfo));
+
+                if (deviceInfo.Frontpanel != null)
+                {
+                    var prefix = multipleDevices ? $"[{deviceInfo.DisplayName}] " : "";
+                    SubscribeFrontpanelDiagnostics(deviceInfo.Frontpanel, prefix);
+                }
             }
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to build device tabs");
-            ShowStatus($"Failed to build device tabs: {ex.Message}", true);
+            Logger.Error(ex, "Failed to build device UI");
+            ShowStatus($"Failed to build device UI: {ex.Message}", true);
         }
+    }
+
+    private Border CreateDevicePill(DeviceInfo deviceInfo)
+    {
+        var dot = new Ellipse
+        {
+            Width = 7,
+            Height = 7,
+            Fill = Brushes.Green,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 5, 0)
+        };
+
+        var label = new TextBlock
+        {
+            Text = deviceInfo.DisplayName,
+            FontSize = 11,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        var inner = new StackPanel { Orientation = Orientation.Horizontal };
+        inner.Children.Add(dot);
+        inner.Children.Add(label);
+
+        var pill = new Border
+        {
+            CornerRadius = new CornerRadius(99),
+            BorderThickness = new Thickness(1),
+            BorderBrush = Brushes.LightGray,
+            Padding = new Thickness(8, 3, 8, 3),
+            Margin = new Thickness(4, 0, 0, 0),
+            Child = inner
+        };
+
+        if (deviceInfo.Frontpanel != null)
+        {
+            deviceInfo.Frontpanel.Disconnected += (s, e) =>
+            {
+                Application.Current.Dispatcher.Invoke(() => dot.Fill = Brushes.Red);
+            };
+        }
+
+        return pill;
+    }
+
+    private void SubscribeFrontpanelDiagnostics(IFrontpanel frontpanel, string prefix)
+    {
+        frontpanel.ControlActivated += (s, e) =>
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                DiagnosticsEventLog.AppendText($"[{DateTime.Now:HH:mm:ss.fff}] {prefix}PRESSED  {e.ControlId}\n");
+                DiagnosticsEventLog.ScrollToEnd();
+            });
+        };
+
+        frontpanel.ControlDeactivated += (s, e) =>
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                DiagnosticsEventLog.AppendText($"[{DateTime.Now:HH:mm:ss.fff}] {prefix}RELEASED {e.ControlId}\n");
+                DiagnosticsEventLog.ScrollToEnd();
+            });
+        };
+
+        frontpanel.Disconnected += (s, e) =>
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                DiagnosticsEventLog.AppendText($"[{DateTime.Now:HH:mm:ss.fff}] {prefix}DISCONNECTED\n");
+                DiagnosticsEventLog.ScrollToEnd();
+            });
+        };
+    }
+
+    private void DiagnosticsClear_Click(object sender, RoutedEventArgs e)
+    {
+        DiagnosticsEventLog.Clear();
     }
 
     private void UpdateState()
@@ -296,12 +385,13 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             {
                 ShowStatus("Waiting for DCS aircraft...", false);
                 StartButton.Content = "Detecting...";
+                UpdateBridgeStatusCard("Waiting for DCS aircraft...", "Load a supported module in DCS World");
             }
             else if (AircraftRegistry.FindByDcsBiosName(dcsBiosName) is not { } descriptor)
             {
-                // Unsupported module — keep waiting for a supported one.
                 ShowStatus($"Unsupported aircraft: {dcsBiosName} — waiting...", false);
                 StartButton.Content = "Detecting...";
+                UpdateBridgeStatusCard($"Unsupported aircraft: {dcsBiosName}", "Waiting for a supported module...");
             }
             else
             {
@@ -310,6 +400,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
                 StartButton.IsEnabled = false;
                 OnPropertyChanged(nameof(IsBridgeRunning));
                 OnPropertyChanged(nameof(CanEdit));
+                UpdateBridgeStatusCard($"Bridge running · {descriptor.DisplayName}", $"Listening on {config.ReceiveFromIpUdp}:{config.ReceivePortUdp}");
 
                 if (userOptions.MinimizeOnStart)
                 {
@@ -317,6 +408,13 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
                 }
             }
         });
+    }
+
+    private void UpdateBridgeStatusCard(string label, string sub)
+    {
+        BridgeStatusDot.Fill = IsBridgeRunning ? Brushes.Green : new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88));
+        BridgeStatusLabel.Text = label;
+        BridgeStatusSub.Text = sub;
     }
 
     private void ResetStartButton()
@@ -327,6 +425,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         UpdateTitle();
         OnPropertyChanged(nameof(IsBridgeRunning));
         OnPropertyChanged(nameof(CanEdit));
+        UpdateBridgeStatusCard("Bridge stopped", "Aircraft is detected automatically when DCS is running");
     }
 
     private void OnDcsBiosVersionChanged(string? dcsBiosVersion)
