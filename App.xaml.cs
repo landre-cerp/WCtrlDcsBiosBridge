@@ -1,5 +1,7 @@
 using NLog;
 using System.Windows;
+using WWCduDcsBiosBridge.Config;
+using WWCduDcsBiosBridge.Services;
 
 namespace WWCduDcsBiosBridge;
 
@@ -9,17 +11,20 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        // Handle any unhandled exceptions
         this.DispatcherUnhandledException += (sender, args) =>
         {
-            MessageBox.Show($"An unexpected error occurred: {args.Exception.Message}", 
+            MessageBox.Show($"An unexpected error occurred: {args.Exception.Message}",
                             "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             args.Handled = true;
         };
 
         base.OnStartup(e);
+
+        // Apply saved theme before the main window renders
+        var options = UserOptionsStorage.Load();
+        ThemeManager.Apply(options.Theme);
+
         Logger.Info("Application started.");
-        // Other startup logic...
     }
 
     protected override void OnExit(ExitEventArgs e)

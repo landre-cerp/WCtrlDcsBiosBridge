@@ -1,94 +1,102 @@
 <UserControl x:Class="WWCduDcsBiosBridge.UI.OptionsPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    
-    <GroupBox Header="Options" Padding="10">
-        <StackPanel>
-            <TextBlock Text="A-10C Options:" FontWeight="Bold" Margin="0,0,0,5"/>
-            
-            <CheckBox Content="Align CDU Display to Bottom"
-                     IsChecked="{Binding DisplayBottomAligned, Mode=TwoWay}"
-                     Checked="CheckBox_Changed"
-                     Unchecked="CheckBox_Changed"
-                     Margin="0,2"/>
-            
-            <CheckBox Content="Display CMS on CDU"
-                     IsChecked="{Binding DisplayCMS, Mode=TwoWay}"
-                     Checked="CheckBox_Changed"
-                     Unchecked="CheckBox_Changed"
-                     Margin="0,2,0,10"/>
 
-            <TextBlock Text="General Options:" FontWeight="Bold" Margin="0,5,0,5"/>
-            
-            <CheckBox Content="Disable Lighting Management (for SimApp Pro users)"
-                     IsChecked="{Binding DisableLightingManagement, Mode=TwoWay}"
-                     Checked="CheckBox_Changed"
-                     Unchecked="CheckBox_Changed"
-                     Margin="0,2"/>
-            
-            <CheckBox Content="Auto-Start Bridge when Ready"
-                     IsChecked="{Binding AutoStart, Mode=TwoWay}"
-                     Checked="CheckBox_Changed"
-                     Unchecked="CheckBox_Changed"
-                     Margin="0,2"/>
-            
-            <CheckBox Content="Minimize Window on Start"
-                     IsChecked="{Binding MinimizeOnStart, Mode=TwoWay}"
-                     Checked="CheckBox_Changed"
-                     Unchecked="CheckBox_Changed"
-                     Margin="0,2"/>
+    <StackPanel>
+        <TextBlock Text="GENERAL" FontWeight="SemiBold" FontSize="11"
+                   Foreground="{DynamicResource SubtleTextForeground}" Margin="0,0,0,8"/>
 
-            <TextBlock Text="F/A-18C Options:" FontWeight="Bold" Margin="0,10,0,5"/>
-            
-            <TextBlock Text="IFEI Page Navigation Keys:" 
-                      Margin="0,0,0,3"
-                      TextWrapping="Wrap"/>
-            
-            <StackPanel Orientation="Horizontal" Margin="0,2">
-                <TextBlock Text="Show IFEI Key:" VerticalAlignment="Center" Width="120"/>
-                <ComboBox x:Name="NextPageKeyComboBox"
-                         SelectedValue="{Binding NextPageKey, Mode=TwoWay}"
-                         SelectionChanged="ComboBox_Changed"
-                         Width="150"/>
-            </StackPanel>
-            
-            <StackPanel Orientation="Horizontal" Margin="0,2">
-                <TextBlock Text="Show UFC Key:" VerticalAlignment="Center" Width="120"/>
-                <ComboBox x:Name="PrevPageKeyComboBox"
-                         SelectedValue="{Binding PrevPageKey, Mode=TwoWay}"
-                         SelectionChanged="ComboBox_Changed"
-                         Width="150"/>
-            </StackPanel>
+        <CheckBox Content="Disable Lighting Management (for SimApp Pro users)"
+                 IsChecked="{Binding DisableLightingManagement, Mode=TwoWay}"
+                 Checked="CheckBox_Changed"
+                 Unchecked="CheckBox_Changed"
+                 Margin="0,4"/>
 
-            <TextBlock Text="F-16C Options:" FontWeight="Bold" Margin="0,10,0,5"/>
+        <CheckBox Content="Auto-Start Bridge when Ready"
+                 IsChecked="{Binding AutoStart, Mode=TwoWay}"
+                 Checked="CheckBox_Changed"
+                 Unchecked="CheckBox_Changed"
+                 Margin="0,4"/>
 
-            <TextBlock Text="DED / NAV / RWR Page Keys:"
-                      Margin="0,0,0,3"
-                      TextWrapping="Wrap"/>
+        <CheckBox Content="Minimize Window on Start"
+                 IsChecked="{Binding MinimizeOnStart, Mode=TwoWay}"
+                 Checked="CheckBox_Changed"
+                 Unchecked="CheckBox_Changed"
+                 Margin="0,4"/>
 
-            <StackPanel Orientation="Horizontal" Margin="0,2">
-                <TextBlock Text="Show DED Key:" VerticalAlignment="Center" Width="120"/>
-                <ComboBox x:Name="F16CPrevDisplayKeyComboBox"
-                         SelectedValue="{Binding F16CPrevDisplayKey, Mode=TwoWay}"
-                         SelectionChanged="ComboBox_Changed"
-                         Width="150"/>
-            </StackPanel>
+        <Separator Margin="0,12"/>
 
-            <StackPanel Orientation="Horizontal" Margin="0,2">
-                <TextBlock Text="Show NAV Key:" VerticalAlignment="Center" Width="120"/>
-                <ComboBox x:Name="F16CNextDisplayKeyComboBox"
-                         SelectedValue="{Binding F16CNextDisplayKey, Mode=TwoWay}"
-                         SelectionChanged="ComboBox_Changed"
-                         Width="150"/>
-            </StackPanel>
+        <TextBlock Text="A-10C" FontWeight="SemiBold" FontSize="11"
+                   Foreground="{DynamicResource SubtleTextForeground}" Margin="0,0,0,8"/>
 
-            <StackPanel Orientation="Horizontal" Margin="0,2">
-                <TextBlock Text="Show RWR Key:" VerticalAlignment="Center" Width="120"/>
-                <ComboBox x:Name="F16CRwrDisplayKeyComboBox"
-                         SelectedValue="{Binding F16CRwrDisplayKey, Mode=TwoWay}"
-                         SelectionChanged="ComboBox_Changed"
-                         Width="150"/>
-            </StackPanel>
+        <CheckBox Content="Align CDU Display to Bottom"
+                 IsChecked="{Binding DisplayBottomAligned, Mode=TwoWay}"
+                 Checked="CheckBox_Changed"
+                 Unchecked="CheckBox_Changed"
+                 Margin="0,4"/>
+
+        <CheckBox Content="Display CMS on CDU"
+                 IsChecked="{Binding DisplayCMS, Mode=TwoWay}"
+                 Checked="CheckBox_Changed"
+                 Unchecked="CheckBox_Changed"
+                 Margin="0,4"/>
+
+        <Separator Margin="0,12"/>
+
+        <TextBlock Text="F/A-18C" FontWeight="SemiBold" FontSize="11"
+                   Foreground="{DynamicResource SubtleTextForeground}" Margin="0,0,0,4"/>
+
+        <TextBlock Text="IFEI page navigation keys"
+                  Foreground="{DynamicResource SubtleTextForeground}"
+                  FontSize="11" Margin="0,0,0,8"/>
+
+        <StackPanel Orientation="Horizontal" Margin="0,4">
+            <TextBlock Text="Show IFEI Key:" VerticalAlignment="Center" Width="120"/>
+            <ComboBox x:Name="NextPageKeyComboBox"
+                     SelectedValue="{Binding NextPageKey, Mode=TwoWay}"
+                     SelectionChanged="ComboBox_Changed"
+                     Width="150"/>
         </StackPanel>
-    </GroupBox>
+
+        <StackPanel Orientation="Horizontal" Margin="0,4">
+            <TextBlock Text="Show UFC Key:" VerticalAlignment="Center" Width="120"/>
+            <ComboBox x:Name="PrevPageKeyComboBox"
+                     SelectedValue="{Binding PrevPageKey, Mode=TwoWay}"
+                     SelectionChanged="ComboBox_Changed"
+                     Width="150"/>
+        </StackPanel>
+
+        <Separator Margin="0,12"/>
+
+        <TextBlock Text="F-16C" FontWeight="SemiBold" FontSize="11"
+                   Foreground="{DynamicResource SubtleTextForeground}" Margin="0,0,0,4"/>
+
+        <TextBlock Text="DED / NAV / RWR page keys"
+                  Foreground="{DynamicResource SubtleTextForeground}"
+                  FontSize="11" Margin="0,0,0,8"/>
+
+        <StackPanel Orientation="Horizontal" Margin="0,4">
+            <TextBlock Text="Show DED Key:" VerticalAlignment="Center" Width="120"/>
+            <ComboBox x:Name="F16CPrevDisplayKeyComboBox"
+                     SelectedValue="{Binding F16CPrevDisplayKey, Mode=TwoWay}"
+                     SelectionChanged="ComboBox_Changed"
+                     Width="150"/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Margin="0,4">
+            <TextBlock Text="Show NAV Key:" VerticalAlignment="Center" Width="120"/>
+            <ComboBox x:Name="F16CNextDisplayKeyComboBox"
+                     SelectedValue="{Binding F16CNextDisplayKey, Mode=TwoWay}"
+                     SelectionChanged="ComboBox_Changed"
+                     Width="150"/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Margin="0,4">
+            <TextBlock Text="Show RWR Key:" VerticalAlignment="Center" Width="120"/>
+            <ComboBox x:Name="F16CRwrDisplayKeyComboBox"
+                     SelectedValue="{Binding F16CRwrDisplayKey, Mode=TwoWay}"
+                     SelectionChanged="ComboBox_Changed"
+                     Width="150"/>
+        </StackPanel>
+    </StackPanel>
 </UserControl>

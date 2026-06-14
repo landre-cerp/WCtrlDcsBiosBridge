@@ -1,0 +1,346 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Named resource keys referenced via DynamicResource in XAML -->
+    <SolidColorBrush x:Key="WindowBackground"        Color="#F3F3F3"/>
+    <SolidColorBrush x:Key="CardBorderBrush"         Color="#D1D5DB"/>
+    <SolidColorBrush x:Key="SubtleTextForeground"    Color="#777777"/>
+    <SolidColorBrush x:Key="InfoBoxBackground"       Color="#FFF9F0"/>
+    <SolidColorBrush x:Key="InfoBoxBorderBrush"      Color="#DDC080"/>
+    <SolidColorBrush x:Key="InfoBoxForeground"       Color="#664400"/>
+    <SolidColorBrush x:Key="EventLogBackground"      Color="#F5F5F5"/>
+    <SolidColorBrush x:Key="HelpTextForeground"      Color="#555555"/>
+    <SolidColorBrush x:Key="StepBorderBrush"         Color="#BBBBBB"/>
+    <SolidColorBrush x:Key="StepForeground"          Color="#888888"/>
+    <SolidColorBrush x:Key="UpdateBannerBackground"  Color="#FDF5D7"/>
+    <SolidColorBrush x:Key="UpdateBannerBorderBrush" Color="#E6C200"/>
+    <SolidColorBrush x:Key="UpdateBannerForeground"  Color="#664400"/>
+    <SolidColorBrush x:Key="ToggleTrackOff"          Color="#C0C4CC"/>
+    <SolidColorBrush x:Key="ToggleTrackOn"           Color="#0078D4"/>
+    <SolidColorBrush x:Key="ToggleThumb"             Color="#FFFFFF"/>
+
+    <!-- Light palette -->
+    <SolidColorBrush x:Key="LightSurface"      Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="LightSurfaceHover" Color="#E8E8E8"/>
+    <SolidColorBrush x:Key="LightBorder"       Color="#D1D5DB"/>
+    <SolidColorBrush x:Key="LightBorderHover"  Color="#A0A0A0"/>
+    <SolidColorBrush x:Key="LightTextPrimary"  Color="#1F2937"/>
+    <SolidColorBrush x:Key="LightTextMuted"    Color="#6B7280"/>
+    <SolidColorBrush x:Key="LightAccent"       Color="#0078D4"/>
+    <SolidColorBrush x:Key="LightDisabledFg"   Color="#9CA3AF"/>
+    <SolidColorBrush x:Key="LightDisabledBg"   Color="#F3F4F6"/>
+
+    <!-- Button (modern rounded) -->
+    <Style TargetType="{x:Type Button}">
+        <Setter Property="Background"      Value="{StaticResource LightSurface}"/>
+        <Setter Property="BorderBrush"     Value="{StaticResource LightBorder}"/>
+        <Setter Property="Foreground"      Value="{StaticResource LightTextPrimary}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding"         Value="6,4"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment"   Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border x:Name="bd"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="5">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background"  Value="{StaticResource LightSurfaceHover}"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource LightBorderHover}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="bd" Property="Background"  Value="#D0E4F7"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource LightAccent}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="bd" Property="Background"  Value="{StaticResource LightDisabledBg}"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource LightBorder}"/>
+                            <Setter Property="Foreground" Value="{StaticResource LightDisabledFg}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Icon-only button (borderless, used for theme toggle) -->
+    <Style x:Key="IconButton" TargetType="{x:Type Button}">
+        <Setter Property="Background"      Value="Transparent"/>
+        <Setter Property="BorderBrush"     Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground"      Value="{StaticResource LightTextMuted}"/>
+        <Setter Property="Padding"         Value="4"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment"   Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border x:Name="bd"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="6"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource LightSurfaceHover}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#D0E4F7"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- TextBox (modern rounded) -->
+    <Style TargetType="{x:Type TextBox}">
+        <Setter Property="Background"      Value="{StaticResource LightSurface}"/>
+        <Setter Property="Foreground"      Value="{StaticResource LightTextPrimary}"/>
+        <Setter Property="BorderBrush"     Value="{StaticResource LightBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type TextBox}">
+                    <Border x:Name="bd"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="4">
+                        <ScrollViewer x:Name="PART_ContentHost" Margin="3,2"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource LightBorderHover}"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource LightAccent}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- CheckBox rendered as a toggle switch with slide animation -->
+    <Style TargetType="{x:Type CheckBox}">
+        <Setter Property="Foreground" Value="{StaticResource LightTextPrimary}"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type CheckBox}">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border x:Name="track"
+                                Width="38" Height="21"
+                                CornerRadius="10.5"
+                                Background="{DynamicResource ToggleTrackOff}">
+                            <Border x:Name="thumb"
+                                    Width="17" Height="17"
+                                    CornerRadius="8.5"
+                                    Background="{DynamicResource ToggleThumb}"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Margin="2,0,0,0">
+                                <Border.RenderTransform>
+                                    <TranslateTransform x:Name="thumbSlide" X="0"/>
+                                </Border.RenderTransform>
+                            </Border>
+                        </Border>
+                        <ContentPresenter Margin="8,0,0,0"
+                                          VerticalAlignment="Center"
+                                          RecognizesAccessKey="True"/>
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="track" Property="Background" Value="{DynamicResource ToggleTrackOn}"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="thumbSlide"
+                                                         Storyboard.TargetProperty="X"
+                                                         To="17" Duration="0:0:0.12"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="thumbSlide"
+                                                         Storyboard.TargetProperty="X"
+                                                         To="0" Duration="0:0:0.12"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="track" Property="Opacity" Value="0.82"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ComboBoxItem -->
+    <Style TargetType="{x:Type ComboBoxItem}">
+        <Setter Property="Background" Value="{StaticResource LightSurface}"/>
+        <Setter Property="Foreground" Value="{StaticResource LightTextPrimary}"/>
+        <Setter Property="Padding"    Value="8,5"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ComboBoxItem}">
+                    <Border x:Name="bd"
+                            Background="{TemplateBinding Background}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#DBEAFE"/>
+                            <Setter Property="Foreground" Value="{StaticResource LightTextPrimary}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource LightDisabledFg}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ComboBox (modern rounded, dark popup) -->
+    <Style TargetType="{x:Type ComboBox}">
+        <Setter Property="Background"      Value="{StaticResource LightSurface}"/>
+        <Setter Property="BorderBrush"     Value="{StaticResource LightBorder}"/>
+        <Setter Property="Foreground"      Value="{StaticResource LightTextPrimary}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ComboBox}">
+                    <Grid>
+                        <ToggleButton x:Name="toggleButton"
+                                      IsChecked="{Binding IsDropDownOpen, Mode=TwoWay,
+                                                  RelativeSource={RelativeSource TemplatedParent}}"
+                                      Focusable="False">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="{x:Type ToggleButton}">
+                                    <Border x:Name="bd"
+                                            Background="{Binding Background, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                            BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                            BorderThickness="1"
+                                            CornerRadius="5">
+                                        <Path Data="M 0 0 L 5 5 L 10 0"
+                                              Stroke="{StaticResource LightTextMuted}"
+                                              StrokeThickness="1.5"
+                                              HorizontalAlignment="Right"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,8,0"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="{StaticResource LightSurfaceHover}"/>
+                                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource LightBorderHover}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource LightAccent}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                        <ContentPresenter x:Name="ContentSite"
+                                          Content="{TemplateBinding SelectionBoxItem}"
+                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                          IsHitTestVisible="False"
+                                          Margin="8,0,24,0"
+                                          VerticalAlignment="Center"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        <Popup x:Name="PART_Popup"
+                               IsOpen="{TemplateBinding IsDropDownOpen}"
+                               Placement="Bottom"
+                               AllowsTransparency="True"
+                               Focusable="False"
+                               PopupAnimation="Fade">
+                            <Border Background="{StaticResource LightSurface}"
+                                    BorderBrush="{StaticResource LightBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="5"
+                                    MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                    MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                    SnapsToDevicePixels="True">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,3">
+                                    <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource LightDisabledFg}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- TabControl -->
+    <Style TargetType="{x:Type TabControl}">
+        <Setter Property="Background"      Value="{StaticResource LightSurface}"/>
+        <Setter Property="BorderBrush"     Value="{StaticResource LightBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding"         Value="0"/>
+    </Style>
+
+    <!-- TabItem (underline style matching dark) -->
+    <Style TargetType="{x:Type TabItem}">
+        <Setter Property="Foreground"  Value="{StaticResource LightTextMuted}"/>
+        <Setter Property="Background"  Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Padding"     Value="14,7"/>
+        <Setter Property="FontSize"    Value="12"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type TabItem}">
+                    <Border x:Name="bd"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="0,0,0,2"
+                            Margin="0,0,2,0"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter ContentSource="Header"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource LightAccent}"/>
+                            <Setter Property="Foreground" Value="{StaticResource LightTextPrimary}"/>
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True"/>
+                                <Condition Property="IsSelected" Value="False"/>
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.Setters>
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource LightSurfaceHover}"/>
+                            </MultiTrigger.Setters>
+                        </MultiTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

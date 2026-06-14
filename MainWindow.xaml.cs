@@ -3,10 +3,14 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Shapes;
+using WwDevicesDotNet;
 using WWCduDcsBiosBridge.Config;
 using System.Diagnostics;
 using WWCduDcsBiosBridge.Services;
 using WWCduDcsBiosBridge.Aircrafts;
+using Microsoft.Win32;
 
 namespace WWCduDcsBiosBridge;
 
@@ -24,6 +28,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private BridgeManager? bridgeManager;
     private CancellationTokenSource? _detectCts;
     private readonly CancellationTokenSource _shutdownCts = new();
+    private ThemePreference _currentTheme = ThemePreference.System;
 
     private const string GitHubOwner = "landre-cerp";
     private const string GitHubRepo = "WWCduDcsBiosBridge";
@@ -59,11 +64,15 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         AppVersion = AppVersionProvider.GetAppVersion();
         UpdateTitle();
 
-        // Wire up event handlers for new UserControls
         OptionsPanel.SettingsChanged += (sender, args) => SaveUserSettings();
 
         LoadConfig();
         LoadUserSettings();
+        _currentTheme = userOptions.Theme;
+        UpdateThemeToggleIcon();
+
+        SystemEvents.UserPreferenceChanged += OnSystemPreferenceChanged;
+
         _ = DetectDevicesAsync();
         UpdateState();
         Loaded += MainWindow_Loaded;
@@ -87,7 +96,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             var detected = await DeviceManager.DetectAndConnectDevicesAsync(progress, _detectCts.Token,
                 resetDevices: !userOptions.DisableLightingManagement);
             devices.AddRange(detected);
-            BuildDeviceTabs();
+            BuildDeviceUI();
             UpdateStartButtonState();
             
             if (CanStartBridge() && userOptions.AutoStart)
@@ -112,7 +121,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         return IsConfigValid() && devices.Count > 0 && !IsBridgeRunning;
     }
 
-    private void BuildDeviceTabs()
+    private void BuildDeviceUI()
     {
         if (devices.Count == 0)
         {
@@ -123,26 +132,77 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         {
             var cduCount = devices.Count(d => d.Cdu != null);
             var frontpanelCount = devices.Count(d => d.Frontpanel != null);
-            
-            var statusParts = new List<string>();
-            if (cduCount > 0)
-                statusParts.Add($"{cduCount} CDU device{(cduCount != 1 ? "s" : "")}");
-            if (frontpanelCount > 0)
-                statusParts.Add($"{frontpanelCount} Frontpanel device{(frontpanelCount != 1 ? "s" : "")}");
-            
-            ShowStatus($"Detected {string.Join(" and ", statusParts)}", false);
+
+            bool multipleDevices = devices.Count > 1;
+            DeviceListPanel.Children.Clear();
 
             foreach (var deviceInfo in devices)
             {
-                var deviceTab = UI.DeviceTabFactory.CreateDeviceTab(deviceInfo, IsBridgeRunning);
-                MainTabControl.Items.Add(deviceTab);
+                DeviceListPanel.Children.Add(CreateDeviceCard(deviceInfo));
+
             }
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to build device tabs");
-            ShowStatus($"Failed to build device tabs: {ex.Message}", true);
+            Logger.Error(ex, "Failed to build device UI");
+            ShowStatus($"Failed to build device UI: {ex.Message}", true);
         }
+    }
+
+    private static readonly SolidColorBrush CardConnectedBorder = new(Color.FromRgb(0x2E, 0x7D, 0x32));
+    private static readonly SolidColorBrush CardConnectedBg     = new(Color.FromArgb(0x18, 0x2E, 0x7D, 0x32));
+    private static readonly SolidColorBrush CardConnectedDot    = new(Color.FromRgb(0x43, 0xA0, 0x47));
+    private static readonly SolidColorBrush CardDisconnectedBg  = new(Color.FromArgb(0x18, 0xC6, 0x28, 0x28));
+    private static readonly SolidColorBrush CardDisconnectedDot = new(Color.FromRgb(0xE5, 0x39, 0x35));
+    private static readonly SolidColorBrush CardDisconnectedBorder = new(Color.FromRgb(0xB7, 0x1C, 0x1C));
+
+    private Border CreateDeviceCard(DeviceInfo deviceInfo)
+    {
+        var dot = new Ellipse
+        {
+            Width = 7,
+            Height = 7,
+            Fill = CardConnectedDot,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 7, 0)
+        };
+
+        var label = new TextBlock
+        {
+            Text = deviceInfo.DisplayName,
+            FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        var inner = new StackPanel { Orientation = Orientation.Horizontal };
+        inner.Children.Add(dot);
+        inner.Children.Add(label);
+
+        var card = new Border
+        {
+            CornerRadius = new CornerRadius(6),
+            BorderThickness = new Thickness(1),
+            BorderBrush = CardConnectedBorder,
+            Background = CardConnectedBg,
+            Padding = new Thickness(10, 5, 10, 5),
+            Margin = new Thickness(0, 0, 8, 6),
+            Child = inner
+        };
+
+        if (deviceInfo.Frontpanel != null)
+        {
+            deviceInfo.Frontpanel.Disconnected += (s, e) =>
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    dot.Fill = CardDisconnectedDot;
+                    card.Background = CardDisconnectedBg;
+                    card.BorderBrush = CardDisconnectedBorder;
+                });
+            };
+        }
+
+        return card;
     }
 
     private void UpdateState()
@@ -296,12 +356,13 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             {
                 ShowStatus("Waiting for DCS aircraft...", false);
                 StartButton.Content = "Detecting...";
+                UpdateBridgeStatusCard("Waiting for DCS aircraft...", "Load a supported module in DCS World");
             }
             else if (AircraftRegistry.FindByDcsBiosName(dcsBiosName) is not { } descriptor)
             {
-                // Unsupported module — keep waiting for a supported one.
                 ShowStatus($"Unsupported aircraft: {dcsBiosName} — waiting...", false);
                 StartButton.Content = "Detecting...";
+                UpdateBridgeStatusCard($"Unsupported aircraft: {dcsBiosName}", "Waiting for a supported module...");
             }
             else
             {
@@ -310,6 +371,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
                 StartButton.IsEnabled = false;
                 OnPropertyChanged(nameof(IsBridgeRunning));
                 OnPropertyChanged(nameof(CanEdit));
+                UpdateBridgeStatusCard($"Bridge running · {descriptor.DisplayName}", $"Listening on {config.ReceiveFromIpUdp}:{config.ReceivePortUdp}");
 
                 if (userOptions.MinimizeOnStart)
                 {
@@ -317,6 +379,13 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
                 }
             }
         });
+    }
+
+    private void UpdateBridgeStatusCard(string label, string sub)
+    {
+        BridgeStatusDot.Fill = IsBridgeRunning ? Brushes.Green : new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88));
+        BridgeStatusLabel.Text = label;
+        BridgeStatusSub.Text = sub;
     }
 
     private void ResetStartButton()
@@ -327,6 +396,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         UpdateTitle();
         OnPropertyChanged(nameof(IsBridgeRunning));
         OnPropertyChanged(nameof(CanEdit));
+        UpdateBridgeStatusCard("Bridge stopped", "Aircraft is detected automatically when DCS is running");
     }
 
     private void OnDcsBiosVersionChanged(string? dcsBiosVersion)
@@ -341,7 +411,15 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private void UpdateTitle()
     {
         var dcsBios = string.IsNullOrEmpty(_dcsBiosVersion) ? "--.--" : _dcsBiosVersion;
-        Title = $"WWCduDcsBiosBridge v{AppVersion} | DCS-BIOS {dcsBios}";
+        Title = $"WctrlDcsBiosBridge v{AppVersion} | DCS-BIOS {dcsBios}";
+    }
+
+    private void OnSystemPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
+    {
+        if (e.Category == UserPreferenceCategory.General)
+        {
+            Dispatcher.Invoke(() => ThemeManager.Apply(_currentTheme));
+        }
     }
 
     private void LoadUserSettings()
@@ -373,7 +451,37 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         }
     }
 
-    private void ExitButton_Click(object sender, RoutedEventArgs e)
+    private void ThemeToggle_Click(object sender, RoutedEventArgs e)
+    {
+        _currentTheme = _currentTheme switch
+        {
+            ThemePreference.System => ThemePreference.Light,
+            ThemePreference.Light  => ThemePreference.Dark,
+            _                      => ThemePreference.System
+        };
+        ThemeManager.Apply(_currentTheme);
+        userOptions.Theme = _currentTheme;
+        SaveUserSettings();
+        UpdateThemeToggleIcon();
+    }
+
+    private void UpdateThemeToggleIcon()
+    {
+        ThemeIcon.Text = _currentTheme switch
+        {
+            ThemePreference.Light => "☀",
+            ThemePreference.Dark  => "☾",
+            _                     => "◑"
+        };
+        ThemeToggleButton.ToolTip = _currentTheme switch
+        {
+            ThemePreference.Light => "Theme: Light — click for Dark",
+            ThemePreference.Dark  => "Theme: Dark — click for System",
+            _                     => "Theme: System — click for Light"
+        };
+    }
+
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
         _shutdownCts.Cancel();
 
@@ -381,41 +489,26 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         {
             try
             {
-                if (IsBridgeRunning)
-                {
-                    bridgeManager.Stop();
-                }
-                else if (bridgeManager.Contexts != null)
+                if (IsBridgeRunning) bridgeManager.Stop();
+                if (bridgeManager.Contexts != null)
                 {
                     foreach (var ctx in bridgeManager.Contexts)
                     {
-                        try
-                        {
-                            ctx?.Mcdu?.Output?.Clear();
-                            ctx?.Mcdu?.RefreshDisplay();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error(ex, "Error clearing or refreshing MCDU output during bridge shutdown");
-                        }
+                        try { ctx?.Mcdu?.Output?.Clear(); ctx?.Mcdu?.RefreshDisplay(); }
+                        catch (Exception ex) { Logger.Error(ex, "Error clearing MCDU on close"); }
                     }
                 }
-
-                bridgeManager.Dispose();
                 bridgeManager.DcsBiosVersionChanged -= OnDcsBiosVersionChanged;
+                bridgeManager.Dispose();
                 bridgeManager = null;
-                _dcsBiosVersion = null;
-                UpdateTitle();
-                OnPropertyChanged(nameof(IsBridgeRunning));
-                OnPropertyChanged(nameof(CanEdit));
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Error stopping bridge during exit");
+                Logger.Error(ex, "Error stopping bridge during close");
             }
         }
 
-        Application.Current.Shutdown();
+        base.OnClosing(e);
     }
 
     protected override void OnClosed(EventArgs e)
@@ -440,6 +533,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
         if (disposing)
         {
+            SystemEvents.UserPreferenceChanged -= OnSystemPreferenceChanged;
             _shutdownCts.Cancel();
             _detectCts?.Cancel();
             bridgeManager?.Dispose();
