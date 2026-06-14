@@ -105,11 +105,19 @@ internal class M2000C_Listener : AircraftListener
     private DCSBIOSOutput? PCN_DISP_PREP;
     private DCSBIOSOutput? PCN_DISP_DEST;
 
+    private DCSBIOSOutput? CLK_H;
+    private DCSBIOSOutput? CLK_M;
+    private DCSBIOSOutput? CLK_S;
+
     private string _pcnDispL = "N00.00.0";
     private string _pcnDispR = "E00.00.0";
     private string _pcnPrep = "P-1"; 
     private string _pcnDest = "D-1"; 
-    
+
+    private string _clockH= " ";
+    private string _clockM= " ";
+    private string _clockS= " ";
+
     private ushort _clpValue1 = 0;
     private ushort _clpValue2 = 0;
     private ushort _clpValue3 = 0;
@@ -213,6 +221,47 @@ internal class M2000C_Listener : AircraftListener
             FlightDeck.GearNoseDown  = (val & MASK_GEAR_CONF_AUX)   != 0;
             FlightDeck.GearRightDown = (val & MASK_GEAR_CONF_D)     != 0;
         });
+
+        Register(CLK_H, data =>
+        {
+            _clockH = decodeHourNeedle(data); 
+            FlightDeck.Agp32UtcTime = combineHMS();
+        });
+        Register(CLK_M, data =>
+        {
+            _clockM = decodeMinuteNeedle(data);
+            _clockS = decodeSecondNeedle(data);
+            FlightDeck.Agp32UtcTime = combineHMS();
+
+        });
+        Register(CLK_S, data =>
+        {
+            // the clock is in reality related to the chronograph, but we can use it to display seconds in the CDU
+            // the chronograph seems to be 15 minutes max -> 0 -> 65535
+
+            int totalSeconds = (int)(data / 65535.0 * 900); // 15 min = 900s
+            int minutes = totalSeconds / 60;
+            int seconds = totalSeconds % 60;
+            FlightDeck.Agp32Chrono = $"{minutes:D2}{seconds:D2}";
+
+        });
+    }
+
+    private string decodeSecondNeedle(uint data)
+    {
+        double fraction = (data * 60 / 65536.0) - (int)(data * 60 / 65536);
+        return ((int)(fraction * 60)).ToString("D2");
+    }
+
+    private string decodeMinuteNeedle(uint data)
+    {
+        return ((int)(data * 60 / 65536)).ToString("D2"); 
+    }
+
+    private string decodeHourNeedle(uint data)
+    {
+        return ((int)(data * 12 / 65536)).ToString("D2"); 
+
     }
 
     protected override void InitializeDcsBiosOutputs()
@@ -243,6 +292,11 @@ internal class M2000C_Listener : AircraftListener
 
         GEAR_LEVER_REGISTER = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_R");
         if (GEAR_LEVER_REGISTER != null) GEAR_LEVER_REGISTER.Address = LANDING_GEAR_LEVER_ADDR;
+
+        CLK_H = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CLK_H");
+        CLK_M = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CLK_M");
+        CLK_S = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CLK_S");
+
     }
 
     private void UpdateCautionPanel()
@@ -384,5 +438,10 @@ internal class M2000C_Listener : AircraftListener
         string dest = ("D:" + _pcnDest).PadRight(7).Substring(0,7);
         string combinedLine = prep + dest; // 14 chars
         output.Line(13).Green().WriteLine(combinedLine);
+    }
+
+    private string combineHMS()
+    {
+        return $"{_clockH}{_clockM}{_clockS}";
     }
 }
