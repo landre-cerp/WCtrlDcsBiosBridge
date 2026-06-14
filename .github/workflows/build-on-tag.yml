@@ -102,14 +102,14 @@ jobs:
         with:
           name: wctrl-dcsbios-bridge-${{ github.ref_name }}
           path: ./publish/
-          retention-days: 90
+          retention-days: 15
 
       - name: Upload release zip
         uses: actions/upload-artifact@v7
         with:
           name: wctrl-dcsbios-bridge-${{ github.ref_name }}-zip
           path: wctrl-dcsbios-bridge-${{ github.ref_name }}.zip
-          retention-days: 90
+          retention-days: 15
 
   create-release:
     needs: build
