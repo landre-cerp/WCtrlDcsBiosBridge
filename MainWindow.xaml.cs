@@ -148,11 +148,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             {
                 DeviceListPanel.Children.Add(CreateDeviceCard(deviceInfo));
 
-                if (deviceInfo.Frontpanel != null)
-                {
-                    var prefix = multipleDevices ? $"[{deviceInfo.DisplayName}] " : "";
-                    SubscribeFrontpanelDiagnostics(deviceInfo.Frontpanel, prefix);
-                }
             }
         }
         catch (Exception ex)
@@ -216,41 +211,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         }
 
         return card;
-    }
-
-    private void SubscribeFrontpanelDiagnostics(IFrontpanel frontpanel, string prefix)
-    {
-        frontpanel.ControlActivated += (s, e) =>
-        {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                DiagnosticsEventLog.AppendText($"[{DateTime.Now:HH:mm:ss.fff}] {prefix}PRESSED  {e.ControlId}\n");
-                DiagnosticsEventLog.ScrollToEnd();
-            });
-        };
-
-        frontpanel.ControlDeactivated += (s, e) =>
-        {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                DiagnosticsEventLog.AppendText($"[{DateTime.Now:HH:mm:ss.fff}] {prefix}RELEASED {e.ControlId}\n");
-                DiagnosticsEventLog.ScrollToEnd();
-            });
-        };
-
-        frontpanel.Disconnected += (s, e) =>
-        {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                DiagnosticsEventLog.AppendText($"[{DateTime.Now:HH:mm:ss.fff}] {prefix}DISCONNECTED\n");
-                DiagnosticsEventLog.ScrollToEnd();
-            });
-        };
-    }
-
-    private void DiagnosticsClear_Click(object sender, RoutedEventArgs e)
-    {
-        DiagnosticsEventLog.Clear();
     }
 
     private void UpdateState()

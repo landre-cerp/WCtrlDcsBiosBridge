@@ -173,46 +173,8 @@
                 </Grid>
             </TabItem>
 
-            <!-- ══ Diagnostics ══ -->
-            <TabItem Header="Diagnostics">
-                <Grid Margin="14,12,14,14">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0"
-                               Text="Event log"
-                               FontWeight="SemiBold"
-                               Margin="0,0,0,6"/>
-
-                    <TextBox x:Name="DiagnosticsEventLog"
-                             Grid.Row="1"
-                             IsReadOnly="True"
-                             VerticalScrollBarVisibility="Auto"
-                             TextWrapping="Wrap"
-                             FontFamily="Consolas"
-                             FontSize="11"
-                             Background="{DynamicResource EventLogBackground}"
-                             Margin="0,0,0,8"/>
-
-                    <DockPanel Grid.Row="2">
-                        <Button Content="Clear"
-                                DockPanel.Dock="Right"
-                                Padding="10,3"
-                                Margin="8,0,0,0"
-                                Click="DiagnosticsClear_Click"/>
-                        <TextBlock Text="Real-time button presses, releases, and rotary encoder events from connected FCU/EFIS devices."
-                                   FontSize="11"
-                                   Foreground="{DynamicResource SubtleTextForeground}"
-                                   TextWrapping="Wrap"
-                                   VerticalAlignment="Center"/>
-                    </DockPanel>
-                </Grid>
-            </TabItem>
-
-            <!-- ══ Help ══ -->
+<!-- ══ Help ══ -->
             <TabItem Header="Help">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="14,12">
