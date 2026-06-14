@@ -10,6 +10,7 @@ using WWCduDcsBiosBridge.Config;
 using System.Diagnostics;
 using WWCduDcsBiosBridge.Services;
 using WWCduDcsBiosBridge.Aircrafts;
+using Microsoft.Win32;
 
 namespace WWCduDcsBiosBridge;
 
@@ -27,6 +28,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private BridgeManager? bridgeManager;
     private CancellationTokenSource? _detectCts;
     private readonly CancellationTokenSource _shutdownCts = new();
+    private ThemePreference _currentTheme = ThemePreference.System;
 
     private const string GitHubOwner = "landre-cerp";
     private const string GitHubRepo = "WWCduDcsBiosBridge";
@@ -64,9 +66,18 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
         // Wire up event handlers for new UserControls
         OptionsPanel.SettingsChanged += (sender, args) => SaveUserSettings();
+        OptionsPanel.ThemePreferenceChanged += (_, pref) =>
+        {
+            _currentTheme = pref;
+            ThemeManager.Apply(pref);
+        };
 
         LoadConfig();
         LoadUserSettings();
+        _currentTheme = userOptions.Theme;
+
+        SystemEvents.UserPreferenceChanged += OnSystemPreferenceChanged;
+
         _ = DetectDevicesAsync();
         UpdateState();
         Loaded += MainWindow_Loaded;
@@ -156,21 +167,28 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         }
     }
 
+    private static readonly SolidColorBrush PillConnectedBorder = new(Color.FromRgb(0x2E, 0x7D, 0x32));
+    private static readonly SolidColorBrush PillConnectedBg     = new(Color.FromArgb(0x25, 0x2E, 0x7D, 0x32));
+    private static readonly SolidColorBrush PillConnectedDot    = new(Color.FromRgb(0x43, 0xA0, 0x47));
+    private static readonly SolidColorBrush PillDisconnectedBg  = new(Color.FromArgb(0x25, 0xC6, 0x28, 0x28));
+    private static readonly SolidColorBrush PillDisconnectedDot = new(Color.FromRgb(0xE5, 0x39, 0x35));
+
     private Border CreateDevicePill(DeviceInfo deviceInfo)
     {
         var dot = new Ellipse
         {
-            Width = 7,
-            Height = 7,
-            Fill = Brushes.Green,
+            Width = 8,
+            Height = 8,
+            Fill = PillConnectedDot,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 5, 0)
+            Margin = new Thickness(0, 0, 6, 0)
         };
 
         var label = new TextBlock
         {
             Text = deviceInfo.DisplayName,
             FontSize = 11,
+            FontWeight = FontWeights.SemiBold,
             VerticalAlignment = VerticalAlignment.Center
         };
 
@@ -182,9 +200,10 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         {
             CornerRadius = new CornerRadius(99),
             BorderThickness = new Thickness(1),
-            BorderBrush = Brushes.LightGray,
-            Padding = new Thickness(8, 3, 8, 3),
-            Margin = new Thickness(4, 0, 0, 0),
+            BorderBrush = PillConnectedBorder,
+            Background = PillConnectedBg,
+            Padding = new Thickness(9, 4, 9, 4),
+            Margin = new Thickness(6, 0, 0, 0),
             Child = inner
         };
 
@@ -192,7 +211,12 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         {
             deviceInfo.Frontpanel.Disconnected += (s, e) =>
             {
-                Application.Current.Dispatcher.Invoke(() => dot.Fill = Brushes.Red);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    dot.Fill = PillDisconnectedDot;
+                    pill.Background = PillDisconnectedBg;
+                    pill.BorderBrush = PillDisconnectedDot;
+                });
             };
         }
 
@@ -440,7 +464,15 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private void UpdateTitle()
     {
         var dcsBios = string.IsNullOrEmpty(_dcsBiosVersion) ? "--.--" : _dcsBiosVersion;
-        Title = $"WWCduDcsBiosBridge v{AppVersion} | DCS-BIOS {dcsBios}";
+        Title = $"WctrlDcsBiosBridge v{AppVersion} | DCS-BIOS {dcsBios}";
+    }
+
+    private void OnSystemPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
+    {
+        if (e.Category == UserPreferenceCategory.General)
+        {
+            Dispatcher.Invoke(() => ThemeManager.Apply(_currentTheme));
+        }
     }
 
     private void LoadUserSettings()
@@ -539,6 +571,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
         if (disposing)
         {
+            SystemEvents.UserPreferenceChanged -= OnSystemPreferenceChanged;
             _shutdownCts.Cancel();
             _detectCts?.Cancel();
             bridgeManager?.Dispose();

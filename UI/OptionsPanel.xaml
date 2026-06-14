@@ -60,6 +60,15 @@
                          Width="150"/>
             </StackPanel>
 
+            <TextBlock Text="Appearance:" FontWeight="Bold" Margin="0,10,0,5"/>
+
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <TextBlock Text="Theme:" VerticalAlignment="Center" Width="120"/>
+                <ComboBox x:Name="ThemeComboBox"
+                          Width="180"
+                          SelectionChanged="ThemeComboBox_Changed"/>
+            </StackPanel>
+
             <TextBlock Text="F-16C Options:" FontWeight="Bold" Margin="0,10,0,5"/>
 
             <TextBlock Text="DED / NAV / RWR Page Keys:"

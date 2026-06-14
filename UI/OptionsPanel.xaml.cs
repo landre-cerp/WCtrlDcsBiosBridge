@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using WwDevicesDotNet;
+using WWCduDcsBiosBridge.Config;
 
 namespace WWCduDcsBiosBridge.UI;
 
@@ -8,6 +9,7 @@ public partial class OptionsPanel : UserControl
 {
     private bool _isInitializing = true;
     public event EventHandler? SettingsChanged;
+    public event EventHandler<ThemePreference>? ThemePreferenceChanged;
 
     public OptionsPanel()
     {
@@ -18,6 +20,11 @@ public partial class OptionsPanel : UserControl
 
     private void InitializeKeyComboBoxes()
     {
+        if (FindName("ThemeComboBox") is ComboBox themeCombo)
+        {
+            themeCombo.ItemsSource = new[] { "System (follow Windows)", "Light", "Dark" };
+        }
+
         // Get all available MCDU keys as strings
         var keyNames = Enum.GetNames(typeof(Key));
 
@@ -50,10 +57,13 @@ public partial class OptionsPanel : UserControl
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-        // When DataContext is set, prevent CheckBox_Changed from firing during binding initialization
         _isInitializing = true;
 
-        // Use Dispatcher to ensure all bindings are applied before re-enabling event handling
+        if (DataContext is UserOptions opts && FindName("ThemeComboBox") is ComboBox themeCombo)
+        {
+            themeCombo.SelectedIndex = (int)opts.Theme;
+        }
+
         Dispatcher.BeginInvoke(new Action(() => _isInitializing = false), System.Windows.Threading.DispatcherPriority.DataBind);
     }
 
@@ -68,10 +78,19 @@ public partial class OptionsPanel : UserControl
 
     private void ComboBox_Changed(object sender, SelectionChangedEventArgs e)
     {
-        // Only notify parent if this is a user-initiated change (not during initialization)
         if (!_isInitializing)
         {
             SettingsChanged?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    private void ThemeComboBox_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+        if (DataContext is not UserOptions options) return;
+        if (sender is not ComboBox combo) return;
+        options.Theme = (ThemePreference)combo.SelectedIndex;
+        ThemePreferenceChanged?.Invoke(this, options.Theme);
+        SettingsChanged?.Invoke(this, EventArgs.Empty);
     }
 }

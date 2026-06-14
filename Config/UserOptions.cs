@@ -1,4 +1,6 @@
-﻿/// <summary>
+﻿using WWCduDcsBiosBridge.Config;
+
+/// <summary>
 /// User-configurable options for the application and aircraft-specific settings.
 /// These options are persisted to useroptions.json.
 /// </summary>
@@ -59,4 +61,9 @@ public class UserOptions
     /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "F1").
     /// </summary>
     public string F16CRwrDisplayKey { get; set; } = "LineSelectRight1";
+
+    /// <summary>
+    /// Gets or sets the preferred application theme (System, Light, or Dark).
+    /// </summary>
+    public ThemePreference Theme { get; set; } = ThemePreference.System;
 }
