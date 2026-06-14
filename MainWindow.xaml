@@ -20,25 +20,35 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Header: title left, connected device pills right -->
-        <DockPanel Grid.Row="0" Margin="0,0,0,15" VerticalAlignment="Center">
-            <WrapPanel x:Name="DevicePillsPanel" DockPanel.Dock="Right" VerticalAlignment="Center"/>
+        <!-- Header: title left, theme toggle right -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,14" VerticalAlignment="Center">
+            <Button x:Name="ThemeToggleButton"
+                    DockPanel.Dock="Right"
+                    Width="32" Height="32"
+                    Style="{StaticResource IconButton}"
+                    Click="ThemeToggle_Click">
+                <TextBlock x:Name="ThemeIcon"
+                           Text="◑"
+                           FontSize="15"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Button>
             <TextBlock Text="Winctrl DCS-BIOS Bridge"
                        FontSize="16"
-                       FontWeight="Bold"
+                       FontWeight="SemiBold"
                        VerticalAlignment="Center"/>
         </DockPanel>
 
         <!-- Tab Control -->
-        <TabControl x:Name="MainTabControl" Grid.Row="1" Margin="0,0,0,10">
+        <TabControl x:Name="MainTabControl" Grid.Row="1">
 
             <!-- ══ Dashboard ══ -->
             <TabItem Header="Dashboard">
-                <Grid Margin="10">
+                <Grid Margin="14,12,14,14">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
@@ -50,8 +60,8 @@
                     <Border Grid.Row="0"
                             BorderBrush="{DynamicResource CardBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="4"
-                            Padding="12,10"
+                            CornerRadius="6"
+                            Padding="14,10"
                             Margin="0,0,0,10">
                         <DockPanel>
                             <Button x:Name="StartButton"
@@ -81,25 +91,37 @@
                         </DockPanel>
                     </Border>
 
+                    <!-- Description -->
                     <TextBlock Grid.Row="1"
                                Text="Start the bridge, then load into a supported aircraft in DCS World. The CDU or FCU/EFIS display will sync automatically."
                                TextWrapping="Wrap"
                                Foreground="{DynamicResource SubtleTextForeground}"
-                               FontSize="12"/>
+                               FontSize="12"
+                               Margin="0,0,0,12"/>
 
-                    <!-- Status bar (moved here from footer) -->
+                    <!-- Connected devices -->
+                    <StackPanel Grid.Row="2" Margin="0,0,0,4">
+                        <TextBlock Text="CONNECTED DEVICES"
+                                   FontSize="10"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource SubtleTextForeground}"
+                                   Margin="0,0,0,6"/>
+                        <WrapPanel x:Name="DeviceListPanel"/>
+                    </StackPanel>
+
+                    <!-- Status bar -->
                     <ui:StatusBarControl x:Name="StatusControl"
-                                         Grid.Row="3"
-                                         Margin="0,12,0,0"
+                                         Grid.Row="4"
+                                         Margin="0,0,0,0"
                                          HorizontalAlignment="Left"/>
 
                     <!-- Update Notification Banner -->
-                    <Border Grid.Row="4"
+                    <Border Grid.Row="5"
                             Background="{DynamicResource UpdateBannerBackground}"
                             BorderBrush="{DynamicResource UpdateBannerBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="4"
-                            Padding="8"
+                            CornerRadius="5"
+                            Padding="10,7"
                             Margin="0,8,0,0"
                             Visibility="{Binding IsUpdateVisible, Converter={StaticResource BoolToVisibility}}">
                         <DockPanel LastChildFill="False">
@@ -109,11 +131,13 @@
                                        Foreground="{DynamicResource UpdateBannerForeground}"/>
                             <Button Content="Open release"
                                     Click="OpenUpdateLink_Click"
-                                    Margin="0,0,6,0"
+                                    DockPanel.Dock="Right"
+                                    Margin="6,0,0,0"
                                     Padding="10,3"
                                     MinWidth="100"/>
                             <Button Content="Dismiss"
                                     Click="DismissUpdate_Click"
+                                    DockPanel.Dock="Right"
                                     Padding="10,3"
                                     MinWidth="80"/>
                         </DockPanel>
@@ -131,14 +155,14 @@
 
                     <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
                         <ui:OptionsPanel x:Name="OptionsPanel"
-                                         Margin="10"
+                                         Margin="14,12"
                                          IsEnabled="{Binding CanEdit, RelativeSource={RelativeSource AncestorType=Window}}"/>
                     </ScrollViewer>
 
                     <Border Grid.Row="1"
                             BorderBrush="{DynamicResource CardBorderBrush}"
                             BorderThickness="0,1,0,0"
-                            Padding="10,8">
+                            Padding="14,10">
                         <Button x:Name="ConfigButton"
                                 Content="Edit DCS-BIOS Configuration"
                                 Width="210" Height="28"
@@ -151,7 +175,7 @@
 
             <!-- ══ Diagnostics ══ -->
             <TabItem Header="Diagnostics">
-                <Grid Margin="10">
+                <Grid Margin="14,12,14,14">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
@@ -171,7 +195,7 @@
                              FontFamily="Consolas"
                              FontSize="11"
                              Background="{DynamicResource EventLogBackground}"
-                             Margin="0,0,0,6"/>
+                             Margin="0,0,0,8"/>
 
                     <DockPanel Grid.Row="2">
                         <Button Content="Clear"
@@ -191,7 +215,7 @@
             <!-- ══ Help ══ -->
             <TabItem Header="Help">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="12,10">
+                    <StackPanel Margin="14,12">
 
                         <TextBlock Text="Quick start" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
 
@@ -202,7 +226,7 @@
                                 <TextBlock Text="1" FontSize="10" HorizontalAlignment="Center"
                                            VerticalAlignment="Center" Foreground="{DynamicResource StepForeground}"/>
                             </Border>
-                            <TextBlock Text="Connect your Winwing device(s) via USB. They appear as pills next to the window title once detected."
+                            <TextBlock Text="Connect your Winwing device(s) via USB. They appear in the Dashboard once detected."
                                        TextWrapping="Wrap" FontSize="12"
                                        Foreground="{DynamicResource HelpTextForeground}" VerticalAlignment="Center"/>
                         </DockPanel>
@@ -248,7 +272,7 @@
                         <TextBlock Text="DCS-BIOS network" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
                         <Border Background="{DynamicResource InfoBoxBackground}"
                                 BorderBrush="{DynamicResource InfoBoxBorderBrush}"
-                                BorderThickness="1" CornerRadius="3" Padding="10,7">
+                                BorderThickness="1" CornerRadius="4" Padding="10,7">
                             <TextBlock FontSize="12" Foreground="{DynamicResource InfoBoxForeground}" TextWrapping="Wrap">
                                 Default receive: <Run FontWeight="SemiBold">239.255.50.10:5010</Run>&#160; · &#160;Default send: <Run FontWeight="SemiBold">127.0.0.1:7778</Run><LineBreak/>
                                 Only change these if your DCS-BIOS uses non-default ports — use <Run FontStyle="Italic">Edit DCS-BIOS Configuration</Run> in the Configuration tab.
@@ -269,7 +293,7 @@
                             <TextBlock DockPanel.Dock="Left" Text="?" FontSize="11"
                                        Foreground="{DynamicResource StepForeground}" Width="22" VerticalAlignment="Top"/>
                             <TextBlock FontSize="12" Foreground="{DynamicResource HelpTextForeground}" TextWrapping="Wrap">
-                                <Run FontWeight="SemiBold">Device not shown in title bar:</Run> unplug and replug the USB cable, then restart the app.
+                                <Run FontWeight="SemiBold">Device not shown in Dashboard:</Run> unplug and replug the USB cable, then restart the app.
                             </TextBlock>
                         </DockPanel>
 
@@ -302,14 +326,5 @@
             </TabItem>
 
         </TabControl>
-
-        <!-- Footer: Exit only -->
-        <Grid Grid.Row="2">
-            <Button x:Name="ExitButton"
-                    Content="Exit"
-                    Width="100" Height="28"
-                    HorizontalAlignment="Right"
-                    Click="ExitButton_Click"/>
-        </Grid>
     </Grid>
 </Window>

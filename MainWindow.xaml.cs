@@ -64,17 +64,12 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         AppVersion = AppVersionProvider.GetAppVersion();
         UpdateTitle();
 
-        // Wire up event handlers for new UserControls
         OptionsPanel.SettingsChanged += (sender, args) => SaveUserSettings();
-        OptionsPanel.ThemePreferenceChanged += (_, pref) =>
-        {
-            _currentTheme = pref;
-            ThemeManager.Apply(pref);
-        };
 
         LoadConfig();
         LoadUserSettings();
         _currentTheme = userOptions.Theme;
+        UpdateThemeToggleIcon();
 
         SystemEvents.UserPreferenceChanged += OnSystemPreferenceChanged;
 
@@ -147,11 +142,11 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             ShowStatus($"Detected {string.Join(" and ", statusParts)}", false);
 
             bool multipleDevices = devices.Count > 1;
-            DevicePillsPanel.Children.Clear();
+            DeviceListPanel.Children.Clear();
 
             foreach (var deviceInfo in devices)
             {
-                DevicePillsPanel.Children.Add(CreateDevicePill(deviceInfo));
+                DeviceListPanel.Children.Add(CreateDeviceCard(deviceInfo));
 
                 if (deviceInfo.Frontpanel != null)
                 {
@@ -167,28 +162,28 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         }
     }
 
-    private static readonly SolidColorBrush PillConnectedBorder = new(Color.FromRgb(0x2E, 0x7D, 0x32));
-    private static readonly SolidColorBrush PillConnectedBg     = new(Color.FromArgb(0x25, 0x2E, 0x7D, 0x32));
-    private static readonly SolidColorBrush PillConnectedDot    = new(Color.FromRgb(0x43, 0xA0, 0x47));
-    private static readonly SolidColorBrush PillDisconnectedBg  = new(Color.FromArgb(0x25, 0xC6, 0x28, 0x28));
-    private static readonly SolidColorBrush PillDisconnectedDot = new(Color.FromRgb(0xE5, 0x39, 0x35));
+    private static readonly SolidColorBrush CardConnectedBorder = new(Color.FromRgb(0x2E, 0x7D, 0x32));
+    private static readonly SolidColorBrush CardConnectedBg     = new(Color.FromArgb(0x18, 0x2E, 0x7D, 0x32));
+    private static readonly SolidColorBrush CardConnectedDot    = new(Color.FromRgb(0x43, 0xA0, 0x47));
+    private static readonly SolidColorBrush CardDisconnectedBg  = new(Color.FromArgb(0x18, 0xC6, 0x28, 0x28));
+    private static readonly SolidColorBrush CardDisconnectedDot = new(Color.FromRgb(0xE5, 0x39, 0x35));
+    private static readonly SolidColorBrush CardDisconnectedBorder = new(Color.FromRgb(0xB7, 0x1C, 0x1C));
 
-    private Border CreateDevicePill(DeviceInfo deviceInfo)
+    private Border CreateDeviceCard(DeviceInfo deviceInfo)
     {
         var dot = new Ellipse
         {
-            Width = 8,
-            Height = 8,
-            Fill = PillConnectedDot,
+            Width = 7,
+            Height = 7,
+            Fill = CardConnectedDot,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 6, 0)
+            Margin = new Thickness(0, 0, 7, 0)
         };
 
         var label = new TextBlock
         {
             Text = deviceInfo.DisplayName,
-            FontSize = 11,
-            FontWeight = FontWeights.SemiBold,
+            FontSize = 12,
             VerticalAlignment = VerticalAlignment.Center
         };
 
@@ -196,14 +191,14 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         inner.Children.Add(dot);
         inner.Children.Add(label);
 
-        var pill = new Border
+        var card = new Border
         {
-            CornerRadius = new CornerRadius(99),
+            CornerRadius = new CornerRadius(6),
             BorderThickness = new Thickness(1),
-            BorderBrush = PillConnectedBorder,
-            Background = PillConnectedBg,
-            Padding = new Thickness(9, 4, 9, 4),
-            Margin = new Thickness(6, 0, 0, 0),
+            BorderBrush = CardConnectedBorder,
+            Background = CardConnectedBg,
+            Padding = new Thickness(10, 5, 10, 5),
+            Margin = new Thickness(0, 0, 8, 6),
             Child = inner
         };
 
@@ -213,14 +208,14 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    dot.Fill = PillDisconnectedDot;
-                    pill.Background = PillDisconnectedBg;
-                    pill.BorderBrush = PillDisconnectedDot;
+                    dot.Fill = CardDisconnectedDot;
+                    card.Background = CardDisconnectedBg;
+                    card.BorderBrush = CardDisconnectedBorder;
                 });
             };
         }
 
-        return pill;
+        return card;
     }
 
     private void SubscribeFrontpanelDiagnostics(IFrontpanel frontpanel, string prefix)
@@ -504,7 +499,37 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         }
     }
 
-    private void ExitButton_Click(object sender, RoutedEventArgs e)
+    private void ThemeToggle_Click(object sender, RoutedEventArgs e)
+    {
+        _currentTheme = _currentTheme switch
+        {
+            ThemePreference.System => ThemePreference.Light,
+            ThemePreference.Light  => ThemePreference.Dark,
+            _                      => ThemePreference.System
+        };
+        ThemeManager.Apply(_currentTheme);
+        userOptions.Theme = _currentTheme;
+        SaveUserSettings();
+        UpdateThemeToggleIcon();
+    }
+
+    private void UpdateThemeToggleIcon()
+    {
+        ThemeIcon.Text = _currentTheme switch
+        {
+            ThemePreference.Light => "☀",
+            ThemePreference.Dark  => "☾",
+            _                     => "◑"
+        };
+        ThemeToggleButton.ToolTip = _currentTheme switch
+        {
+            ThemePreference.Light => "Theme: Light — click for Dark",
+            ThemePreference.Dark  => "Theme: Dark — click for System",
+            _                     => "Theme: System — click for Light"
+        };
+    }
+
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
         _shutdownCts.Cancel();
 
@@ -512,41 +537,26 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         {
             try
             {
-                if (IsBridgeRunning)
-                {
-                    bridgeManager.Stop();
-                }
-                else if (bridgeManager.Contexts != null)
+                if (IsBridgeRunning) bridgeManager.Stop();
+                if (bridgeManager.Contexts != null)
                 {
                     foreach (var ctx in bridgeManager.Contexts)
                     {
-                        try
-                        {
-                            ctx?.Mcdu?.Output?.Clear();
-                            ctx?.Mcdu?.RefreshDisplay();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error(ex, "Error clearing or refreshing MCDU output during bridge shutdown");
-                        }
+                        try { ctx?.Mcdu?.Output?.Clear(); ctx?.Mcdu?.RefreshDisplay(); }
+                        catch (Exception ex) { Logger.Error(ex, "Error clearing MCDU on close"); }
                     }
                 }
-
-                bridgeManager.Dispose();
                 bridgeManager.DcsBiosVersionChanged -= OnDcsBiosVersionChanged;
+                bridgeManager.Dispose();
                 bridgeManager = null;
-                _dcsBiosVersion = null;
-                UpdateTitle();
-                OnPropertyChanged(nameof(IsBridgeRunning));
-                OnPropertyChanged(nameof(CanEdit));
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Error stopping bridge during exit");
+                Logger.Error(ex, "Error stopping bridge during close");
             }
         }
 
-        Application.Current.Shutdown();
+        base.OnClosing(e);
     }
 
     protected override void OnClosed(EventArgs e)
