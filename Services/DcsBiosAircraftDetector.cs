@@ -4,7 +4,7 @@ using DCS_BIOS.Interfaces;
 using DCS_BIOS.Serialized;
 using NLog;
 
-namespace WWCduDcsBiosBridge.Aircrafts;
+namespace WWCduDcsBiosBridge.Services;
 
 /// <summary>
 /// Continuously monitors the <c>MetadataStart/_ACFT_NAME</c> string from
@@ -17,7 +17,7 @@ namespace WWCduDcsBiosBridge.Aircrafts;
 /// DCS zeroes the memory — so the first two raw bytes at the <c>_ACFT_NAME</c>
 /// base address (0x0000 = no cockpit) are the reliable "is a module loaded" gate.
 /// </summary>
-internal sealed class AircraftDetector : IDCSBIOSStringListener, IDcsBiosDataListener, IDisposable
+internal sealed class DcsBiosAircraftDetector : IDCSBIOSStringListener, IDcsBiosDataListener, IDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

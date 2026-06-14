@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace WWCduDcsBiosBridge;
+namespace WWCduDcsBiosBridge.Services;
 
 public static class AppVersionProvider
 {

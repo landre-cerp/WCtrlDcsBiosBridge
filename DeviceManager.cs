@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using NLog;
 using System.IO;
 using WwDevicesDotNet;
+using WWCduDcsBiosBridge.Devices;
 
 namespace WWCduDcsBiosBridge;
 

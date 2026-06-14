@@ -1,4 +1,4 @@
-namespace WWCduDcsBiosBridge.Config;
+namespace WWCduDcsBiosBridge.Common;
 
 /// <summary>
 /// Represents a void result type for operations that don't return a value.

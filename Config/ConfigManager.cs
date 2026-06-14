@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text.Json;
 using WWCduDcsBiosBridge.Aircrafts;
+using WWCduDcsBiosBridge.Common;
 
 namespace WWCduDcsBiosBridge.Config;
 
