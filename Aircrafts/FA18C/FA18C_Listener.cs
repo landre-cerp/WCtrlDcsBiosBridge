@@ -17,6 +17,9 @@ internal class FA18C_Listener : AircraftListener
 
     private DCSBIOSOutput? _LANDING_GEAR_HANDLE_LT;
 
+    private DCSBIOSOutput? _FLP_LG_FULL_FLAPS_LT;
+    private DCSBIOSOutput? _FLP_LG_HALF_FLAPS_LT;
+
     uint _masterCaution = 0;
     uint _lightMode = 0; // 2=NVG, 1=NITE, 0=DAY
 
@@ -81,6 +84,11 @@ internal class FA18C_Listener : AircraftListener
         Register(_FLP_LG_NOSE_GEAR_LT, v => FlightDeck.GearNoseDown = v == 1);
 
         Register(_LANDING_GEAR_HANDLE_LT, v => FlightDeck.GearWarning = v == 1);
+        
+        Register(_FLP_LG_HALF_FLAPS_LT, v => FlightDeck.LedAutoBrkLoDecel = v == 1);
+        Register(_FLP_LG_FULL_FLAPS_LT, v => FlightDeck.LedAutoBrkMedDecel = v == 1);
+
+        _ifeiPage.RegisterFrontPanelControls(RegisterString, FlightDeck);
     }
 
     protected override void InitializeDcsBiosOutputs()
@@ -92,6 +100,9 @@ internal class FA18C_Listener : AircraftListener
         _FLP_LG_RIGHT_GEAR_LT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("FLP_LG_RIGHT_GEAR_LT");
         _FLP_LG_NOSE_GEAR_LT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("FLP_LG_NOSE_GEAR_LT");
         _LANDING_GEAR_HANDLE_LT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LANDING_GEAR_HANDLE_LT");
+
+        _FLP_LG_HALF_FLAPS_LT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("FLP_LG_HALF_FLAPS_LT");
+        _FLP_LG_FULL_FLAPS_LT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("FLP_LG_FULL_FLAPS_LT");
 
         _ufcPage.InitializeControls();
         _ifeiPage.InitializeControls();

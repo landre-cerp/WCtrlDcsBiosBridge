@@ -37,6 +37,15 @@ internal class Agp32Renderer : FrontpanelRenderer
         leds.Set(Agp32State.Agp32Led.Gear2Down, nose);
         leds.Set(Agp32State.Agp32Led.Gear3Down, right);
 
+        leds.Set(Agp32State.Agp32Led.BrkFanHot , model.LedBrkFanHot ?? false);
+        leds.Set(Agp32State.Agp32Led.BrkFanOn, model.LedBrkFanOn ?? false);
+        leds.Set(Agp32State.Agp32Led.AutoBrkMedDecel , model.LedAutoBrkMedDecel ?? false);
+        leds.Set(Agp32State.Agp32Led.AutoBrkLoDecel, model.LedAutoBrkLoDecel ?? false);
+        leds.Set(Agp32State.Agp32Led.AutoBrkMaxDecel, model.LedAutoBrkMaxDecel ?? false);
+        leds.Set(Agp32State.Agp32Led.AutoBrkLoOn, model.LedAutoBrkLoOn ?? false);
+        leds.Set(Agp32State.Agp32Led.AutoBrkMedOn, model.LedAutoBrkMedOn ?? false);
+        leds.Set(Agp32State.Agp32Led.AutoBrkMaxOn, model.LedAutoBrkMaxOn ?? false);
+
         // A single gear-in-transit warning maps to the A320 panel's red UNLK
         // triangles (lit while a gear disagrees with the lever) plus the
         // lever's red arrow.
