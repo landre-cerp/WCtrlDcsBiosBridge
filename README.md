@@ -37,16 +37,7 @@ At least one of these devices.
 Each aircraft has its own page describing the supported devices, CDU display, LEDs,
 brightness, and any front-panel output. Click an aircraft for details.
 
-| Aircraft | Support | Highlights |
-|----------|---------|------------|
-| [A-10C](docs/A-10C.md) | Full | CDU + CMS overlay, LEDs, brightness, full front panel (flight data, gear, baro) and AGP32 clock |
-| [AH-64D](docs/AH-64D.md) | Basic | Pilot EUFD + keyboard display |
-| [F/A-18C](docs/FA-18C.md) | Basic | UFC and IFEI pages |
-| [CH-47F](docs/CH-47F.md) | Basic | Pilot or co-pilot CDU (requires DCS-BIOS v0.11.0+) |
-| [OH-58D](docs/OH-58D.md) | Basic | MPD/TGT/TRQ/CMWS/RFI CDU display, AGP32 UTC clock |
-| [F-15E](docs/F-15E.md) | Basic | UFC lines 1-6 (by smreki) |
-| [F-16C](docs/F-16C.md) | Basic | Switchable DED / NAV / RWR CDU pages |
-| [M-2000C](docs/M-2000C.md) | Basic | PCN display and caution-light panel |
+[A-10C](docs/A-10C.md) | [AH-64D](docs/AH-64D.md) | [F/A-18C](docs/FA-18C.md) | [CH-47F](docs/CH-47F.md) | [OH-58D](docs/OH-58D.md) | [F-15E](docs/F-15E.md) |[F-16C](docs/F-16C.md) | [M-2000C](docs/M-2000C.md)
 
 **Front panels** (FCU/EFIS, PAP3, AGP32) render whatever the active aircraft publishes.
 Today the **A-10C** drives the full set (flight data, gear LEDs, and the chrono/UTC/ET
