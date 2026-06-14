@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using NLog;
 using System.IO;
 using WwDevicesDotNet;
+using WWCduDcsBiosBridge.Config;
 using WWCduDcsBiosBridge.Devices;
 
 namespace WWCduDcsBiosBridge;
@@ -137,23 +138,30 @@ public class DeviceManager
     public static string GetDeviceName(DeviceIdentifier deviceId) => deviceId.Description;
 
     /// <summary>
-    /// Disposes a list of devices safely
+    /// Disposes a list of devices safely, applying the close-reset options before
+    /// closing each USB connection. Pass <see langword="null"/> to skip the reset
+    /// (e.g. when lighting management is disabled).
     /// </summary>
-    /// <param name="resetDevices">
-    /// Reset each device to its known-good state before disposing, so the panels are
-    /// left clean (blank displays, LEDs off) rather than frozen on the last frame.
-    /// </param>
-    public static void DisposeDevices(IEnumerable<DeviceInfo> devices, bool resetDevices = true)
+    internal static void DisposeDevices(IEnumerable<DeviceInfo> devices, CloseResetOptions? resetOptions = null)
     {
         if (devices == null) return;
         foreach (var deviceInfo in devices)
         {
-            if (resetDevices)
+            if (resetOptions != null)
             {
                 try
                 {
-                    deviceInfo.Cdu?.Reset();
-                    deviceInfo.Frontpanel?.Reset();
+                    if (deviceInfo.Cdu != null)
+                    {
+                        var b = resetOptions.BrightnessPercent;
+                        deviceInfo.Cdu.Cleanup(b, b, resetOptions.Markers ? 0 : 100);
+                    }
+                    if (deviceInfo.Frontpanel != null)
+                    {
+                        deviceInfo.Frontpanel.Reset();
+                        var bv = resetOptions.BrightnessByte;
+                        deviceInfo.Frontpanel.SetBrightness(bv, bv, bv);
+                    }
                 }
                 catch (Exception ex)
                 {

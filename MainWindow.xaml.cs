@@ -53,9 +53,10 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private AircraftDescriptor? _detectedAircraft;
 
     // Each section is editable unless its specific aircraft is currently running.
-    public bool IsA10COptionsEnabled  => _detectedAircraft != AircraftRegistry.A10C;
-    public bool IsFA18COptionsEnabled => _detectedAircraft != AircraftRegistry.FA18C;
-    public bool IsF16COptionsEnabled  => _detectedAircraft != AircraftRegistry.F16C;
+    public bool IsA10COptionsEnabled   => _detectedAircraft != AircraftRegistry.A10C;
+    public bool IsFA18COptionsEnabled  => _detectedAircraft != AircraftRegistry.FA18C;
+    public bool IsF16COptionsEnabled   => _detectedAircraft != AircraftRegistry.F16C;
+    public bool IsLightingManaged      => !userOptions.DisableLightingManagement;
 
     public string AppVersion { get; }
 
@@ -73,7 +74,11 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         AppVersion = AppVersionProvider.GetAppVersion();
         UpdateTitle();
 
-        OptionsPanel.SettingsChanged += (sender, args) => SaveUserSettings();
+        OptionsPanel.SettingsChanged += (sender, args) =>
+        {
+            SaveUserSettings();
+            OnPropertyChanged(nameof(IsLightingManaged));
+        };
 
         LoadConfig();
         LoadUserSettings();
@@ -511,14 +516,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             try
             {
                 if (IsBridgeRunning) bridgeManager.Stop();
-                if (bridgeManager.Contexts != null)
-                {
-                    foreach (var ctx in bridgeManager.Contexts)
-                    {
-                        try { ctx?.Mcdu?.Output?.Clear(); ctx?.Mcdu?.RefreshDisplay(); }
-                        catch (Exception ex) { Logger.Error(ex, "Error clearing MCDU on close"); }
-                    }
-                }
                 bridgeManager.DcsBiosVersionChanged -= OnDcsBiosVersionChanged;
                 bridgeManager.Dispose();
                 bridgeManager = null;
@@ -558,8 +555,9 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             _shutdownCts.Cancel();
             _detectCts?.Cancel();
             bridgeManager?.Dispose();
+            DeviceManager.DisposeDevices(devices,
+                userOptions.DisableLightingManagement ? null : CloseResetOptions.From(userOptions));
             SaveUserSettings();
-            DeviceManager.DisposeDevices(devices, resetDevices: !userOptions.DisableLightingManagement);
         }
 
         _disposed = true;

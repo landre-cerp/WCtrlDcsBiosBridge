@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using WWCduDcsBiosBridge.Aircrafts;
+using WWCduDcsBiosBridge.Config;
 using WWCduDcsBiosBridge.Devices.Frontpanels.Renderers;
 using Timer = System.Timers.Timer;
 
@@ -115,6 +116,38 @@ public class FrontpanelHub : IDisposable
         finally
         {
             Monitor.Exit(_renderLock);
+        }
+    }
+
+    /// <summary>
+    /// Stops the render loop and resets all connected frontpanel devices according
+    /// to <paramref name="opts"/>. Call this before <see cref="Dispose"/> when a
+    /// deliberate on-close reset is required.
+    /// </summary>
+    internal void ApplyCloseReset(CloseResetOptions opts)
+    {
+        _renderTimer.Stop();
+
+        // Acquire the render lock so we don't race with an in-flight tick.
+        lock (_renderLock)
+        {
+            foreach (var adapter in _adapters)
+            {
+                try
+                {
+                    // Reset() blanks screen + turns LEDs off at 100 % brightness for
+                    // CommonWinWingPanel devices; for segment-only devices (AGP32)
+                    // it only restores brightness, which is then overridden below.
+                    adapter.Device.Reset();
+
+                    var b = opts.BrightnessByte;
+                    adapter.Device.SetBrightness(b, b, b);
+                }
+                catch (Exception ex)
+                {
+                    App.Logger.Warn(ex, $"Failed to reset frontpanel {adapter.DisplayName} on close");
+                }
+            }
         }
     }
 

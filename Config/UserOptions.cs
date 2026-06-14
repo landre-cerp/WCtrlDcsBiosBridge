@@ -66,4 +66,19 @@ public class UserOptions
     /// Gets or sets the preferred application theme (System, Light, or Dark).
     /// </summary>
     public ThemePreference Theme { get; set; } = ThemePreference.System;
+
+    // ── On-close device reset ────────────────────────────────────────────────
+    // Only applies when DisableLightingManagement is false.
+    // Screen content is always cleared on close.
+
+    /// <summary>
+    /// Set all device backlights to 0 % when the application closes.
+    /// When false, backlight stays at 80 % (blank but visible).
+    /// </summary>
+    public bool CloseResetBacklight { get; set; } = true;
+
+    /// <summary>
+    /// Turn off all button/panel LEDs (markers) when the application closes.
+    /// </summary>
+    public bool CloseResetMarkers { get; set; } = true;
 }
