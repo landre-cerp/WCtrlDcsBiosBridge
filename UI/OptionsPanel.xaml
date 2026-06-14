@@ -3,100 +3,148 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <StackPanel>
+
+        <!-- General — always editable -->
         <TextBlock Text="GENERAL" FontWeight="SemiBold" FontSize="11"
                    Foreground="{DynamicResource SubtleTextForeground}" Margin="0,0,0,8"/>
 
         <CheckBox Content="Disable Lighting Management (for SimApp Pro users)"
                  IsChecked="{Binding DisableLightingManagement, Mode=TwoWay}"
-                 Checked="CheckBox_Changed"
-                 Unchecked="CheckBox_Changed"
+                 Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
                  Margin="0,4"/>
-
         <CheckBox Content="Auto-Start Bridge when Ready"
                  IsChecked="{Binding AutoStart, Mode=TwoWay}"
-                 Checked="CheckBox_Changed"
-                 Unchecked="CheckBox_Changed"
+                 Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
                  Margin="0,4"/>
-
         <CheckBox Content="Minimize Window on Start"
                  IsChecked="{Binding MinimizeOnStart, Mode=TwoWay}"
-                 Checked="CheckBox_Changed"
-                 Unchecked="CheckBox_Changed"
+                 Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
                  Margin="0,4"/>
 
         <Separator Margin="0,12"/>
 
-        <TextBlock Text="A-10C" FontWeight="SemiBold" FontSize="11"
-                   Foreground="{DynamicResource SubtleTextForeground}" Margin="0,0,0,8"/>
+        <!-- A-10C — disabled while A-10C is the active aircraft -->
+        <StackPanel IsEnabled="{Binding IsA10COptionsEnabled, RelativeSource={RelativeSource AncestorType=Window}}">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                <TextBlock Text="A-10C" FontWeight="SemiBold" FontSize="13"
+                           Foreground="{DynamicResource SubtleTextForeground}"
+                           VerticalAlignment="Center"/>
+                <Border Margin="8,0,0,0" CornerRadius="4" Padding="6,2"
+                        VerticalAlignment="Center"
+                        Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=StackPanel}}" Value="False">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="Disabled while in use" FontSize="10" Foreground="#E65100"/>
+                </Border>
+            </StackPanel>
 
-        <CheckBox Content="Align CDU Display to Bottom"
-                 IsChecked="{Binding DisplayBottomAligned, Mode=TwoWay}"
-                 Checked="CheckBox_Changed"
-                 Unchecked="CheckBox_Changed"
-                 Margin="0,4"/>
-
-        <CheckBox Content="Display CMS on CDU"
-                 IsChecked="{Binding DisplayCMS, Mode=TwoWay}"
-                 Checked="CheckBox_Changed"
-                 Unchecked="CheckBox_Changed"
-                 Margin="0,4"/>
-
-        <Separator Margin="0,12"/>
-
-        <TextBlock Text="F/A-18C" FontWeight="SemiBold" FontSize="11"
-                   Foreground="{DynamicResource SubtleTextForeground}" Margin="0,0,0,4"/>
-
-        <TextBlock Text="IFEI page navigation keys"
-                  Foreground="{DynamicResource SubtleTextForeground}"
-                  FontSize="11" Margin="0,0,0,8"/>
-
-        <StackPanel Orientation="Horizontal" Margin="0,4">
-            <TextBlock Text="Show IFEI Key:" VerticalAlignment="Center" Width="120"/>
-            <ComboBox x:Name="NextPageKeyComboBox"
-                     SelectedValue="{Binding NextPageKey, Mode=TwoWay}"
-                     SelectionChanged="ComboBox_Changed"
-                     Width="150"/>
-        </StackPanel>
-
-        <StackPanel Orientation="Horizontal" Margin="0,4">
-            <TextBlock Text="Show UFC Key:" VerticalAlignment="Center" Width="120"/>
-            <ComboBox x:Name="PrevPageKeyComboBox"
-                     SelectedValue="{Binding PrevPageKey, Mode=TwoWay}"
-                     SelectionChanged="ComboBox_Changed"
-                     Width="150"/>
+            <CheckBox Content="Align CDU Display to Bottom"
+                     IsChecked="{Binding DisplayBottomAligned, Mode=TwoWay}"
+                     Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+                     Margin="0,4"/>
+            <CheckBox Content="Display CMS on CDU"
+                     IsChecked="{Binding DisplayCMS, Mode=TwoWay}"
+                     Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+                     Margin="0,4"/>
         </StackPanel>
 
         <Separator Margin="0,12"/>
 
-        <TextBlock Text="F-16C" FontWeight="SemiBold" FontSize="11"
-                   Foreground="{DynamicResource SubtleTextForeground}" Margin="0,0,0,4"/>
+        <!-- F/A-18C — disabled while F/A-18C is the active aircraft -->
+        <StackPanel IsEnabled="{Binding IsFA18COptionsEnabled, RelativeSource={RelativeSource AncestorType=Window}}">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                <TextBlock Text="F/A-18C" FontWeight="SemiBold" FontSize="13"
+                           Foreground="{DynamicResource SubtleTextForeground}"
+                           VerticalAlignment="Center"/>
+                <Border Margin="8,0,0,0" CornerRadius="4" Padding="6,2"
+                        VerticalAlignment="Center"
+                        Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=StackPanel}}" Value="False">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="Disabled while in use" FontSize="10" Foreground="#E65100"/>
+                </Border>
+            </StackPanel>
 
-        <TextBlock Text="DED / NAV / RWR page keys"
-                  Foreground="{DynamicResource SubtleTextForeground}"
-                  FontSize="11" Margin="0,0,0,8"/>
-
-        <StackPanel Orientation="Horizontal" Margin="0,4">
-            <TextBlock Text="Show DED Key:" VerticalAlignment="Center" Width="120"/>
-            <ComboBox x:Name="F16CPrevDisplayKeyComboBox"
-                     SelectedValue="{Binding F16CPrevDisplayKey, Mode=TwoWay}"
-                     SelectionChanged="ComboBox_Changed"
-                     Width="150"/>
+            <TextBlock Text="IFEI page navigation keys"
+                      Foreground="{DynamicResource SubtleTextForeground}"
+                      FontSize="11" Margin="0,0,0,8"/>
+            <StackPanel Orientation="Horizontal" Margin="0,4">
+                <TextBlock Text="Show IFEI Key:" VerticalAlignment="Center" Width="120"/>
+                <ComboBox x:Name="NextPageKeyComboBox"
+                         SelectedValue="{Binding NextPageKey, Mode=TwoWay}"
+                         SelectionChanged="ComboBox_Changed" Width="150"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,4">
+                <TextBlock Text="Show UFC Key:" VerticalAlignment="Center" Width="120"/>
+                <ComboBox x:Name="PrevPageKeyComboBox"
+                         SelectedValue="{Binding PrevPageKey, Mode=TwoWay}"
+                         SelectionChanged="ComboBox_Changed" Width="150"/>
+            </StackPanel>
         </StackPanel>
 
-        <StackPanel Orientation="Horizontal" Margin="0,4">
-            <TextBlock Text="Show NAV Key:" VerticalAlignment="Center" Width="120"/>
-            <ComboBox x:Name="F16CNextDisplayKeyComboBox"
-                     SelectedValue="{Binding F16CNextDisplayKey, Mode=TwoWay}"
-                     SelectionChanged="ComboBox_Changed"
-                     Width="150"/>
+        <Separator Margin="0,12"/>
+
+        <!-- F-16C — disabled while F-16C is the active aircraft -->
+        <StackPanel IsEnabled="{Binding IsF16COptionsEnabled, RelativeSource={RelativeSource AncestorType=Window}}">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                <TextBlock Text="F-16C" FontWeight="SemiBold" FontSize="13"
+                           Foreground="{DynamicResource SubtleTextForeground}"
+                           VerticalAlignment="Center"/>
+                <Border Margin="8,0,0,0" CornerRadius="4" Padding="6,2"
+                        VerticalAlignment="Center"
+                        Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=StackPanel}}" Value="False">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="Disabled while in use" FontSize="10" Foreground="#E65100"/>
+                </Border>
+            </StackPanel>
+
+            <TextBlock Text="DED / NAV / RWR page keys"
+                      Foreground="{DynamicResource SubtleTextForeground}"
+                      FontSize="11" Margin="0,0,0,8"/>
+            <StackPanel Orientation="Horizontal" Margin="0,4">
+                <TextBlock Text="Show DED Key:" VerticalAlignment="Center" Width="120"/>
+                <ComboBox x:Name="F16CPrevDisplayKeyComboBox"
+                         SelectedValue="{Binding F16CPrevDisplayKey, Mode=TwoWay}"
+                         SelectionChanged="ComboBox_Changed" Width="150"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,4">
+                <TextBlock Text="Show NAV Key:" VerticalAlignment="Center" Width="120"/>
+                <ComboBox x:Name="F16CNextDisplayKeyComboBox"
+                         SelectedValue="{Binding F16CNextDisplayKey, Mode=TwoWay}"
+                         SelectionChanged="ComboBox_Changed" Width="150"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,4">
+                <TextBlock Text="Show RWR Key:" VerticalAlignment="Center" Width="120"/>
+                <ComboBox x:Name="F16CRwrDisplayKeyComboBox"
+                         SelectedValue="{Binding F16CRwrDisplayKey, Mode=TwoWay}"
+                         SelectionChanged="ComboBox_Changed" Width="150"/>
+            </StackPanel>
         </StackPanel>
 
-        <StackPanel Orientation="Horizontal" Margin="0,4">
-            <TextBlock Text="Show RWR Key:" VerticalAlignment="Center" Width="120"/>
-            <ComboBox x:Name="F16CRwrDisplayKeyComboBox"
-                     SelectedValue="{Binding F16CRwrDisplayKey, Mode=TwoWay}"
-                     SelectionChanged="ComboBox_Changed"
-                     Width="150"/>
-        </StackPanel>
     </StackPanel>
 </UserControl>

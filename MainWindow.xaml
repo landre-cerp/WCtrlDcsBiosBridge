@@ -155,8 +155,7 @@
 
                     <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
                         <ui:OptionsPanel x:Name="OptionsPanel"
-                                         Margin="14,12"
-                                         IsEnabled="{Binding CanEdit, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                         Margin="14,12"/>
                     </ScrollViewer>
 
                     <Border Grid.Row="1"
