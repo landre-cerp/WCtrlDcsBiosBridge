@@ -1,11 +1,12 @@
 <Window x:Class="WWCduDcsBiosBridge.Config.ConfigWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="DCS-BIOS Configuration" 
-        Height="500" 
+        Title="DCS-BIOS Configuration"
+        Height="500"
         Width="600"
         ResizeMode="CanMinimize"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBackground}">
 
     <Grid Margin="20">
         <Grid.RowDefinitions>
