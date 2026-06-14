@@ -48,6 +48,14 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     public bool IsBridgeRunning => bridgeManager?.IsStarted == true;
     public bool CanEdit => !IsBridgeRunning;
 
+    // Null while idle or detecting; set to the active descriptor once an aircraft is confirmed.
+    private AircraftDescriptor? _detectedAircraft;
+
+    // Each section is editable unless its specific aircraft is currently running.
+    public bool IsA10COptionsEnabled  => _detectedAircraft != AircraftRegistry.A10C;
+    public bool IsFA18COptionsEnabled => _detectedAircraft != AircraftRegistry.FA18C;
+    public bool IsF16COptionsEnabled  => _detectedAircraft != AircraftRegistry.F16C;
+
     public string AppVersion { get; }
 
     // Live DCS-BIOS exporter version reported by DCS; null until received.
@@ -354,18 +362,21 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         {
             if (dcsBiosName == null)
             {
+                SetDetectedAircraft(null);
                 ShowStatus("Waiting for DCS aircraft...", false);
                 StartButton.Content = "Detecting...";
                 UpdateBridgeStatusCard("Waiting for DCS aircraft...", "Load a supported module in DCS World");
             }
             else if (AircraftRegistry.FindByDcsBiosName(dcsBiosName) is not { } descriptor)
             {
+                SetDetectedAircraft(null);
                 ShowStatus($"Unsupported aircraft: {dcsBiosName} — waiting...", false);
                 StartButton.Content = "Detecting...";
                 UpdateBridgeStatusCard($"Unsupported aircraft: {dcsBiosName}", "Waiting for a supported module...");
             }
             else
             {
+                SetDetectedAircraft(descriptor);
                 ShowStatus($"Detected: {descriptor.DisplayName}", false);
                 StartButton.Content = "Bridge Running";
                 StartButton.IsEnabled = false;
@@ -388,8 +399,17 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         BridgeStatusSub.Text = sub;
     }
 
+    private void SetDetectedAircraft(AircraftDescriptor? descriptor)
+    {
+        _detectedAircraft = descriptor;
+        OnPropertyChanged(nameof(IsA10COptionsEnabled));
+        OnPropertyChanged(nameof(IsFA18COptionsEnabled));
+        OnPropertyChanged(nameof(IsF16COptionsEnabled));
+    }
+
     private void ResetStartButton()
     {
+        SetDetectedAircraft(null);
         StartButton.IsEnabled = !IsBridgeRunning && devices.Count > 0 && IsConfigValid();
         StartButton.Content = "Start Bridge";
         _dcsBiosVersion = null;
