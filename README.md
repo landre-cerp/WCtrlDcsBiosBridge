@@ -1,6 +1,6 @@
 
 [![Release][release-shield]][release-url]
-![License](https://img.shields.io/github/license/landre-cerp/WWCduDcsBiosBridge)
+![License](https://img.shields.io/github/license/landre-cerp/WctrlDcsBiosBridge)
 [![Discord][discord-shield]][discord-invite-url]
 ![Build Status][build-shield]
 [![Pre-Release][pre-release-shield]][pre-release-url]
@@ -142,7 +142,7 @@ The only manual choice left is the **seat** for the CH-47F when two or more CDUs
 
 All application activity is logged to `log.txt` in the same folder as the executable. Check this file for detailed error information.
 
-Report issues [here](https://github.com/landre-cerp/WWCduDcsBiosBridge/issues), or reach out on Discord [![Discord][discord-shield]][discord-invite-url].
+Report issues [here](https://github.com/landre-cerp/WctrlDcsBiosBridge/issues), or reach out on Discord [![Discord][discord-shield]][discord-invite-url].
 
 ## Known Limitations
 
@@ -171,11 +171,11 @@ For issues and questions, please check the logs first and review the troubleshoo
 
 and if you want, no need, you can [Buy Me a Coffee](https://www.buymeacoffee.com/cerppo)
 
-[release-url]: https://github.com/landre-cerp/WWCduDcsBiosBridge/releases
-[release-shield]:  https://img.shields.io/github/release/landre-cerp/WWCduDcsBiosBridge.svg
+[release-url]: https://github.com/landre-cerp/WctrlDcsBiosBridge/releases
+[release-shield]:  https://img.shields.io/github/release/landre-cerp/WctrlDcsBiosBridge.svg
 [discord-shield]: https://img.shields.io/discord/231115945047883778
 [discord-invite-url]: https://discord.gg/Td2cGvMhVC
 [dcs-forum-discussion]: https://forum.dcs.world/topic/368056-winwing-mcdu-can-it-be-used-in-dcs-for-other-aircraft/page/4/
-[build-shield]: https://img.shields.io/github/actions/workflow/status/landre-cerp/WWCduDcsBiosBridge/build-on-tag.yml
-[pre-release-shield]: https://img.shields.io/github/v/release/landre-cerp/WWCduDcsBiosBridge?include_prereleases&sort=semver
-[pre-release-url]: https://github.com/landre-cerp/WWCduDcsBiosBridge/releases
+[build-shield]: https://img.shields.io/github/actions/workflow/status/landre-cerp/WctrlDcsBiosBridge/build-on-tag.yml
+[pre-release-shield]: https://img.shields.io/github/v/release/landre-cerp/WctrlDcsBiosBridge?include_prereleases&sort=semver
+[pre-release-url]: https://github.com/landre-cerp/WctrlDcsBiosBridge/releases
