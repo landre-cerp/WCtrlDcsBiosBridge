@@ -2,6 +2,9 @@ name: Build on Push
 
 on:
   push:
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
     branches:
       - '**' # Triggers on push to any branch
 
