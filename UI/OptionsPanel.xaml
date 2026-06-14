@@ -3,23 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <StackPanel>
-        <TextBlock Text="A-10C" FontWeight="SemiBold" FontSize="11"
-                   Foreground="{DynamicResource SubtleTextForeground}" Margin="0,0,0,8"/>
-
-        <CheckBox Content="Align CDU Display to Bottom"
-                 IsChecked="{Binding DisplayBottomAligned, Mode=TwoWay}"
-                 Checked="CheckBox_Changed"
-                 Unchecked="CheckBox_Changed"
-                 Margin="0,4"/>
-
-        <CheckBox Content="Display CMS on CDU"
-                 IsChecked="{Binding DisplayCMS, Mode=TwoWay}"
-                 Checked="CheckBox_Changed"
-                 Unchecked="CheckBox_Changed"
-                 Margin="0,4"/>
-
-        <Separator Margin="0,12"/>
-
         <TextBlock Text="GENERAL" FontWeight="SemiBold" FontSize="11"
                    Foreground="{DynamicResource SubtleTextForeground}" Margin="0,0,0,8"/>
 
@@ -37,6 +20,23 @@
 
         <CheckBox Content="Minimize Window on Start"
                  IsChecked="{Binding MinimizeOnStart, Mode=TwoWay}"
+                 Checked="CheckBox_Changed"
+                 Unchecked="CheckBox_Changed"
+                 Margin="0,4"/>
+
+        <Separator Margin="0,12"/>
+
+        <TextBlock Text="A-10C" FontWeight="SemiBold" FontSize="11"
+                   Foreground="{DynamicResource SubtleTextForeground}" Margin="0,0,0,8"/>
+
+        <CheckBox Content="Align CDU Display to Bottom"
+                 IsChecked="{Binding DisplayBottomAligned, Mode=TwoWay}"
+                 Checked="CheckBox_Changed"
+                 Unchecked="CheckBox_Changed"
+                 Margin="0,4"/>
+
+        <CheckBox Content="Display CMS on CDU"
+                 IsChecked="{Binding DisplayCMS, Mode=TwoWay}"
                  Checked="CheckBox_Changed"
                  Unchecked="CheckBox_Changed"
                  Margin="0,4"/>
