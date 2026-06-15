@@ -51,10 +51,15 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         list.Add(data => handler(output.GetUIntValue(data)));
     }
 
-    // Enregistre un handler pour une adresse brute (valeur non décodée).
-    // Utile pour les registres bitfield lus tels quels, sans masque/décalage.
+    // Registers a handler for a raw (undecoded) address — value is passed as-is, no mask/shift.
+    // Use for bitfield registers when DCS-BIOS named outputs are missing or have incorrect definitions.
+    // NOTE: DCSBIOSProtocolParser only dispatches events for addresses on its broadcast whitelist.
+    // Named outputs (Register/RegisterString) get whitelisted automatically via DCSBIOSOutput.Address setter.
+    // RegisterRaw bypasses that path, so it must whitelist the address explicitly by setting it on a
+    // throw-away DCSBIOSOutput — the setter calls DCSBIOSProtocolParser.RegisterAddressToBroadCast.
     protected void RegisterRaw(uint address, Action<uint> handler)
     {
+        _ = new DCSBIOSOutput { Address = address }; // side effect: registers address with protocol parser whitelist
         if (!_dataHandlers.TryGetValue(address, out var list))
             _dataHandlers[address] = list = new();
         list.Add(handler);

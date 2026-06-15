@@ -152,19 +152,19 @@ internal class FA18C_IFEI_Page
 
     internal void combineClock(FlightDeckState flightDeck)
     {
-        flightDeck.Agp32UtcTime = $"{_clockH}{_clockM}{_clockS}";
+        flightDeck.ClockUtcTime = $"{_clockH}{_clockM}{_clockS}";
 
     }
 
     internal void combineTimer(FlightDeckState flightDeck)
     {
 
-        flightDeck.Agp32Et = $"{_timerM}{_timerS}";
+        flightDeck.ClockElapsedTime = $"{_timerM}{_timerS}";
         if (_timerH != " 0" && _timerH != "  ")
         {
-            flightDeck.Agp32Chrono = $"{_timerH}{_timerM}";
+            flightDeck.ClockChrono = $"{_timerH}{_timerM}";
         }
-        
+
 
     }
 

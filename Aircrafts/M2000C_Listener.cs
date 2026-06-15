@@ -12,15 +12,13 @@ namespace WWCduDcsBiosBridge.Aircrafts;
 internal class M2000C_Listener : AircraftListener
 {
     // --- Register addresses ---
-    // Rationale: During early integration a bug was observed where using the official named DCS-BIOS outputs for the M‑2000C
-    // lights resulted in no LED updates on the physical MCDU (the callbacks fired, but the decoded light states stayed false).
-    // Root cause (still under investigation) appears to be a mismatch between exported module definitions and runtime memory
-    // layout for the PCN/CLP light registers. As a pragmatic workaround we bind to existing string display outputs
-    // (PCN_DISP_*) purely as container objects and forcibly override their Address with the raw register values.
-    // This bypasses the faulty name resolution while reusing the common listener infrastructure. Each CLP register
-    // (CLP_ADDR_1..3) and the PCN lights registers (PCN_LIGHTS_ADDRESS / PCN_LIGHTS_ADDRESS_2) is a 16-bit bitfield; individual
-    // bits are translated using the masks defined below. If the upstream DCS-BIOS definitions are fixed later, this indirection
-    // can be removed and replaced by direct named output resolution.
+    // The PCN/CLP light registers and gear registers are read via RegisterRaw(address, handler).
+    // Named DCS-BIOS outputs for these registers either do not exist in the M-2000C module JSON or
+    // have incorrect mask/shift definitions, so the standard Register() path cannot be used.
+    // RegisterRaw passes the unmasked 16-bit register value to the callback; individual bits are
+    // extracted using the masks defined below.
+    // If the upstream DCS-BIOS definitions are corrected, these RegisterRaw calls can be replaced
+    // with Register(DCSBIOSOutput?, handler) using the corresponding named outputs.
     private const uint LANDING_GEAR_LEVER_ADDR = 0x72a4;
     private const uint GEAR_CONF_AUX_ADDR = 0x7244;
 
@@ -90,15 +88,6 @@ internal class M2000C_Listener : AircraftListener
     private const uint MASK_CLP_DECOL = 1024;
     private const uint MASK_CLP_PARK = 2048;
 
-
-    // --- DCS-BIOS controls (string outputs used as placeholders, addresses overridden) ---
-    private DCSBIOSOutput? PCN_LIGHTS_REGISTER;
-    private DCSBIOSOutput? CLP_REGISTER_1;
-    private DCSBIOSOutput? CLP_REGISTER_2;
-    private DCSBIOSOutput? CLP_REGISTER_3;
-    private DCSBIOSOutput? PCN_LIGHTS_REGISTER_2;
-    private DCSBIOSOutput? GEAR_CONF_REGISTER;
-    private DCSBIOSOutput? GEAR_LEVER_REGISTER;
 
     private DCSBIOSOutput? PCN_DISP_L;
     private DCSBIOSOutput? PCN_DISP_R;
@@ -224,25 +213,23 @@ internal class M2000C_Listener : AircraftListener
 
         Register(CLK_H, data =>
         {
-            _clockH = decodeHourNeedle(data); 
-            FlightDeck.Agp32UtcTime = combineHMS();
+            _clockH = decodeHourNeedle(data);
+            FlightDeck.ClockUtcTime = combineHMS();
         });
         Register(CLK_M, data =>
         {
             _clockM = decodeMinuteNeedle(data);
             _clockS = decodeSecondNeedle(data);
-            FlightDeck.Agp32UtcTime = combineHMS();
+            FlightDeck.ClockUtcTime = combineHMS();
 
         });
         Register(CLK_S, data =>
         {
-            // the clock is in reality related to the chronograph, but we can use it to display seconds in the CDU
-            // the chronograph seems to be 15 minutes max -> 0 -> 65535
-
+            // CLK_S is the chronograph needle (0–15 min range, not a true seconds hand).
             int totalSeconds = (int)(data / 65535.0 * 900); // 15 min = 900s
             int minutes = totalSeconds / 60;
             int seconds = totalSeconds % 60;
-            FlightDeck.Agp32Chrono = $"{minutes:D2}{seconds:D2}";
+            FlightDeck.ClockChrono = $"{minutes:D2}{seconds:D2}";
 
         });
     }
@@ -270,28 +257,6 @@ internal class M2000C_Listener : AircraftListener
         PCN_DISP_R = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_R");
         PCN_DISP_PREP = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_PREP");
         PCN_DISP_DEST = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_DEST");
-        // Reuse an existing PCN display output object and repoint its address to the raw lights register.
-        PCN_LIGHTS_REGISTER = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_L");
-        if (PCN_LIGHTS_REGISTER != null) PCN_LIGHTS_REGISTER.Address = PCN_LIGHTS_ADDRESS;
-
-        // Reuse PCN display outputs as generic DCSBIOSOutput instances for CLP bitfield registers.
-        CLP_REGISTER_1 = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_R");
-        if (CLP_REGISTER_1 != null) CLP_REGISTER_1.Address = CLP_ADDR_1;
-
-        CLP_REGISTER_2 = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_PREP");
-        if (CLP_REGISTER_2 != null) CLP_REGISTER_2.Address = CLP_ADDR_2;
-
-        CLP_REGISTER_3 = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_DEST");
-        if (CLP_REGISTER_3 != null) CLP_REGISTER_3.Address = CLP_ADDR_3;
-
-        PCN_LIGHTS_REGISTER_2 = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_DEST");
-        if (PCN_LIGHTS_REGISTER_2 != null) PCN_LIGHTS_REGISTER_2.Address = PCN_LIGHTS_ADDRESS_2;
-
-        GEAR_CONF_REGISTER = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_L");
-        if (GEAR_CONF_REGISTER != null) GEAR_CONF_REGISTER.Address = GEAR_CONF_AUX_ADDR;
-
-        GEAR_LEVER_REGISTER = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_R");
-        if (GEAR_LEVER_REGISTER != null) GEAR_LEVER_REGISTER.Address = LANDING_GEAR_LEVER_ADDR;
 
         CLK_H = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CLK_H");
         CLK_M = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CLK_M");

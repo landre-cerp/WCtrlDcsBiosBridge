@@ -180,7 +180,7 @@ internal class OH58D_Listener : AircraftListener
 
     private void UpdateClock()
     {
-        FlightDeck.Agp32UtcTime = _clockHh+_clockMm+_clockSs;
+        FlightDeck.ClockUtcTime = _clockHh+_clockMm+_clockSs;
     }
 
     // The clock drives the AGP32 chrono, so it is frontpanel data: register it
