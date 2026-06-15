@@ -226,25 +226,25 @@ internal class A10C_Listener : AircraftListener
         {
             var mode = s.Trim();
             _clockShowsEt = mode.Equals("ET", StringComparison.OrdinalIgnoreCase);
-            UpdateAgp32ClockFields();
+            UpdateClockFields();
         });
 
         RegisterString(_CLOCK_HH, s =>
         {
             _clockHh = NormalizeTwoDigitClockPart(s);
-            UpdateAgp32ClockFields();
+            UpdateClockFields();
         });
 
         RegisterString(_CLOCK_MM, s =>
         {
             _clockMm = NormalizeTwoDigitClockPart(s);
-            UpdateAgp32ClockFields();
+            UpdateClockFields();
         });
 
         RegisterString(_CLOCK_SS, s =>
         {
             _clockSs = NormalizeTwoDigitClockPart(s);
-            UpdateAgp32ClockFields();
+            UpdateClockFields();
         });
     }
     
@@ -347,22 +347,21 @@ internal class A10C_Listener : AircraftListener
         }
     }
 
-    private void UpdateAgp32ClockFields()
+    private void UpdateClockFields()
     {
         var hhmmss = _clockHh + _clockMm + _clockSs;
 
         // A-10C exposes only the currently selected clock source on CLOCK_HH/MM/SS.
-        // Keep UTC updated every time; when ET is selected, also derive AGP32 ET.
-        FlightDeck.Agp32UtcTime = hhmmss;
+        // Keep UTC updated every time; when ET is selected, also derive elapsed time.
+        FlightDeck.ClockUtcTime = hhmmss;
 
         if (_clockShowsEt)
         {
-            // AGP32 ET has 4 digits; keep minutes+seconds from HHMMSS.
-            FlightDeck.Agp32Et = hhmmss.Substring(2, 4);
+            FlightDeck.ClockElapsedTime = hhmmss.Substring(2, 4);
         }
         else
         {
-            FlightDeck.Agp32Et = string.Empty;
+            FlightDeck.ClockElapsedTime = string.Empty;
         }
     }
 

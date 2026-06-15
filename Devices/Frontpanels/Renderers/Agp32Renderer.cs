@@ -22,9 +22,9 @@ internal class Agp32Renderer : FrontpanelRenderer
         // is at zero — the AGP32 gear lights are useless when dark.
         ApplyBrightness(model);
 
-        _state.ChrDisplay = model.Agp32Chrono ?? string.Empty;
-        _state.ClockDisplay = model.Agp32UtcTime ?? string.Empty;
-        _state.EtDisplay = model.Agp32Et ?? string.Empty;
+        _state.ChrDisplay = model.ClockChrono ?? string.Empty;
+        _state.ClockDisplay = model.ClockUtcTime ?? string.Empty;
+        _state.EtDisplay = model.ClockElapsedTime ?? string.Empty;
 
         var leds = new Agp32State.Agp32Leds();
 

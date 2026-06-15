@@ -50,21 +50,18 @@ internal class FlightDeckState
     public int SegmentBrightnessPercent { get; set; } = 100;
 
     /// <summary>
-    /// AGP32 chrono display as "MMSS" digits (device renders it as "88:88").
-    /// Example: "1234" for 12:34.
+    /// Chronograph display as "MMSS" digits (e.g. "1234" for 12:34).
     /// </summary>
-    public string? Agp32Chrono { get; set; }
+    public string? ClockChrono { get; set; }
 
     /// <summary>
-    /// AGP32 UTC time display as "HHMMSS" digits (device renders it as "88:88:88").
-    /// Example: "123456" for 12:34:56.
+    /// UTC clock display as "HHMMSS" digits (e.g. "123456" for 12:34:56).
     /// </summary>
-    public string? Agp32UtcTime { get; set; }
+    public string? ClockUtcTime { get; set; }
 
     /// <summary>
-    /// AGP32 ET display as "HHMM" digits (device renders it as "88:88").
-    /// Example: "1234" for 12:34.
+    /// Elapsed-time display as "HHMM" digits (e.g. "1234" for 12:34).
     /// </summary>
-    public string? Agp32Et { get; set; }
+    public string? ClockElapsedTime { get; set; }
 
 }

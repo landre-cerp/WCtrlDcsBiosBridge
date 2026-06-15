@@ -49,6 +49,7 @@ or commitize style like:
 - Make your changes in the appropriate files.
 - Follow the existing coding style and conventions.
 - For C# code, target `.NET 8`
+- **Naming convention for private fields:** prefix private `DCSBIOSOutput?` fields with `_` (e.g. `_CDU_BRT`, `_IAS`). This distinguishes them from local variables and matches the convention used across all aircraft listeners.
 
 ### Add a new Aircraft
 Aircraft are now driven by a single registry and detected automatically from the DCS-BIOS `MetadataStart/_ACFT_NAME` value — there is no CDU menu to edit anymore.
@@ -153,11 +154,28 @@ public static readonly IReadOnlyList<AircraftDescriptor> All = new[]
 |--------|-----|
 | `Register(output, v => ...)` | Handle an integer output (`v` is the decoded `uint`). |
 | `RegisterString(output, s => ...)` | Handle a string output. |
+| `RegisterRaw(address, v => ...)` | Low-level handler for raw bitfield registers when named DCS-BIOS outputs are unavailable or have incorrect mask/shift definitions (M-2000C uses this). `v` is the raw unmasked 16-bit register value; apply bitmasks manually. Also handles the address whitelist registration required by the protocol parser — no extra setup needed. |
 | `GetCompositor(DEFAULT_PAGE).Line(n)...` | Write a CDU line (`.Green()`, `.White()`, `.WriteLine(...)`, ...). |
 | `SetCduLeds(fail:, fm1:, fm2:, fm:, ind:, rdy:)` | Set CDU status LEDs. |
 | `SetDisplayBrightnessPercent` / `SetBacklightBrightnessPercent` / `SetLedBrightnessPercent` | CDU brightness (0-100). |
-| `FlightDeck` | Semantic frontpanel state (`Speed`, `Heading`, `Altitude`, gear, AGP32 clock...). |
+| `FlightDeck` | Semantic front-panel state — see table below. |
 | `HasCdu`, `CduDevice` | Whether a CDU is connected / the underlying device. |
+
+#### FlightDeck properties
+
+Populate these in `RegisterFrontpanelControls()`. Renderers read whatever properties their device can display; leave anything your aircraft does not provide as `null`.
+
+| Property | Type | Meaning |
+|----------|------|---------|
+| `Speed`, `Heading`, `Altitude`, `VerticalSpeed` | `int?` | Indicated airspeed (kt), heading (°), altitude (ft), vertical speed (ft/min). |
+| `BaroPressure` | `int?` | Barometric pressure in inHg × 100 (e.g. 2992 = 29.92 inHg). |
+| `GearLeftDown`, `GearNoseDown`, `GearRightDown` | `bool?` | Gear down-and-locked indicators. |
+| `GearWarning` | `bool?` | Gear handle red warning light. |
+| `ClockUtcTime` | `string?` | UTC time as `"HHMMSS"` (e.g. `"123456"` = 12:34:56). |
+| `ClockChrono` | `string?` | Chronograph as `"MMSS"` (e.g. `"0145"` = 1 min 45 s). |
+| `ClockElapsedTime` | `string?` | Elapsed time as `"HHMM"` (e.g. `"0012"` = 12 min). |
+| `ConsoleBrightness` | `byte?` | Cockpit console backlight, 0–255. |
+| `SegmentBrightnessPercent` | `int` | 7-segment display brightness, 0–100 (default 100). |
 
 ### 4. Test Your Changes
 - There's no automated test suite (as most of the tests are using the physical device), please ensure to:
@@ -212,31 +230,3 @@ A: Follow the coding standards of the project, test your changes, and ensure you
 ---
 
 Thank you for considering contributing to our project! Your help is greatly appreciated. If you have any questions, feel free to ask in the discussions or issues section.
-
-**Frontpanel Integration:**
-- Check if `frontpanelHub.HasFrontpanels` before handling frontpanel-specific updates
-- Use `frontpanelState` to update frontpanel display values (speed, heading, altitude, vertical speed)
-- Set `refresh_frontpanel` flag when frontpanel data changes
-- For FCU/EFIS devices, cast to `FcuEfisState` for additional properties like barometric pressure
-- For PAP3 devices, cast to `Pap3State` for device-specific features
-- For PDC-3N devices, only brightness control is available (no display or LED features)
-- The frontpanel display updates automatically via the timer in `AircraftListener` base class
-- **Brightness:** When setting brightness via `FrontpanelHub.SetBrightness()`, convert DCS-BIOS values to the 0-255 byte range:
-  ```csharp
-  var rawBrightness = _CONSOLE_BRT!.GetUIntValue(e.Data);
-  var brightness = (byte)(rawBrightness * 255 / _CONSOLE_BRT.MaxValue);
-  frontpanelHub.SetBrightness(brightness, brightness, brightness);
-  ```
-  **Do not** convert to percentage (0-100) first, as this limits maximum brightness to only ~39% of actual capability.
-  When multiple frontpanel devices are connected, `SetBrightness()` broadcasts to all of them (e.g., both PAP3 and PDC-3N receive the same brightness values).
-- See `A10C_Listener.cs` for a complete frontpanel integration example with altitude drum conversion
-
-**Supported Frontpanel Devices:**
-- **FCU/EFIS**: Full display, LED control, brightness control (Airbus style autopilot/flight director)
-- **PAP3**: Full display, LED control, brightness control (Boeing 737 Primary Autopilot Panel)
-  - **Important**: PAP3 has **three separate brightness controls**:
-    1. Panel backlight (physical panel illumination)
-    2. LCD display brightness (7-segment displays) - **must be set to 255 for visibility**
-    3. LED marker lights
-  - When calling `SetBrightness(panel, lcd, led)`, ensure the middle parameter (LCD) is set high enough (recommended: 255)
-- **PDC-3N**: Brightness control only (Boeing 737 Panel Display Controller, designed to work with PAP3)
