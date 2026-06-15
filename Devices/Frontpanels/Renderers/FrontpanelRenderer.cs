@@ -30,7 +30,7 @@ internal abstract class FrontpanelRenderer
 
     protected void ApplyBrightness(
         FlightDeckState model,
-        byte fallbackPanelBacklight = 255,
+        byte fallbackPanelBacklight = 127,
         byte fallbackLcdBacklight = 255,
         byte fallbackLedBacklight = 255)
     {

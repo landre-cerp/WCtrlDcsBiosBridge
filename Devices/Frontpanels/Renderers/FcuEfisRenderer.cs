@@ -9,7 +9,11 @@ namespace WWCduDcsBiosBridge.Devices.Frontpanels.Renderers;
 /// </summary>
 internal class FcuEfisRenderer : FrontpanelRenderer
 {
-    private readonly FcuEfisState _state = new();
+    private readonly FcuEfisState _state = new()
+    {
+        LeftBaroQnh = true,
+        RightBaroQnh = true,
+    };
     private readonly FcuEfisLeds _leds = new();
 
     public FcuEfisRenderer(IReadOnlyList<IFrontpanelAdapter> adapters, bool manageLighting)
@@ -26,6 +30,7 @@ internal class FcuEfisRenderer : FrontpanelRenderer
         _state.Altitude = model.Altitude;
         _state.VerticalSpeed = model.VerticalSpeed;
         _state.LeftBaroPressure = model.BaroPressure;
+        _state.RightBaroPressure = model.BaroPressure;
 
         foreach (var adapter in adapters)
         {
