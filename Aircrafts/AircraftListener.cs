@@ -174,6 +174,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         BIOSEventHandler.AttachDataListener(this);
         BIOSEventHandler.AttachConnectionListener(this);
 
+        cdu?.Render(pages[_currentPage]);
         _DisplayCDUTimer.Start();
 
     }
@@ -181,7 +182,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     private void InitMcduBrightness(bool disabledBrightness)
     {
         if (disabledBrightness || cdu == null) return;
-        SetBacklightBrightnessPercent(100);
+        SetBacklightBrightnessPercent(50);
         SetLedBrightnessPercent(100);
         SetDisplayBrightnessPercent(100);
     }

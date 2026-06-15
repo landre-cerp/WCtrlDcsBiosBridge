@@ -11,6 +11,9 @@ internal class FlightDeckState
     public int? Heading { get; set; }
     public int? Altitude { get; set; }
     public int? VerticalSpeed { get; set; }
+    public int? PltCourse { get; set; }
+    public int? CplCourse { get; set; }
+
 
     /// <summary>
     /// Barometric pressure in inHg * 100 (FCU convention, e.g. 2992 for 29.92 inHg).

@@ -9,14 +9,7 @@ namespace WWCduDcsBiosBridge.Devices.Frontpanels.Renderers;
 /// </summary>
 internal class Pap3Renderer : FrontpanelRenderer
 {
-    // PAP3 LCDs turn off on empty/null values, so default to zeros.
-    private readonly Pap3State _state = new()
-    {
-        Speed = 0,
-        Heading = 0,
-        Altitude = 0,
-        VerticalSpeed = 0,
-    };
+    private readonly Pap3State _state = new();
 
     private readonly Pap3Leds _leds = new();
 
@@ -29,10 +22,12 @@ internal class Pap3Renderer : FrontpanelRenderer
     {
         ApplyBrightness(model);
 
-        _state.Speed = model.Speed ?? 0;
-        _state.Heading = model.Heading ?? 0;
-        _state.Altitude = model.Altitude ?? 0;
-        _state.VerticalSpeed = model.VerticalSpeed ?? 0;
+        _state.Speed = model.Speed;
+        _state.Heading = model.Heading;
+        _state.Altitude = model.Altitude;
+        _state.VerticalSpeed = model.VerticalSpeed;
+        _state.PltCourseValue = model.PltCourse;
+        _state.CplCourseValue = model.CplCourse;
 
         foreach (var adapter in adapters)
         {

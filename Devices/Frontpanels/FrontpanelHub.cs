@@ -24,6 +24,7 @@ public class FrontpanelHub : IDisposable
     private readonly object _renderLock = new();
 
     private FlightDeckState? _model;
+    private readonly bool _manageLighting;
     private bool _disposed;
 
     /// <summary>
@@ -44,6 +45,7 @@ public class FrontpanelHub : IDisposable
     public FrontpanelHub(IEnumerable<IFrontpanelAdapter> adapters, bool manageLighting)
     {
         _adapters = new List<IFrontpanelAdapter>(adapters ?? throw new ArgumentNullException(nameof(adapters)));
+        _manageLighting = manageLighting;
 
         CreateRenderer<FcuEfisAdapter>(a => new FcuEfisRenderer(a, manageLighting));
         CreateRenderer<Pap3Adapter>(a => new Pap3Renderer(a, manageLighting));
@@ -88,7 +90,28 @@ public class FrontpanelHub : IDisposable
         _model = model ?? throw new ArgumentNullException(nameof(model));
         if (_renderers.Count > 0)
         {
+            InitializeDevices();
             _renderTimer.Start();
+        }
+    }
+
+    private void InitializeDevices()
+    {
+        if (!_manageLighting) return;
+        lock (_renderLock)
+        {
+            foreach (var adapter in _adapters)
+            {
+                try
+                {
+                    adapter.Device.Reset();
+                    adapter.Device.SetBrightness(127, 255, 255); // panel 50%, LCD 100%, LEDs 100%
+                }
+                catch (Exception ex)
+                {
+                    App.Logger.Warn(ex, $"Failed to initialize frontpanel {adapter.DisplayName}");
+                }
+            }
         }
     }
 
