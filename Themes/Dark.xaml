@@ -18,6 +18,9 @@
     <SolidColorBrush x:Key="ToggleTrackOff"          Color="#606060"/>
     <SolidColorBrush x:Key="ToggleTrackOn"           Color="#4A90D9"/>
     <SolidColorBrush x:Key="ToggleThumb"             Color="#F0F0F0"/>
+    <SolidColorBrush x:Key="CardConnectedBorderBrush" Color="#2E7D32"/>
+    <SolidColorBrush x:Key="CardConnectedBgBrush"     Color="#182E7D32"/>
+    <SolidColorBrush x:Key="CardConnectedDotBrush"    Color="#43A047"/>
 
     <!-- Internal palette -->
     <SolidColorBrush x:Key="DarkAppBg"        Color="#1E1E1E"/>

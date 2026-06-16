@@ -23,16 +23,15 @@ public static class ThemeManager
 
     public static void Apply(ThemePreference preference)
     {
-        var dark = preference switch
+        var uri = preference switch
         {
-            ThemePreference.Dark  => true,
-            ThemePreference.Light => false,
+            ThemePreference.Light => new Uri("pack://application:,,,/Themes/Light.xaml"),
+            ThemePreference.DCS   => new Uri("pack://application:,,,/Themes/DCS.xaml"),
+            ThemePreference.Dark  => new Uri("pack://application:,,,/Themes/Dark.xaml"),
             _                     => IsSystemDark()
+                                         ? new Uri("pack://application:,,,/Themes/Dark.xaml")
+                                         : new Uri("pack://application:,,,/Themes/Light.xaml")
         };
-
-        var uri = dark
-            ? new Uri("pack://application:,,,/Themes/Dark.xaml")
-            : new Uri("pack://application:,,,/Themes/Light.xaml");
 
         var dicts = Application.Current.Resources.MergedDictionaries;
         if (_activeDict != null) dicts.Remove(_activeDict);
