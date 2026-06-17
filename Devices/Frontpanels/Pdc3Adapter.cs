@@ -13,6 +13,7 @@ public class Pdc3Adapter : IFrontpanelAdapter
 {
     private readonly Pdc3Device _device;
 
+    public IFrontpanel Device => _device;
     public string DisplayName { get; }
     public bool IsConnected => _device.IsConnected;
 
@@ -22,14 +23,6 @@ public class Pdc3Adapter : IFrontpanelAdapter
     {
         _device = device ?? throw new ArgumentNullException(nameof(device));
         DisplayName = displayName ?? "PDC-3N";
-    }
-
-    public void Reset()
-    {
-        if (!IsConnected)
-            return;
-
-        _device.Reset();
     }
 
     /// <summary>

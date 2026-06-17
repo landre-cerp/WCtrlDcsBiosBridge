@@ -11,6 +11,7 @@ public class FcuEfisAdapter : IFrontpanelAdapter
 {
     private readonly FcuEfisDevice _device;
 
+    public IFrontpanel Device => _device;
     public string DisplayName { get; }
     public bool IsConnected => _device.IsConnected;
 
@@ -20,11 +21,6 @@ public class FcuEfisAdapter : IFrontpanelAdapter
     {
         _device = device ?? throw new ArgumentNullException(nameof(device));
         DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
-    }
-
-    public void Reset()
-    {
-        _device.Reset();
     }
 
     public void UpdateDisplay(IFrontpanelState state)
