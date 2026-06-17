@@ -125,7 +125,7 @@ The only manual choice left is the **seat** for the CH-47F when two or more CDUs
 ### Brightness Issues
 
 - **Mismatched brightness:** Use the aircraft's brightness controls first, then adjust MCDU
-- **A10C:** MCDU brightness is linked to the console rotary control (right pedestal)
+- **A10C:** Check the [specific documentation](docs/A-10C.md)
 - **CH-47F:** Check the [specific documentation](docs/CH-47F.md)
 - In case of flickering with SimAppPro running, check the
 
@@ -140,7 +140,7 @@ Report issues [here](https://github.com/landre-cerp/WctrlDcsBiosBridge/issues), 
 ## Known Limitations
 
 - **Cursor behavior:** May appear erratic during waypoint entry (reflects DCS-BIOS data)
-- **CH-47F support:** Requires DCS-BIOS nightly build (0.11.0 or later)
+- **CH-47F support:** Requires DCS-BIOS 0.11.0 or later
 - **Brightness sync:** May not perfectly match aircraft state
 
 ## Development
@@ -149,7 +149,6 @@ This project is written in C# and targets .NET 8.0. It uses:
 - **DCS-BIOS** for DCS communication
 - **ww-devices-dotnet** for Winctrl hardware interface
 - **NLog** for logging
-- **System.CommandLine** for command-line parsing
 
 ## Contributing
 see `docs/CONTRIBUTING.md` for contribution guidelines. [link](docs/CONTRIBUTING.md)
