@@ -8,11 +8,6 @@ namespace WWCduDcsBiosBridge.Devices.Frontpanels;
 /// </summary>
 public interface IFrontpanelAdapter
 {
-    /// <summary>
-    /// Gets the underlying frontpanel device.
-    /// </summary>
-    IFrontpanel Device { get; }
-
     IFrontpanelCapabilities Capabilities { get; }
 
     /// <summary>
@@ -34,6 +29,11 @@ public interface IFrontpanelAdapter
     /// Sets the brightness levels for the frontpanel.
     /// </summary>
     void SetBrightness(byte panelBacklight, byte lcdBacklight, byte ledBacklight);
+
+    /// <summary>
+    /// Resets the frontpanel device to its default state.
+    /// </summary>
+    void Reset();
 
     /// <summary>
     /// Gets a value indicating whether the device is currently connected.
