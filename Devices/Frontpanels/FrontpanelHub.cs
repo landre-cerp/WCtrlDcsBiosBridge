@@ -104,8 +104,8 @@ public class FrontpanelHub : IDisposable
             {
                 try
                 {
-                    adapter.Device.Reset();
-                    adapter.Device.SetBrightness(127, 255, 255); // panel 50%, LCD 100%, LEDs 100%
+                    adapter.Reset();
+                    adapter.SetBrightness(127, 255, 255); // panel 50%, LCD 100%, LEDs 100%
                 }
                 catch (Exception ex)
                 {
@@ -161,10 +161,10 @@ public class FrontpanelHub : IDisposable
                     // Reset() blanks screen + turns LEDs off at 100 % brightness for
                     // CommonWinWingPanel devices; for segment-only devices (AGP32)
                     // it only restores brightness, which is then overridden below.
-                    adapter.Device.Reset();
+                    adapter.Reset();
 
                     var b = opts.BrightnessByte;
-                    adapter.Device.SetBrightness(b, b, b);
+                    adapter.SetBrightness(b, b, b);
                 }
                 catch (Exception ex)
                 {
