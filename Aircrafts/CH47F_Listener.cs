@@ -3,7 +3,7 @@ using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 using System.Linq;
 
-namespace WWCduDcsBiosBridge.Aircrafts;
+namespace WCtrlDcsBiosBridge.Aircrafts;
 
 internal class CH47F_Listener : AircraftListener
 {

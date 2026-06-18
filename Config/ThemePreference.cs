@@ -1,4 +1,4 @@
-namespace WWCduDcsBiosBridge.Config;
+namespace WCtrlDcsBiosBridge.Config;
 
 public enum ThemePreference
 {

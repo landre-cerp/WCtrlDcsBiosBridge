@@ -2,7 +2,7 @@ using System;
 using WwDevicesDotNet;
 using WwDevicesDotNet.Winctrl.FcuAndEfis;
 
-namespace WWCduDcsBiosBridge.Devices.Frontpanels;
+namespace WCtrlDcsBiosBridge.Devices.Frontpanels;
 
 /// <summary>
 /// Adapter for FCU/EFIS devices that implements the capability-based pattern.

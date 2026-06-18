@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using WwDevicesDotNet.Winctrl.Pap3;
-using WWCduDcsBiosBridge.Aircrafts;
+using WCtrlDcsBiosBridge.Aircrafts;
 
-namespace WWCduDcsBiosBridge.Devices.Frontpanels.Renderers;
+namespace WCtrlDcsBiosBridge.Devices.Frontpanels.Renderers;
 
 /// <summary>
 /// Renders the flight deck state to PAP3 devices (Boeing 737 style).

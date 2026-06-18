@@ -2,7 +2,7 @@ using System;
 using WwDevicesDotNet;
 using WwDevicesDotNet.Winctrl.Pap3;
 
-namespace WWCduDcsBiosBridge.Devices.Frontpanels;
+namespace WCtrlDcsBiosBridge.Devices.Frontpanels;
 
 /// <summary>
 /// Adapter for PAP3 devices that implements the capability-based pattern.

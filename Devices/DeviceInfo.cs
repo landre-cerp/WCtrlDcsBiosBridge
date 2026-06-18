@@ -1,6 +1,6 @@
 using WwDevicesDotNet;
 
-namespace WWCduDcsBiosBridge.Devices;
+namespace WCtrlDcsBiosBridge.Devices;
 
 /// <summary>
 /// Contains information about a detected CDU or Frontpanel device

@@ -1,4 +1,4 @@
-namespace WWCduDcsBiosBridge.Aircrafts;
+namespace WCtrlDcsBiosBridge.Aircrafts;
 
 /// <summary>
 /// Everything the bridge needs to know to create a listener for an aircraft.
@@ -77,7 +77,7 @@ internal static class AircraftRegistry
     /// </summary>
     public static readonly IReadOnlyList<AircraftDescriptor> All = new[]
     {
-        A10C, AH64D, FA18C, CH47, F15E, M2000C, F16C, OH58D,
+        A10C, AH64D, FA18C, CH47, F15E, M2000C, F16C, OH58D, 
     };
 
     public static AircraftDescriptor Find(int moduleId) =>

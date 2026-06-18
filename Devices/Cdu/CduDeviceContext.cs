@@ -1,9 +1,9 @@
 using WwDevicesDotNet;
-using WWCduDcsBiosBridge.Aircrafts;
-using WWCduDcsBiosBridge.Config;
-using WWCduDcsBiosBridge.Services;
+using WCtrlDcsBiosBridge.Aircrafts;
+using WCtrlDcsBiosBridge.Config;
+using WCtrlDcsBiosBridge.Services;
 
-namespace WWCduDcsBiosBridge.Devices.Cdu;
+namespace WCtrlDcsBiosBridge.Devices.Cdu;
 
 /// <summary>
 /// Represents the context for a CDU device within the bridge: it shows the aircraft

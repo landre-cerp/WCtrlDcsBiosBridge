@@ -1,4 +1,4 @@
-namespace WWCduDcsBiosBridge.Config;
+namespace WCtrlDcsBiosBridge.Config;
 
 /// <summary>
 /// Controls what the app resets on connected devices when closing.

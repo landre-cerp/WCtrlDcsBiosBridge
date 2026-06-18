@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using WWCduDcsBiosBridge.Aircrafts;
+using WCtrlDcsBiosBridge.Aircrafts;
 
-namespace WWCduDcsBiosBridge.Devices.Frontpanels.Renderers;
+namespace WCtrlDcsBiosBridge.Devices.Frontpanels.Renderers;
 
 /// <summary>
 /// Translates the semantic <see cref="FlightDeckState"/> to one family of frontpanel

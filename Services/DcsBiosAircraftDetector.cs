@@ -4,7 +4,7 @@ using DCS_BIOS.Interfaces;
 using DCS_BIOS.Serialized;
 using NLog;
 
-namespace WWCduDcsBiosBridge.Services;
+namespace WCtrlDcsBiosBridge.Services;
 
 /// <summary>
 /// Continuously monitors the <c>MetadataStart/_ACFT_NAME</c> string from

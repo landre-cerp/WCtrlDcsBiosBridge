@@ -2,14 +2,14 @@ using ClassLibraryCommon;
 using DCS_BIOS;
 using DCS_BIOS.ControlLocator;
 using NLog;
-using WWCduDcsBiosBridge.Config;
-using WWCduDcsBiosBridge.Aircrafts;
-using WWCduDcsBiosBridge.Devices;
-using WWCduDcsBiosBridge.Devices.Cdu;
-using WWCduDcsBiosBridge.Devices.Frontpanels;
-using WWCduDcsBiosBridge.Services;
+using WCtrlDcsBiosBridge.Config;
+using WCtrlDcsBiosBridge.Aircrafts;
+using WCtrlDcsBiosBridge.Devices;
+using WCtrlDcsBiosBridge.Devices.Cdu;
+using WCtrlDcsBiosBridge.Devices.Frontpanels;
+using WCtrlDcsBiosBridge.Services;
 
-namespace WWCduDcsBiosBridge;
+namespace WCtrlDcsBiosBridge;
 
 /// <summary>
 /// Manages the DCS-BIOS bridge lifecycle

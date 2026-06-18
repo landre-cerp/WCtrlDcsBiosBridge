@@ -1,4 +1,4 @@
-namespace WWCduDcsBiosBridge.Aircrafts;
+namespace WCtrlDcsBiosBridge.Aircrafts;
 
 /// <summary>
 /// Semantic, device-agnostic flight deck state. Aircraft listeners write the values

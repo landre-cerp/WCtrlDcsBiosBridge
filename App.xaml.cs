@@ -1,9 +1,9 @@
 using NLog;
 using System.Windows;
-using WWCduDcsBiosBridge.Config;
-using WWCduDcsBiosBridge.Services;
+using WCtrlDcsBiosBridge.Config;
+using WCtrlDcsBiosBridge.Services;
 
-namespace WWCduDcsBiosBridge;
+namespace WCtrlDcsBiosBridge;
 
 public partial class App : Application
 {

@@ -6,14 +6,14 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using WwDevicesDotNet;
-using WWCduDcsBiosBridge.Config;
+using WCtrlDcsBiosBridge.Config;
 using System.Diagnostics;
-using WWCduDcsBiosBridge.Devices;
-using WWCduDcsBiosBridge.Services;
-using WWCduDcsBiosBridge.Aircrafts;
+using WCtrlDcsBiosBridge.Devices;
+using WCtrlDcsBiosBridge.Services;
+using WCtrlDcsBiosBridge.Aircrafts;
 using Microsoft.Win32;
 
-namespace WWCduDcsBiosBridge;
+namespace WCtrlDcsBiosBridge;
 
 public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 {
@@ -32,7 +32,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private ThemePreference _currentTheme = ThemePreference.System;
 
     private const string GitHubOwner = "landre-cerp";
-    private const string GitHubRepo = "WWCduDcsBiosBridge";
+    private const string GitHubRepo = "WCtrlDcsBiosBridge";
 
     // Dedicated update notification state
     private string? _updateMessage;

@@ -1,7 +1,7 @@
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 
-namespace WWCduDcsBiosBridge.Devices.Cdu;
+namespace WCtrlDcsBiosBridge.Devices.Cdu;
 
 internal sealed class CduRenderState
 {

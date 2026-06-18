@@ -1,9 +1,9 @@
 using System;
 using System.Windows;
 using Microsoft.Win32;
-using WWCduDcsBiosBridge.Config;
+using WCtrlDcsBiosBridge.Config;
 
-namespace WWCduDcsBiosBridge.Services;
+namespace WCtrlDcsBiosBridge.Services;
 
 public static class ThemeManager
 {

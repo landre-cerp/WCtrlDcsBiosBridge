@@ -3,7 +3,7 @@ using DCS_BIOS.Serialized;
 using System.Text;
 using WwDevicesDotNet;
 
-namespace WWCduDcsBiosBridge.Aircrafts;
+namespace WCtrlDcsBiosBridge.Aircrafts;
 
 internal class F16C_Ded_Page
 {

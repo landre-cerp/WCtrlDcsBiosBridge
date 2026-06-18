@@ -2,10 +2,10 @@ using Newtonsoft.Json;
 using NLog;
 using System.IO;
 using WwDevicesDotNet;
-using WWCduDcsBiosBridge.Config;
-using WWCduDcsBiosBridge.Devices;
+using WCtrlDcsBiosBridge.Config;
+using WCtrlDcsBiosBridge.Devices;
 
-namespace WWCduDcsBiosBridge;
+namespace WCtrlDcsBiosBridge;
 
 /// <summary>
 /// Manages CDU and FrontPanel device detection and connection

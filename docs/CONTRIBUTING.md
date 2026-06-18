@@ -65,7 +65,7 @@ using DCS_BIOS.ControlLocator;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 
-namespace WWCduDcsBiosBridge.Aircrafts;
+namespace WCtrlDcsBiosBridge.Aircrafts;
 
 internal class F14_Listener : AircraftListener
 {
