@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
-using WWCduDcsBiosBridge.Aircrafts;
-using WWCduDcsBiosBridge.Common;
+using WCtrlDcsBiosBridge.Aircrafts;
+using WCtrlDcsBiosBridge.Common;
 
-namespace WWCduDcsBiosBridge.Config;
+namespace WCtrlDcsBiosBridge.Config;
 
 /// <summary>
 /// Manages configuration loading, saving, and validation for the DCS-BIOS bridge application.

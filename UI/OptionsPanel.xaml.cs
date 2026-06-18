@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using WwDevicesDotNet;
-namespace WWCduDcsBiosBridge.UI;
+namespace WCtrlDcsBiosBridge.UI;
 
 public partial class OptionsPanel : UserControl
 {

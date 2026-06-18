@@ -1,4 +1,4 @@
-<UserControl x:Class="WWCduDcsBiosBridge.UI.OptionsPanel"
+<UserControl x:Class="WCtrlDcsBiosBridge.UI.OptionsPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 

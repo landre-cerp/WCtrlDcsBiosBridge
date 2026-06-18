@@ -5,7 +5,7 @@ using WwDevicesDotNet.Winctrl.FcuAndEfis;
 using WwDevicesDotNet.Winctrl.Pap3;
 using WwDevicesDotNet.Winctrl.Pdc3nm;
 
-namespace WWCduDcsBiosBridge.Devices.Frontpanels;
+namespace WCtrlDcsBiosBridge.Devices.Frontpanels;
 
 /// <summary>
 /// Factory for creating frontpanel adapters from IFrontpanel devices.

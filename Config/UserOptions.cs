@@ -1,4 +1,4 @@
-﻿using WWCduDcsBiosBridge.Config;
+﻿using WCtrlDcsBiosBridge.Config;
 
 /// <summary>
 /// User-configurable options for the application and aircraft-specific settings.

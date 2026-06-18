@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls;
 
-namespace WWCduDcsBiosBridge.UI;
+namespace WCtrlDcsBiosBridge.UI;
 
 public partial class StatusBarControl : UserControl, INotifyPropertyChanged
 {

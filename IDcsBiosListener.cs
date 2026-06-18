@@ -1,6 +1,6 @@
 ﻿using DCS_BIOS.Interfaces;
 
-namespace WWCduDcsBiosBridge;
+namespace WCtrlDcsBiosBridge;
 
 internal interface IDcsBiosListener : IDcsBiosConnectionListener , IDcsBiosDataListener, IDCSBIOSStringListener
 {

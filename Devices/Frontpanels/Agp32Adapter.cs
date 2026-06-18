@@ -2,7 +2,7 @@ using System;
 using WwDevicesDotNet;
 using WwDevicesDotNet.Winctrl.Agp32;
 
-namespace WWCduDcsBiosBridge.Devices.Frontpanels;
+namespace WCtrlDcsBiosBridge.Devices.Frontpanels;
 
 /// <summary>
 /// Adapter for AGP32 devices that implements the capability-based pattern.

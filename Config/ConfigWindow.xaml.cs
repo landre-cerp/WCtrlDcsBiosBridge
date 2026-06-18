@@ -4,7 +4,7 @@ using System.IO;
 using System.Net;
 using System.Windows;
 
-namespace WWCduDcsBiosBridge.Config;
+namespace WCtrlDcsBiosBridge.Config;
 
 public partial class ConfigWindow : Window
 {

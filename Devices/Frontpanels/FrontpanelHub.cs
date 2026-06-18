@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using WWCduDcsBiosBridge.Aircrafts;
-using WWCduDcsBiosBridge.Config;
-using WWCduDcsBiosBridge.Devices.Frontpanels.Renderers;
+using WCtrlDcsBiosBridge.Aircrafts;
+using WCtrlDcsBiosBridge.Config;
+using WCtrlDcsBiosBridge.Devices.Frontpanels.Renderers;
 using Timer = System.Timers.Timer;
 
-namespace WWCduDcsBiosBridge.Devices.Frontpanels;
+namespace WCtrlDcsBiosBridge.Devices.Frontpanels;
 
 /// <summary>
 /// Hosts one renderer per connected frontpanel family and periodically renders

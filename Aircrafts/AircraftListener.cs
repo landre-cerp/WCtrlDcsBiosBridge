@@ -8,9 +8,9 @@ using Newtonsoft.Json;
 using System.IO;
 using Timer = System.Timers.Timer;
 using WwDevicesDotNet;
-using WWCduDcsBiosBridge.Devices.Cdu;
+using WCtrlDcsBiosBridge.Devices.Cdu;
 
-namespace WWCduDcsBiosBridge.Aircrafts;
+namespace WCtrlDcsBiosBridge.Aircrafts;
 
 internal abstract class AircraftListener : IDcsBiosListener, IDisposable
 {

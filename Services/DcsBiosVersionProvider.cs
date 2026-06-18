@@ -4,7 +4,7 @@ using DCS_BIOS.Interfaces;
 using DCS_BIOS.Serialized;
 using NLog;
 
-namespace WWCduDcsBiosBridge.Services;
+namespace WCtrlDcsBiosBridge.Services;
 
 /// <summary>
 /// Listens to the DCS-BIOS CommonData <c>VERSION</c> string and exposes the
