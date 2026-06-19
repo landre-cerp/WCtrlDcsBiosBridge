@@ -1,6 +1,4 @@
-using DCS_BIOS.ControlLocator;
 using DCS_BIOS.EventArgs;
-using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Aircrafts;
@@ -11,15 +9,6 @@ internal class F16C_Listener : AircraftListener
 {
     private const string NAV_PAGE = "NAV";
     private const string RWR_PAGE = "RWR";
-
-    private DCSBIOSOutput? _PRI_CONSOLES_BRT;
-    private DCSBIOSOutput? _LIGHT_MASTER_CAUTION;
-    private DCSBIOSOutput? _PRI_DATA_DISPLAY_BRT;
-
-    private DCSBIOSOutput? _LIGHT_GEAR_L;
-    private DCSBIOSOutput? _LIGHT_GEAR_N;
-    private DCSBIOSOutput? _LIGHT_GEAR_R;
-    private DCSBIOSOutput? _LIGHT_GEAR_WARN;
 
     private readonly Key _dedDisplayKey;
     private readonly Key _navDisplayKey;
@@ -94,43 +83,25 @@ internal class F16C_Listener : AircraftListener
 
         if (!options.DisableLightingManagement)
         {
-            Register(_PRI_CONSOLES_BRT, v =>
-                SetBacklightBrightnessPercent((int)(v * 100 / _PRI_CONSOLES_BRT!.MaxValue)));
-            Register(_PRI_DATA_DISPLAY_BRT, v =>
-                SetDisplayBrightnessPercent((int)(v * 100 / _PRI_DATA_DISPLAY_BRT!.MaxValue)));
+            RegisterUInt("PRI_CONSOLES_BRT_KNB", (ctrl, v) =>
+                SetBacklightBrightnessPercent((int)(v * 100 / ctrl.MaxValue)));
+            RegisterUInt("PRI_DATA_DISPLAY_BRT_KNB", (ctrl, v) =>
+                SetDisplayBrightnessPercent((int)(v * 100 / ctrl.MaxValue)));
         }
 
-        Register(_LIGHT_MASTER_CAUTION, v => SetCduLeds(fail: v == 1));
+        RegisterUInt("LIGHT_MASTER_CAUTION", v => SetCduLeds(fail: v == 1));
 
         _dedPage.RegisterControls(Register, RegisterString, () => GetCompositor(DEFAULT_PAGE));
         _navPage.RegisterControls(Register, RegisterString, () => GetCompositor(NAV_PAGE));
         _rwrPage.RegisterControls(Register, RegisterString, () => GetCompositor(RWR_PAGE));
     }
 
-    protected override void RegisterFrontpanelControls() {
-
-        Register(_LIGHT_GEAR_L, v => FlightDeck.GearLeftDown = v == 1);
-        Register(_LIGHT_GEAR_N, v => FlightDeck.GearNoseDown = v == 1);
-        Register(_LIGHT_GEAR_R, v => FlightDeck.GearRightDown = v == 1);
-
-        Register(_LIGHT_GEAR_WARN, v => FlightDeck.GearWarning = v == 1);
-    }
-
-    protected override void InitializeDcsBiosOutputs()
+    protected override void RegisterFrontpanelControls()
     {
-        _PRI_CONSOLES_BRT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("PRI_CONSOLES_BRT_KNB");
-        _LIGHT_MASTER_CAUTION = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_MASTER_CAUTION");
-        _PRI_DATA_DISPLAY_BRT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("PRI_DATA_DISPLAY_BRT_KNB");
-
-        _LIGHT_GEAR_L = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_GEAR_L");
-        _LIGHT_GEAR_N = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_GEAR_N");
-        _LIGHT_GEAR_R = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_GEAR_R");
-
-        _LIGHT_GEAR_WARN = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_GEAR_WARN");
-            
-        _dedPage.InitializeControls();
-        _navPage.InitializeControls();
-        _rwrPage.InitializeControls();
+        RegisterUInt("LIGHT_GEAR_L",    v => FlightDeck.GearLeftDown = v == 1);
+        RegisterUInt("LIGHT_GEAR_N",    v => FlightDeck.GearNoseDown = v == 1);
+        RegisterUInt("LIGHT_GEAR_R",    v => FlightDeck.GearRightDown = v == 1);
+        RegisterUInt("LIGHT_GEAR_WARN", v => FlightDeck.GearWarning = v == 1);
     }
 
     protected override void Dispose(bool disposing)

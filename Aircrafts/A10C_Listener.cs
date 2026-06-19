@@ -1,5 +1,3 @@
-using DCS_BIOS.ControlLocator;
-using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 
@@ -10,41 +8,8 @@ internal class A10C_Listener : AircraftListener
     private const int BRT_STEP = 5;
     private readonly DCSBIOSOutput?[] cduLines = new DCSBIOSOutput?[10];
 
-    private DCSBIOSOutput? _CDU_BRT; 
-    private DCSBIOSOutput? _MASTER_CAUTION; 
-
-    private DCSBIOSOutput? _CONSOLE_BRT; 
-    private DCSBIOSOutput? _NOSE_SW_GREENLIGHT;
-    private DCSBIOSOutput? _CANOPY_LED; 
-    private DCSBIOSOutput? _GUN_READY;
-
-    private DCSBIOSOutput? _CMSP1;
-    private DCSBIOSOutput? _CMSP2;
-
-    private DCSBIOSOutput? _HEADING;
-    private DCSBIOSOutput? _IAS;
-    private DCSBIOSOutput? _VS;
-    private DCSBIOSOutput? _ALT_PRESSURE0;
-    private DCSBIOSOutput? _ALT_PRESSURE1;
-    private DCSBIOSOutput? _ALT_PRESSURE2;
-    private DCSBIOSOutput? _ALT_PRESSURE3;
-
-    private DCSBIOSOutput? _ALTITUDE_10000ft;
-    private DCSBIOSOutput? _ALTITUDE_1000ft;
-    private DCSBIOSOutput? _ALTITUDE_100ft;
-    private DCSBIOSOutput? _ALTITUDE_100ftPointer;
-
-    private DCSBIOSOutput? _GEAR_L_SAFE;
-    private DCSBIOSOutput? _GEAR_R_SAFE;
-    private DCSBIOSOutput? _GEAR_N_SAFE;
-
-    private DCSBIOSOutput? _HANDLE_GEAR_WARNING;
-    private DCSBIOSOutput? _UFC_INTEN;
-
-    private DCSBIOSOutput? _CLOCK_ETC;
-    private DCSBIOSOutput? _CLOCK_HH;
-    private DCSBIOSOutput? _CLOCK_MM;
-    private DCSBIOSOutput? _CLOCK_SS;
+    // multi-use: registered in both RegisterCduControls and RegisterFrontpanelControls
+    private DCSBIOSOutput? _CONSOLE_BRT;
 
     private int[] pressureDigits = new int[4];
     private int[] altitudeDigits = new int[3];
@@ -68,71 +33,36 @@ internal class A10C_Listener : AircraftListener
     {
         for (int i = 0; i < 10; i++)
         {
-            cduLines[i] = DCSBIOSControlLocator.GetStringDCSBIOSOutput($"CDU_LINE{i}");
+            cduLines[i] = ResolveStr($"CDU_LINE{i}");
         }
 
-        _CDU_BRT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CDU_BRT");
-        _MASTER_CAUTION = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("MASTER_CAUTION");
-
-        _CONSOLE_BRT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("INT_CONSOLE_L_BRIGHT");
-        _NOSE_SW_GREENLIGHT= DCSBIOSControlLocator.GetUIntDCSBIOSOutput("NOSEWHEEL_STEERING");
-        _CANOPY_LED = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CANOPY_UNLOCKED");
-        _GUN_READY = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("GUN_READY");
-
-        _CMSP1 = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CMSP1");
-        _CMSP2 = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CMSP2");
-
-        _ALTITUDE_10000ft = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_10000FT_CNT");
-        _ALTITUDE_1000ft = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_1000FT_CNT");
-        _ALTITUDE_100ft = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_100FT_CNT");
-        _ALTITUDE_100ftPointer = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_100FT");
-
-        _HEADING = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("HDG_DEG");
-        _IAS = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("IAS_US_INT");
-        _VS = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("VVI");
-
-        _ALT_PRESSURE0 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE0");
-        _ALT_PRESSURE1 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE1");
-        _ALT_PRESSURE2 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE2");
-        _ALT_PRESSURE3 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE3");
-
-        _GEAR_L_SAFE = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("GEAR_L_SAFE");
-        _GEAR_R_SAFE = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("GEAR_R_SAFE");
-        _GEAR_N_SAFE = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("GEAR_N_SAFE");
-
-        _HANDLE_GEAR_WARNING = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("HANDLE_GEAR_WARNING");
-
-        _UFC_INTEN = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("UFC_INTEN");
-
-        _CLOCK_ETC = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CLOCK_ETC");
-        _CLOCK_HH = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CLOCK_HH");
-        _CLOCK_MM = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CLOCK_MM");
-        _CLOCK_SS = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CLOCK_SS");
+        _CONSOLE_BRT = ResolveUInt("INT_CONSOLE_L_BRIGHT");
     }
 
 
     protected override void RegisterCduControls()
     {
-        if (!options.DisableLightingManagement && HasCdu) { 
+        if (!options.DisableLightingManagement && HasCdu)
+        {
             Register(_CONSOLE_BRT, v =>
             {
                 SetBacklightBrightnessPercent((int)(v * 100 / _CONSOLE_BRT!.MaxValue));
             });
-            Register(_CDU_BRT, v =>
+            RegisterUInt("CDU_BRT", v =>
             {
                 var currentBrightness = GetDisplayBrightnessPercent();
                 if (v == 0)
                     SetDisplayBrightnessPercent(Math.Min(100, currentBrightness - BRT_STEP));
                 else if (v == 2)
                     SetDisplayBrightnessPercent(Math.Min(100, currentBrightness + BRT_STEP));
-            }); 
+            });
         }
 
         // --- LEDs ---
-        Register(_CANOPY_LED,         v => SetCduLeds(fm2: v == 1));
-        Register(_NOSE_SW_GREENLIGHT, v => SetCduLeds(ind: v == 1));
-        Register(_GUN_READY,          v => SetCduLeds(fm1: v == 1));
-        Register(_MASTER_CAUTION,     v => SetCduLeds(fail: v == 1));
+        RegisterUInt("CANOPY_UNLOCKED",    v => SetCduLeds(fm2: v == 1));
+        RegisterUInt("NOSEWHEEL_STEERING", v => SetCduLeds(ind: v == 1));
+        RegisterUInt("GUN_READY",          v => SetCduLeds(fm1: v == 1));
+        RegisterUInt("MASTER_CAUTION",     v => SetCduLeds(fail: v == 1));
 
         // --- CDU display lines ---
         bool bottomAligned = options.DisplayBottomAligned;
@@ -146,8 +76,8 @@ internal class A10C_Listener : AircraftListener
         {
             int cmsp1Line = bottomAligned ? 0 : 12;
             int cmsp2Line = bottomAligned ? 1 : 13;
-            RegisterString(_CMSP1, s => WriteCduLine(cmsp1Line, s));
-            RegisterString(_CMSP2, s => WriteCduLine(cmsp2Line, s));
+            RegisterStr("CMSP1", s => WriteCduLine(cmsp1Line, s));
+            RegisterStr("CMSP2", s => WriteCduLine(cmsp2Line, s));
         }
     }
 
@@ -161,87 +91,78 @@ internal class A10C_Listener : AircraftListener
                 FlightDeck.ConsoleBrightness = (byte)(v * 255 / _CONSOLE_BRT!.MaxValue);
             });
 
-            Register(_UFC_INTEN, v =>
+            RegisterUInt("UFC_INTEN", v =>
             {
                 if (v == 0)
-                {
                     FlightDeck.SegmentBrightnessPercent = Math.Min(100, FlightDeck.SegmentBrightnessPercent - BRT_STEP);
-                }
-                if (v==2)
-                {
+                if (v == 2)
                     FlightDeck.SegmentBrightnessPercent = Math.Min(100, FlightDeck.SegmentBrightnessPercent + BRT_STEP);
-                }
-
             });
         }
 
-        Register(_HEADING, v => FlightDeck.Heading = (int)v);
+        RegisterUInt("HDG_DEG", v => FlightDeck.Heading = (int)v);
 
-        Register(_VS, v => FlightDeck.VerticalSpeed = ConvertVviToVerticalSpeed((int)v));
+        RegisterUInt("VVI", v => FlightDeck.VerticalSpeed = ConvertVviToVerticalSpeed((int)v));
 
-        Register(_ALTITUDE_10000ft, v =>
+        RegisterUInt("ALT_10000FT_CNT", (ctrl, v) =>
         {
-            altitudeDigits[2] = ConvertDrumPositionToDigit(v, _ALTITUDE_10000ft!.MaxValue);
+            altitudeDigits[2] = ConvertDrumPositionToDigit(v, ctrl.MaxValue);
             FlightDeck.Altitude = CombineAltitude();
         });
-        Register(_ALTITUDE_1000ft, v =>
+        RegisterUInt("ALT_1000FT_CNT", (ctrl, v) =>
         {
-            altitudeDigits[1] = ConvertDrumPositionToDigit(v, _ALTITUDE_1000ft!.MaxValue);
+            altitudeDigits[1] = ConvertDrumPositionToDigit(v, ctrl.MaxValue);
             FlightDeck.Altitude = CombineAltitude();
         });
-        Register(_ALTITUDE_100ft, v =>
+        RegisterUInt("ALT_100FT_CNT", (ctrl, v) =>
         {
-            altitudeDigits[0] = ConvertDrumPositionToDigit(v, _ALTITUDE_100ft!.MaxValue);
+            altitudeDigits[0] = ConvertDrumPositionToDigit(v, ctrl.MaxValue);
             FlightDeck.Altitude = CombineAltitude();
         });
-        Register(_ALTITUDE_100ftPointer, v =>
+        RegisterUInt("ALT_100FT", (ctrl, v) =>
         {
-            altitudeFine = ConvertPointerPositionToFineAltitude(v, _ALTITUDE_100ftPointer!.MaxValue);
+            altitudeFine = ConvertPointerPositionToFineAltitude(v, ctrl.MaxValue);
             FlightDeck.Altitude = CombineAltitude();
         });
 
-        var pressureDrums = new[] { _ALT_PRESSURE0, _ALT_PRESSURE1, _ALT_PRESSURE2, _ALT_PRESSURE3 };
-        for (int i = 0; i < pressureDrums.Length; i++)
+        var pressureNames = new[] { "ALT_PRESSURE0", "ALT_PRESSURE1", "ALT_PRESSURE2", "ALT_PRESSURE3" };
+        for (int i = 0; i < pressureNames.Length; i++)
         {
             int digitIndex = i;
-            var drum = pressureDrums[i];
-            Register(drum, v =>
+            RegisterUInt(pressureNames[i], (ctrl, v) =>
             {
-                pressureDigits[digitIndex] = ConvertDrumPositionToDigit(v, drum!.MaxValue);
+                pressureDigits[digitIndex] = ConvertDrumPositionToDigit(v, ctrl.MaxValue);
                 FlightDeck.BaroPressure = CombineBaroPressure();
             });
         }
 
-        Register(_IAS, s =>
-        {
-            FlightDeck.Speed = (int)s;
-        });
+        RegisterUInt("IAS_US_INT", v => FlightDeck.Speed = (int)v);
 
-        Register(_GEAR_L_SAFE, v => FlightDeck.GearLeftDown = v == 1);
-        Register(_GEAR_N_SAFE, v => FlightDeck.GearNoseDown = v == 1);
-        Register(_GEAR_R_SAFE, v => FlightDeck.GearRightDown = v == 1);
-        Register(_HANDLE_GEAR_WARNING, v => FlightDeck.GearWarning = v == 1);
+        RegisterUInt("GEAR_L_SAFE", v => FlightDeck.GearLeftDown = v == 1);
+        RegisterUInt("GEAR_N_SAFE", v => FlightDeck.GearNoseDown = v == 1);
+        RegisterUInt("GEAR_R_SAFE", v => FlightDeck.GearRightDown = v == 1);
+        RegisterUInt("HANDLE_GEAR_WARNING", v => FlightDeck.GearWarning = v == 1);
 
-        RegisterString(_CLOCK_ETC, s =>
+        RegisterStr("CLOCK_ETC", s =>
         {
             var mode = s.Trim();
             _clockShowsEt = mode.Equals("ET", StringComparison.OrdinalIgnoreCase);
             UpdateClockFields();
         });
 
-        RegisterString(_CLOCK_HH, s =>
+        RegisterStr("CLOCK_HH", s =>
         {
             _clockHh = NormalizeTwoDigitClockPart(s);
             UpdateClockFields();
         });
 
-        RegisterString(_CLOCK_MM, s =>
+        RegisterStr("CLOCK_MM", s =>
         {
             _clockMm = NormalizeTwoDigitClockPart(s);
             UpdateClockFields();
         });
 
-        RegisterString(_CLOCK_SS, s =>
+        RegisterStr("CLOCK_SS", s =>
         {
             _clockSs = NormalizeTwoDigitClockPart(s);
             UpdateClockFields();

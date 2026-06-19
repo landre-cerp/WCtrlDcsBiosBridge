@@ -74,6 +74,25 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         list.Add(handler);
     }
 
+    protected void RegisterUInt(string controlId, Action<uint> handler)
+        => Register(DCSBIOSControlLocator.GetUIntDCSBIOSOutput(controlId), handler);
+
+    protected void RegisterUInt(string controlId, Action<DCSBIOSOutput, uint> handler)
+    {
+        var ctrl = DCSBIOSControlLocator.GetUIntDCSBIOSOutput(controlId);
+        if (ctrl is null) return;
+        Register(ctrl, v => handler(ctrl, v));
+    }
+
+    protected void RegisterStr(string controlId, Action<string> handler)
+        => RegisterString(DCSBIOSControlLocator.GetStringDCSBIOSOutput(controlId), handler);
+
+    protected DCSBIOSOutput? ResolveUInt(string controlId)
+        => DCSBIOSControlLocator.GetUIntDCSBIOSOutput(controlId);
+
+    protected DCSBIOSOutput? ResolveStr(string controlId)
+        => DCSBIOSControlLocator.GetStringDCSBIOSOutput(controlId);
+
     // Dispatch unique : implémentation explicite des interfaces pour que les
     // classes filles ne puissent plus l'override. Elles passent par Register/RegisterString.
     void IDcsBiosDataListener.DcsBiosDataReceived(object sender, DCSBIOSDataEventArgs e)
@@ -264,7 +283,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         }
     }
 
-    protected abstract void InitializeDcsBiosOutputs();
+    protected virtual void InitializeDcsBiosOutputs() { }
     protected abstract void RegisterCduControls();
 
     /// <summary>

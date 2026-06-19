@@ -7,46 +7,6 @@ namespace WCtrlDcsBiosBridge.Aircrafts;
 
 internal class F16C_Nav_Page
 {
-    private DCSBIOSOutput? _EHSI_COURSE;
-    private DCSBIOSOutput? _EHSI_RANGE;
-    private DCSBIOSOutput? _EHSI_MODE_LEFT;
-    private DCSBIOSOutput? _EHSI_MODE_RIGHT;
-
-    private DCSBIOSOutput? _EHSI_RANGE_INVALID;
-    private DCSBIOSOutput? _EHSI_CRS_SET_KNB;
-
-    private DCSBIOSOutput? _STANDBY_COMPASS_HEADING;
-
-    private DCSBIOSOutput? _ALT_10000;
-    private DCSBIOSOutput? _ALT_1000;
-    private DCSBIOSOutput? _ALT_100;
-    private DCSBIOSOutput? _ALT_PNEU;
-    private DCSBIOSOutput? _QNH_D0;
-    private DCSBIOSOutput? _QNH_D1;
-    private DCSBIOSOutput? _QNH_D2;
-    private DCSBIOSOutput? _QNH_D3;
-
-    private DCSBIOSOutput? _AIRSPEED;
-    private DCSBIOSOutput? _MACH;
-    private DCSBIOSOutput? _VVI;
-
-    private DCSBIOSOutput? _FUEL_TOT_10K;
-    private DCSBIOSOutput? _FUEL_TOT_1K;
-    private DCSBIOSOutput? _FUEL_TOT_100;
-
-    private DCSBIOSOutput? _FUEL_FF_10K;
-    private DCSBIOSOutput? _FUEL_FF_1K;
-    private DCSBIOSOutput? _FUEL_FF_100;
-
-    private DCSBIOSOutput? _FUEL_AL;
-    private DCSBIOSOutput? _FUEL_FR;
-    private DCSBIOSOutput? _LIGHT_FUEL_LOW;
-
-    private DCSBIOSOutput? _CLOCK_H;
-    private DCSBIOSOutput? _CLOCK_MS;
-    private DCSBIOSOutput? _CLOCK_ELAPSED_M;
-    private DCSBIOSOutput? _CLOCK_ELAPSED_S;
-
     private string _ehsiCourse = "";
     private string _ehsiRange = "";
     private string _ehsiModeLeft = "";
@@ -86,211 +46,182 @@ internal class F16C_Nav_Page
     private int _elapsedMin;
     private int _elapsedSec;
 
-    public void InitializeControls()
-    {
-        _EHSI_COURSE = DCSBIOSControlLocator.GetStringDCSBIOSOutput("EHSI_COURSE");
-        _EHSI_RANGE = DCSBIOSControlLocator.GetStringDCSBIOSOutput("EHSI_RANGE");
-        _EHSI_MODE_LEFT = DCSBIOSControlLocator.GetStringDCSBIOSOutput("EHSI_MODE_LEFT");
-        _EHSI_MODE_RIGHT = DCSBIOSControlLocator.GetStringDCSBIOSOutput("EHSI_MODE_RIGHT");
-
-        _EHSI_RANGE_INVALID = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("EHSI_RANGE_INVALID");
-        _EHSI_CRS_SET_KNB = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("EHSI_CRS_SET_KNB");
-        
-        _STANDBY_COMPASS_HEADING = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("STANDBY_COMPASS_HEADING");
-
-        _ALT_10000 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_10000_FT_CNT");
-        _ALT_1000 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_1000_FT_CNT");
-        _ALT_100 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_100_FT_CNT");
-        _ALT_PNEU = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PNEU_FLAG");
-        _QNH_D0 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE_DRUM_0_CNT");
-        _QNH_D1 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE_DRUM_1_CNT");
-        _QNH_D2 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE_DRUM_2_CNT");
-        _QNH_D3 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("ALT_PRESSURE_DRUM_3_CNT");
-
-        _AIRSPEED = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("AIRSPEED");
-        _MACH = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("MACH_INDICATOR");
-        _VVI = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("VVI");
-
-        _FUEL_TOT_10K = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("FUELTOTALIZER_10K");
-        _FUEL_TOT_1K = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("FUELTOTALIZER_1K");
-        _FUEL_TOT_100 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("FUELTOTALIZER_100");
-
-        _FUEL_FF_10K = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("FUELFLOWCOUNTER_10K");
-        _FUEL_FF_1K = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("FUELFLOWCOUNTER_1K");
-        _FUEL_FF_100 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("FUELFLOWCOUNTER_100");
-
-        _FUEL_AL = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("FUEL_AL");
-        _FUEL_FR = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("FUEL_FR");
-        _LIGHT_FUEL_LOW = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_AFT_FUEL_LOW");
-
-        _CLOCK_H = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CLOCK_CURRTIME_H");
-        _CLOCK_MS = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CLOCK_CURRTIME_MS");
-        _CLOCK_ELAPSED_M = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CLOCK_ELAPSED_TIME_M");
-        _CLOCK_ELAPSED_S = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CLOCK_ELAPSED_TIME_SEC");
-    }
-
     public void RegisterControls(
         Action<DCSBIOSOutput?, Action<uint>> register,
         Action<DCSBIOSOutput?, Action<string>> registerString,
         Func<Compositor> compositor)
     {
+        DCSBIOSOutput? UInt(string id) => DCSBIOSControlLocator.GetUIntDCSBIOSOutput(id);
+        DCSBIOSOutput? Str(string id)  => DCSBIOSControlLocator.GetStringDCSBIOSOutput(id);
+
         void Refresh() => Render(compositor());
 
-        register(_STANDBY_COMPASS_HEADING, v =>
+        register(UInt("STANDBY_COMPASS_HEADING"), v =>
         {
             _currentHeadingDeg = (int)Math.Round(v * 360.0 / 65536.0, MidpointRounding.AwayFromZero) % 360;
             Refresh();
         });
 
-        register(_EHSI_RANGE_INVALID, v =>
+        register(UInt("EHSI_RANGE_INVALID"), v =>
         {
             _ehsiRangeInvalid = v == 1;
             _rangeInvalid = v == 1;
             Refresh();
         });
 
-        register(_EHSI_CRS_SET_KNB, v =>
+        register(UInt("EHSI_CRS_SET_KNB"), v =>
         {
             _selectedCourseDeg = KnobToDegrees(v);
             Refresh();
         });
 
-        register(_ALT_10000, v =>
+        var alt10k = UInt("ALT_10000_FT_CNT");
+        register(alt10k, v =>
         {
-            _altD10k = DecodeDrumDigit(v, _ALT_10000!.MaxValue);
+            _altD10k = DecodeDrumDigit(v, alt10k!.MaxValue);
             RecomputeAltitude();
             Refresh();
         });
 
-        register(_ALT_1000, v =>
+        var alt1k = UInt("ALT_1000_FT_CNT");
+        register(alt1k, v =>
         {
-            _altD1k = DecodeDrumDigit(v, _ALT_1000!.MaxValue);
+            _altD1k = DecodeDrumDigit(v, alt1k!.MaxValue);
             RecomputeAltitude();
             Refresh();
         });
 
-        register(_ALT_100, v =>
+        var alt100 = UInt("ALT_100_FT_CNT");
+        register(alt100, v =>
         {
-            _altLowFt = DecodeSubThousandValue(v, _ALT_100!.MaxValue, 1);
+            _altLowFt = DecodeSubThousandValue(v, alt100!.MaxValue, 1);
             RecomputeAltitude();
             Refresh();
         });
 
-        register(_ALT_PNEU, v =>
+        register(UInt("ALT_PNEU_FLAG"), v =>
         {
             _pneuFail = v > 32767;
             Refresh();
         });
 
-        register(_QNH_D0, v => { _qnhD0 = DecodeDrumDigit(v, _QNH_D0!.MaxValue); Refresh(); });
-        register(_QNH_D1, v => { _qnhD1 = DecodeDrumDigit(v, _QNH_D1!.MaxValue); Refresh(); });
-        register(_QNH_D2, v => { _qnhD2 = DecodeDrumDigit(v, _QNH_D2!.MaxValue); Refresh(); });
-        register(_QNH_D3, v => { _qnhD3 = DecodeDrumDigit(v, _QNH_D3!.MaxValue); Refresh(); });
+        var qnhD0 = UInt("ALT_PRESSURE_DRUM_0_CNT"); register(qnhD0, v => { _qnhD0 = DecodeDrumDigit(v, qnhD0!.MaxValue); Refresh(); });
+        var qnhD1 = UInt("ALT_PRESSURE_DRUM_1_CNT"); register(qnhD1, v => { _qnhD1 = DecodeDrumDigit(v, qnhD1!.MaxValue); Refresh(); });
+        var qnhD2 = UInt("ALT_PRESSURE_DRUM_2_CNT"); register(qnhD2, v => { _qnhD2 = DecodeDrumDigit(v, qnhD2!.MaxValue); Refresh(); });
+        var qnhD3 = UInt("ALT_PRESSURE_DRUM_3_CNT"); register(qnhD3, v => { _qnhD3 = DecodeDrumDigit(v, qnhD3!.MaxValue); Refresh(); });
 
-        register(_AIRSPEED, v =>
+        var airspeed = UInt("AIRSPEED");
+        register(airspeed, v =>
         {
-            _iasKts = (int)Math.Round(DecodeAirspeed(v / (double)_AIRSPEED!.MaxValue));
+            _iasKts = (int)Math.Round(DecodeAirspeed(v / (double)airspeed!.MaxValue));
             Refresh();
         });
 
-        register(_MACH, v =>
+        var mach = UInt("MACH_INDICATOR");
+        register(mach, v =>
         {
-            _mach = DecodeMach(v / (double)_MACH!.MaxValue);
+            _mach = DecodeMach(v / (double)mach!.MaxValue);
             Refresh();
         });
 
-        register(_VVI, v =>
+        register(UInt("VVI"), v =>
         {
             _vviFpm = DecodeVviFpm(v);
             Refresh();
         });
 
-        register(_FUEL_TOT_10K, v =>
+        var fuelTot10k = UInt("FUELTOTALIZER_10K");
+        register(fuelTot10k, v =>
         {
-            _fuelTot10kDigit = DecodeDrumDigit(v, _FUEL_TOT_10K!.MaxValue);
+            _fuelTot10kDigit = DecodeDrumDigit(v, fuelTot10k!.MaxValue);
             RecomputeFuelTotal();
             Refresh();
         });
 
-        register(_FUEL_TOT_1K, v =>
+        var fuelTot1k = UInt("FUELTOTALIZER_1K");
+        register(fuelTot1k, v =>
         {
-            _fuelTot1kDigit = DecodeDrumDigit(v, _FUEL_TOT_1K!.MaxValue);
+            _fuelTot1kDigit = DecodeDrumDigit(v, fuelTot1k!.MaxValue);
             RecomputeFuelTotal();
             Refresh();
         });
 
-        register(_FUEL_TOT_100, v =>
+        var fuelTot100 = UInt("FUELTOTALIZER_100");
+        register(fuelTot100, v =>
         {
-            _fuelTot100Digit = DecodeDrumDigit(v, _FUEL_TOT_100!.MaxValue);
+            _fuelTot100Digit = DecodeDrumDigit(v, fuelTot100!.MaxValue);
             RecomputeFuelTotal();
             Refresh();
         });
 
-        register(_FUEL_FF_10K, v =>
+        var fuelFf10k = UInt("FUELFLOWCOUNTER_10K");
+        register(fuelFf10k, v =>
         {
-            _fuelFf10kDigit = DecodeDrumDigit(v, _FUEL_FF_10K!.MaxValue);
+            _fuelFf10kDigit = DecodeDrumDigit(v, fuelFf10k!.MaxValue);
             _fuelFlowPph = ComposeFuelFlowPph(_fuelFf10kDigit, _fuelFf1kDigit, _fuelFf100Digit);
             Refresh();
         });
 
-        register(_FUEL_FF_1K, v =>
+        var fuelFf1k = UInt("FUELFLOWCOUNTER_1K");
+        register(fuelFf1k, v =>
         {
-            _fuelFf1kDigit = DecodeDrumDigit(v, _FUEL_FF_1K!.MaxValue);
+            _fuelFf1kDigit = DecodeDrumDigit(v, fuelFf1k!.MaxValue);
             _fuelFlowPph = ComposeFuelFlowPph(_fuelFf10kDigit, _fuelFf1kDigit, _fuelFf100Digit);
             Refresh();
         });
 
-        register(_FUEL_FF_100, v =>
+        var fuelFf100 = UInt("FUELFLOWCOUNTER_100");
+        register(fuelFf100, v =>
         {
-            _fuelFf100Digit = DecodeSubThousandValue(v, _FUEL_FF_100!.MaxValue, 50);
+            _fuelFf100Digit = DecodeSubThousandValue(v, fuelFf100!.MaxValue, 50);
             _fuelFlowPph = ComposeFuelFlowPph(_fuelFf10kDigit, _fuelFf1kDigit, _fuelFf100Digit);
             Refresh();
         });
 
-        register(_FUEL_AL, v =>
+        register(UInt("FUEL_AL"), v =>
         {
             _fuelAlLb = (int)Math.Round(v * 4000.0 / 65535.0);
             Refresh();
         });
 
-        register(_FUEL_FR, v =>
+        register(UInt("FUEL_FR"), v =>
         {
             _fuelFrLb = (int)Math.Round(v * 4000.0 / 65535.0);
             Refresh();
         });
 
-        register(_LIGHT_FUEL_LOW, v =>
+        register(UInt("LIGHT_AFT_FUEL_LOW"), v =>
         {
             _fuelLow = v == 1;
             Refresh();
         });
 
-        register(_CLOCK_H, v =>
+        register(UInt("CLOCK_CURRTIME_H"), v =>
         {
             int hour12 = (int)Math.Floor(v * 12.0 / 65536.0) % 12;
             _clockH = hour12 == 0 ? 12 : hour12;
             Refresh();
         });
 
-        register(_CLOCK_MS, v =>
+        register(UInt("CLOCK_CURRTIME_MS"), v =>
         {
             _clockMin = (int)Math.Floor(v * 60.0 / 65536.0);
             Refresh();
         });
 
-        register(_CLOCK_ELAPSED_M, v =>
+        register(UInt("CLOCK_ELAPSED_TIME_M"), v =>
         {
             _elapsedMin = (int)Math.Floor(v * 60.0 / 65536.0);
             Refresh();
         });
 
-        register(_CLOCK_ELAPSED_S, v =>
+        register(UInt("CLOCK_ELAPSED_TIME_SEC"), v =>
         {
             _elapsedSec = (int)Math.Floor(v * 60.0 / 65536.0);
             Refresh();
         });
 
-        registerString(_EHSI_COURSE, s =>
+        registerString(Str("EHSI_COURSE"), s =>
         {
             _ehsiCourse = s.Trim();
             if (int.TryParse(s.Trim(), out int crs))
@@ -301,7 +232,7 @@ internal class F16C_Nav_Page
             Refresh();
         });
 
-        registerString(_EHSI_RANGE, s =>
+        registerString(Str("EHSI_RANGE"), s =>
         {
             string raw = s.Replace("\0", "").Trim();
             string normalized = NormalizeRangeText(raw);
@@ -321,13 +252,13 @@ internal class F16C_Nav_Page
             Refresh();
         });
 
-        registerString(_EHSI_MODE_LEFT, s =>
+        registerString(Str("EHSI_MODE_LEFT"), s =>
         {
             _ehsiModeLeft = s.Trim();
             Refresh();
         });
 
-        registerString(_EHSI_MODE_RIGHT, s =>
+        registerString(Str("EHSI_MODE_RIGHT"), s =>
         {
             _ehsiModeRight = s.Trim();
             Refresh();

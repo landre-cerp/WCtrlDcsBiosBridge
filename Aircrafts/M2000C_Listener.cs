@@ -1,10 +1,7 @@
-using DCS_BIOS.ControlLocator;
-using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace WCtrlDcsBiosBridge.Aircrafts;
@@ -89,15 +86,6 @@ internal class M2000C_Listener : AircraftListener
     private const uint MASK_CLP_PARK = 2048;
 
 
-    private DCSBIOSOutput? PCN_DISP_L;
-    private DCSBIOSOutput? PCN_DISP_R;
-    private DCSBIOSOutput? PCN_DISP_PREP;
-    private DCSBIOSOutput? PCN_DISP_DEST;
-
-    private DCSBIOSOutput? CLK_H;
-    private DCSBIOSOutput? CLK_M;
-    private DCSBIOSOutput? CLK_S;
-
     private string _pcnDispL = "N00.00.0";
     private string _pcnDispR = "E00.00.0";
     private string _pcnPrep = "P-1"; 
@@ -168,25 +156,25 @@ internal class M2000C_Listener : AircraftListener
             if (_clpValue3 != val) { _clpValue3 = val; UpdateCautionPanel(); }
         });
 
-        RegisterString(PCN_DISP_L, s =>
+        RegisterStr("PCN_DISP_L", s =>
         {
             _pcnDispL = s;
             UpdateCombinedPCNDisplay(GetCompositor(DEFAULT_PAGE));
         });
 
-        RegisterString(PCN_DISP_R, s =>
+        RegisterStr("PCN_DISP_R", s =>
         {
             _pcnDispR = s;
             UpdateCombinedPCNDisplay(GetCompositor(DEFAULT_PAGE));
         });
 
-        RegisterString(PCN_DISP_PREP, s =>
+        RegisterStr("PCN_DISP_PREP", s =>
         {
             _pcnPrep = s;
             UpdateCombinedPrepDestDisplay(GetCompositor(DEFAULT_PAGE));
         });
 
-        RegisterString(PCN_DISP_DEST, s =>
+        RegisterStr("PCN_DISP_DEST", s =>
         {
             _pcnDest = s;
             UpdateCombinedPrepDestDisplay(GetCompositor(DEFAULT_PAGE));
@@ -211,19 +199,19 @@ internal class M2000C_Listener : AircraftListener
             FlightDeck.GearRightDown = (val & MASK_GEAR_CONF_D)     != 0;
         });
 
-        Register(CLK_H, data =>
+        RegisterUInt("CLK_H", data =>
         {
             _clockH = decodeHourNeedle(data);
             FlightDeck.ClockUtcTime = combineHMS();
         });
-        Register(CLK_M, data =>
+        RegisterUInt("CLK_M", data =>
         {
             _clockM = decodeMinuteNeedle(data);
             _clockS = decodeSecondNeedle(data);
             FlightDeck.ClockUtcTime = combineHMS();
 
         });
-        Register(CLK_S, data =>
+        RegisterUInt("CLK_S", data =>
         {
             // CLK_S is the chronograph needle (0–15 min range, not a true seconds hand).
             int totalSeconds = (int)(data / 65535.0 * 900); // 15 min = 900s
@@ -248,19 +236,6 @@ internal class M2000C_Listener : AircraftListener
     private string decodeHourNeedle(uint data)
     {
         return ((int)(data * 12 / 65536)).ToString("D2"); 
-
-    }
-
-    protected override void InitializeDcsBiosOutputs()
-    {
-        PCN_DISP_L = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_L");
-        PCN_DISP_R = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_R");
-        PCN_DISP_PREP = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_PREP");
-        PCN_DISP_DEST = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PCN_DISP_DEST");
-
-        CLK_H = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CLK_H");
-        CLK_M = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CLK_M");
-        CLK_S = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CLK_S");
 
     }
 

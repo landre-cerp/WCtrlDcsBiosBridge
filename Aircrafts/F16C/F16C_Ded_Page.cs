@@ -7,10 +7,6 @@ namespace WCtrlDcsBiosBridge.Aircrafts;
 
 internal class F16C_Ded_Page
 {
-    private readonly DCSBIOSOutput?[] _dedMainLines = new DCSBIOSOutput?[5];
-    private readonly DCSBIOSOutput?[] _dedSecLines = new DCSBIOSOutput?[5];
-    private readonly DCSBIOSOutput?[] _dedFormats = new DCSBIOSOutput?[5];
-
     private readonly string[] _dedMainText = new string[5];
     private readonly string[] _dedFormatText = new string[5];
     private readonly string[] _dedRenderedMain = new string[5];
@@ -57,37 +53,18 @@ internal class F16C_Ded_Page
         }
     }
 
-    public void InitializeControls()
-    {
-        _dedMainLines[0] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_LINE_1");
-        _dedMainLines[1] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_LINE_2");
-        _dedMainLines[2] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_LINE_3");
-        _dedMainLines[3] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_LINE_4");
-        _dedMainLines[4] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_LINE_5");
-
-        _dedSecLines[0] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L1");
-        _dedSecLines[1] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L2");
-        _dedSecLines[2] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L3");
-        _dedSecLines[3] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L4");
-        _dedSecLines[4] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L5");
-
-        _dedFormats[0] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L1_FORMAT");
-        _dedFormats[1] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L2_FORMAT");
-        _dedFormats[2] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L3_FORMAT");
-        _dedFormats[3] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L4_FORMAT");
-        _dedFormats[4] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L5_FORMAT");
-    }
-
     public void RegisterControls(
         Action<DCSBIOSOutput?, Action<uint>> register,
         Action<DCSBIOSOutput?, Action<string>> registerString,
         Func<Compositor> compositor)
     {
+        DCSBIOSOutput? Str(string id) => DCSBIOSControlLocator.GetStringDCSBIOSOutput(id);
+
         for (int i = 0; i < 5; i++)
         {
             int idx = i;
-            registerString(_dedMainLines[idx], s => { _dedMainText[idx] = s; Render(compositor()); });
-            registerString(_dedFormats[idx], s => { _dedFormatText[idx] = s; Render(compositor()); });
+            registerString(Str($"DED_LINE_{i + 1}"), s => { _dedMainText[idx] = s; Render(compositor()); });
+            registerString(Str($"DED_L{i + 1}_FORMAT"), s => { _dedFormatText[idx] = s; Render(compositor()); });
         }
     }
 

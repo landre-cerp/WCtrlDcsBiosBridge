@@ -6,49 +6,6 @@ namespace WCtrlDcsBiosBridge.Aircrafts;
 
 internal class F16C_Rwr_Page
 {
-    private DCSBIOSOutput? _LIGHT_RWR_POWER;
-    private DCSBIOSOutput? _LIGHT_RWR_ACTIVITY;
-    private DCSBIOSOutput? _LIGHT_RWR_SEARCH;
-    private DCSBIOSOutput? _LIGHT_RWR_ALT;
-    private DCSBIOSOutput? _LIGHT_RWR_ALT_LOW;
-    private DCSBIOSOutput? _LIGHT_RWR_MSL_LAUNCH;
-    private DCSBIOSOutput? _LIGHT_RWR_MODE_PRI;
-    private DCSBIOSOutput? _LIGHT_RWR_MODE_OPEN;
-    private DCSBIOSOutput? _LIGHT_RWR_HANDOFF_H;
-    private DCSBIOSOutput? _LIGHT_RWR_SHIP_UNK;
-    private DCSBIOSOutput? _LIGHT_RWR_TGTSEP_DN;
-    private DCSBIOSOutput? _LIGHT_RWR_TGTSEP_UP;
-    private DCSBIOSOutput? _LIGHT_RWR_SYSTEST;
-
-    private DCSBIOSOutput? _LIGHT_ECM_1_A;
-    private DCSBIOSOutput? _LIGHT_ECM_1_F;
-    private DCSBIOSOutput? _LIGHT_ECM_1_S;
-    private DCSBIOSOutput? _LIGHT_ECM_1_T;
-    private DCSBIOSOutput? _LIGHT_ECM_2_A;
-    private DCSBIOSOutput? _LIGHT_ECM_2_F;
-    private DCSBIOSOutput? _LIGHT_ECM_2_S;
-    private DCSBIOSOutput? _LIGHT_ECM_2_T;
-    private DCSBIOSOutput? _LIGHT_ECM_3_A;
-    private DCSBIOSOutput? _LIGHT_ECM_3_F;
-    private DCSBIOSOutput? _LIGHT_ECM_3_S;
-    private DCSBIOSOutput? _LIGHT_ECM_3_T;
-    private DCSBIOSOutput? _LIGHT_ECM_4_A;
-    private DCSBIOSOutput? _LIGHT_ECM_4_F;
-    private DCSBIOSOutput? _LIGHT_ECM_4_S;
-    private DCSBIOSOutput? _LIGHT_ECM_4_T;
-    private DCSBIOSOutput? _LIGHT_ECM_5_A;
-    private DCSBIOSOutput? _LIGHT_ECM_5_F;
-    private DCSBIOSOutput? _LIGHT_ECM_5_S;
-    private DCSBIOSOutput? _LIGHT_ECM_5_T;
-
-    private DCSBIOSOutput? _CMDS_CH_AMOUNT;
-    private DCSBIOSOutput? _CMDS_FL_AMOUNT;
-    private DCSBIOSOutput? _CMDS_O1_AMOUNT;
-    private DCSBIOSOutput? _CMDS_O2_AMOUNT;
-    private DCSBIOSOutput? _LIGHT_CMDS_RDY;
-    private DCSBIOSOutput? _LIGHT_CMDS_GO;
-    private DCSBIOSOutput? _LIGHT_CMDS_DISP;
-
     private bool _rwrPower;
     private bool _rwrActivity;
     private bool _rwrSearch;
@@ -92,96 +49,53 @@ internal class F16C_Rwr_Page
     private string _cmdsO1 = "---";
     private string _cmdsO2 = "---";
 
-    public void InitializeControls()
-    {
-        _LIGHT_RWR_POWER = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_RWR_POWER");
-        _LIGHT_RWR_ACTIVITY = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_RWR_ACTIVITY");
-        _LIGHT_RWR_SEARCH = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_RWR_SEARCH");
-        _LIGHT_RWR_ALT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_RWR_ALT");
-        _LIGHT_RWR_ALT_LOW = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_RWR_ALT_LOW");
-        _LIGHT_RWR_MSL_LAUNCH = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_RWR_MSL_LAUNCH");
-        _LIGHT_RWR_MODE_PRI = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_RWR_MODE_PRI");
-        _LIGHT_RWR_MODE_OPEN = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_RWR_MODE_OPEN");
-        _LIGHT_RWR_HANDOFF_H = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_RWR_HANDOFF_H");
-        _LIGHT_RWR_SHIP_UNK = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_RWR_SHIP_UNK");
-        _LIGHT_RWR_TGTSEP_DN = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_RWR_TGTSEP_DN");
-        _LIGHT_RWR_TGTSEP_UP = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_RWR_TGTSEP_UP");
-        _LIGHT_RWR_SYSTEST = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_RWR_SYSTEST");
-
-        _LIGHT_ECM_1_A = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_1_A");
-        _LIGHT_ECM_1_F = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_1_F");
-        _LIGHT_ECM_1_S = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_1_S");
-        _LIGHT_ECM_1_T = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_1_T");
-        _LIGHT_ECM_2_A = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_2_A");
-        _LIGHT_ECM_2_F = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_2_F");
-        _LIGHT_ECM_2_S = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_2_S");
-        _LIGHT_ECM_2_T = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_2_T");
-        _LIGHT_ECM_3_A = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_3_A");
-        _LIGHT_ECM_3_F = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_3_F");
-        _LIGHT_ECM_3_S = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_3_S");
-        _LIGHT_ECM_3_T = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_3_T");
-        _LIGHT_ECM_4_A = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_4_A");
-        _LIGHT_ECM_4_F = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_4_F");
-        _LIGHT_ECM_4_S = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_4_S");
-        _LIGHT_ECM_4_T = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_4_T");
-        _LIGHT_ECM_5_A = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_5_A");
-        _LIGHT_ECM_5_F = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_5_F");
-        _LIGHT_ECM_5_S = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_5_S");
-        _LIGHT_ECM_5_T = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_ECM_5_T");
-
-        _CMDS_CH_AMOUNT = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CMDS_CH_AMOUNT");
-        _CMDS_FL_AMOUNT = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CMDS_FL_AMOUNT");
-        _CMDS_O1_AMOUNT = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CMDS_O1_AMOUNT");
-        _CMDS_O2_AMOUNT = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CMDS_O2_AMOUNT");
-        _LIGHT_CMDS_RDY = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_CMDS_RDY");
-        _LIGHT_CMDS_GO = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_CMDS_GO");
-        _LIGHT_CMDS_DISP = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("LIGHT_CMDS_DISP");
-    }
-
     public void RegisterControls(
         Action<DCSBIOSOutput?, Action<uint>> register,
         Action<DCSBIOSOutput?, Action<string>> registerString,
         Func<Compositor> compositor)
     {
+        DCSBIOSOutput? UInt(string id) => DCSBIOSControlLocator.GetUIntDCSBIOSOutput(id);
+        DCSBIOSOutput? Str(string id)  => DCSBIOSControlLocator.GetStringDCSBIOSOutput(id);
+
         void Light(DCSBIOSOutput? ctrl, Action<bool> set)
             => register(ctrl, v => { set(v == 1); Render(compositor()); });
 
-        Light(_LIGHT_RWR_POWER, b => _rwrPower = b);
-        Light(_LIGHT_RWR_ACTIVITY, b => _rwrActivity = b);
-        Light(_LIGHT_RWR_SEARCH, b => _rwrSearch = b);
-        Light(_LIGHT_RWR_ALT, b => _rwrAlt = b);
-        Light(_LIGHT_RWR_ALT_LOW, b => _rwrAltLow = b);
-        Light(_LIGHT_RWR_MSL_LAUNCH, b => _rwrMslLaunch = b);
-        Light(_LIGHT_RWR_MODE_PRI, b => _rwrModePri = b);
-        Light(_LIGHT_RWR_MODE_OPEN, b => _rwrModeOpen = b);
-        Light(_LIGHT_RWR_HANDOFF_H, b => _rwrHandoff = b);
-        Light(_LIGHT_RWR_SHIP_UNK, b => _rwrShipUnk = b);
-        Light(_LIGHT_RWR_TGTSEP_DN, b => _rwrTgtSepDn = b);
-        Light(_LIGHT_RWR_TGTSEP_UP, b => _rwrTgtSepUp = b);
-        Light(_LIGHT_RWR_SYSTEST, b => _rwrSysTest = b);
+        Light(UInt("LIGHT_RWR_POWER"),     b => _rwrPower = b);
+        Light(UInt("LIGHT_RWR_ACTIVITY"),  b => _rwrActivity = b);
+        Light(UInt("LIGHT_RWR_SEARCH"),    b => _rwrSearch = b);
+        Light(UInt("LIGHT_RWR_ALT"),       b => _rwrAlt = b);
+        Light(UInt("LIGHT_RWR_ALT_LOW"),   b => _rwrAltLow = b);
+        Light(UInt("LIGHT_RWR_MSL_LAUNCH"),b => _rwrMslLaunch = b);
+        Light(UInt("LIGHT_RWR_MODE_PRI"),  b => _rwrModePri = b);
+        Light(UInt("LIGHT_RWR_MODE_OPEN"), b => _rwrModeOpen = b);
+        Light(UInt("LIGHT_RWR_HANDOFF_H"), b => _rwrHandoff = b);
+        Light(UInt("LIGHT_RWR_SHIP_UNK"),  b => _rwrShipUnk = b);
+        Light(UInt("LIGHT_RWR_TGTSEP_DN"), b => _rwrTgtSepDn = b);
+        Light(UInt("LIGHT_RWR_TGTSEP_UP"), b => _rwrTgtSepUp = b);
+        Light(UInt("LIGHT_RWR_SYSTEST"),   b => _rwrSysTest = b);
 
-        Light(_LIGHT_ECM_1_A, b => _ecm1A = b); Light(_LIGHT_ECM_1_F, b => _ecm1F = b);
-        Light(_LIGHT_ECM_1_S, b => _ecm1S = b); Light(_LIGHT_ECM_1_T, b => _ecm1T = b);
-        Light(_LIGHT_ECM_2_A, b => _ecm2A = b); Light(_LIGHT_ECM_2_F, b => _ecm2F = b);
-        Light(_LIGHT_ECM_2_S, b => _ecm2S = b); Light(_LIGHT_ECM_2_T, b => _ecm2T = b);
-        Light(_LIGHT_ECM_3_A, b => _ecm3A = b); Light(_LIGHT_ECM_3_F, b => _ecm3F = b);
-        Light(_LIGHT_ECM_3_S, b => _ecm3S = b); Light(_LIGHT_ECM_3_T, b => _ecm3T = b);
-        Light(_LIGHT_ECM_4_A, b => _ecm4A = b); Light(_LIGHT_ECM_4_F, b => _ecm4F = b);
-        Light(_LIGHT_ECM_4_S, b => _ecm4S = b); Light(_LIGHT_ECM_4_T, b => _ecm4T = b);
-        Light(_LIGHT_ECM_5_A, b => _ecm5A = b); Light(_LIGHT_ECM_5_F, b => _ecm5F = b);
-        Light(_LIGHT_ECM_5_S, b => _ecm5S = b); Light(_LIGHT_ECM_5_T, b => _ecm5T = b);
+        Light(UInt("LIGHT_ECM_1_A"), b => _ecm1A = b); Light(UInt("LIGHT_ECM_1_F"), b => _ecm1F = b);
+        Light(UInt("LIGHT_ECM_1_S"), b => _ecm1S = b); Light(UInt("LIGHT_ECM_1_T"), b => _ecm1T = b);
+        Light(UInt("LIGHT_ECM_2_A"), b => _ecm2A = b); Light(UInt("LIGHT_ECM_2_F"), b => _ecm2F = b);
+        Light(UInt("LIGHT_ECM_2_S"), b => _ecm2S = b); Light(UInt("LIGHT_ECM_2_T"), b => _ecm2T = b);
+        Light(UInt("LIGHT_ECM_3_A"), b => _ecm3A = b); Light(UInt("LIGHT_ECM_3_F"), b => _ecm3F = b);
+        Light(UInt("LIGHT_ECM_3_S"), b => _ecm3S = b); Light(UInt("LIGHT_ECM_3_T"), b => _ecm3T = b);
+        Light(UInt("LIGHT_ECM_4_A"), b => _ecm4A = b); Light(UInt("LIGHT_ECM_4_F"), b => _ecm4F = b);
+        Light(UInt("LIGHT_ECM_4_S"), b => _ecm4S = b); Light(UInt("LIGHT_ECM_4_T"), b => _ecm4T = b);
+        Light(UInt("LIGHT_ECM_5_A"), b => _ecm5A = b); Light(UInt("LIGHT_ECM_5_F"), b => _ecm5F = b);
+        Light(UInt("LIGHT_ECM_5_S"), b => _ecm5S = b); Light(UInt("LIGHT_ECM_5_T"), b => _ecm5T = b);
 
-        Light(_LIGHT_CMDS_RDY, b => _cmdsRdy = b);
-        Light(_LIGHT_CMDS_GO, b => _cmdsGo = b);
-        Light(_LIGHT_CMDS_DISP, b => _cmdsDisp = b);
+        Light(UInt("LIGHT_CMDS_RDY"),  b => _cmdsRdy = b);
+        Light(UInt("LIGHT_CMDS_GO"),   b => _cmdsGo = b);
+        Light(UInt("LIGHT_CMDS_DISP"), b => _cmdsDisp = b);
 
         void Amount(DCSBIOSOutput? ctrl, Action<string> set)
             => registerString(ctrl, s => { set(s.Trim()); Render(compositor()); });
 
-        Amount(_CMDS_CH_AMOUNT, s => _cmdsCh = s);
-        Amount(_CMDS_FL_AMOUNT, s => _cmdsFl = s);
-        Amount(_CMDS_O1_AMOUNT, s => _cmdsO1 = s);
-        Amount(_CMDS_O2_AMOUNT, s => _cmdsO2 = s);
+        Amount(Str("CMDS_CH_AMOUNT"), s => _cmdsCh = s);
+        Amount(Str("CMDS_FL_AMOUNT"), s => _cmdsFl = s);
+        Amount(Str("CMDS_O1_AMOUNT"), s => _cmdsO1 = s);
+        Amount(Str("CMDS_O2_AMOUNT"), s => _cmdsO2 = s);
     }
 
     public void Render(Compositor o)
