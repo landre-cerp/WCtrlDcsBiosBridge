@@ -3,15 +3,12 @@ using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Aircrafts;
 
-internal class FA18C_Listener : AircraftListener
+internal partial class FA18C_Listener : AircraftListener
 {
     private const string IFEI_PAGE = "IFEI";
 
     uint _masterCaution = 0;
     uint _lightMode = 0; // 2=NVG, 1=NITE, 0=DAY
-
-    private readonly FA18C_UFC_Page _ufcPage = new();
-    private readonly FA18C_IFEI_Page _ifeiPage = new();
 
     private readonly Key _nextPageKey;
     private readonly Key _prevPageKey;
@@ -34,12 +31,12 @@ internal class FA18C_Listener : AircraftListener
         if (e.Key == _nextPageKey)
         {
             _currentPage = IFEI_PAGE;
-            _ifeiPage.Render(GetCompositor(IFEI_PAGE), _lightMode);
+            RenderIfei();
         }
         else if (e.Key == _prevPageKey)
         {
             _currentPage = DEFAULT_PAGE;
-            _ufcPage.Render(GetCompositor(DEFAULT_PAGE));
+            RenderUfc();
         }
     }
 
@@ -61,8 +58,8 @@ internal class FA18C_Listener : AircraftListener
             }
         });
 
-        _ufcPage.RegisterControls(RegisterString, () => _ufcPage.Render(GetCompositor(DEFAULT_PAGE)));
-        _ifeiPage.RegisterControls(RegisterString, () => _ifeiPage.Render(GetCompositor(IFEI_PAGE), _lightMode));
+        RegisterUfcControls();
+        RegisterIfeiControls();
     }
 
     protected override void RegisterFrontpanelControls()
@@ -74,7 +71,7 @@ internal class FA18C_Listener : AircraftListener
         RegisterUInt("FLP_LG_HALF_FLAPS_LT",   v => FlightDeck.LedAutoBrkLoDecel = v == 1);
         RegisterUInt("FLP_LG_FULL_FLAPS_LT",   v => FlightDeck.LedAutoBrkMedDecel = v == 1);
 
-        _ifeiPage.RegisterFrontPanelControls(RegisterString, FlightDeck);
+        RegisterIfeiFrontPanelControls();
     }
 
     protected override void Dispose(bool disposing)

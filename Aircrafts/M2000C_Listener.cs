@@ -11,11 +11,11 @@ internal class M2000C_Listener : AircraftListener
     // --- Register addresses ---
     // The PCN/CLP light registers and gear registers are read via RegisterRaw(address, handler).
     // Named DCS-BIOS outputs for these registers either do not exist in the M-2000C module JSON or
-    // have incorrect mask/shift definitions, so the standard Register() path cannot be used.
+    // have incorrect mask/shift definitions, so the standard RegisterUInt() path cannot be used.
     // RegisterRaw passes the unmasked 16-bit register value to the callback; individual bits are
     // extracted using the masks defined below.
     // If the upstream DCS-BIOS definitions are corrected, these RegisterRaw calls can be replaced
-    // with Register(DCSBIOSOutput?, handler) using the corresponding named outputs.
+    // with RegisterUInt(id, handler) using the corresponding named outputs.
     private const uint LANDING_GEAR_LEVER_ADDR = 0x72a4;
     private const uint GEAR_CONF_AUX_ADDR = 0x7244;
 

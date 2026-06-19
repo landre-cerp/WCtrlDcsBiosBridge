@@ -44,7 +44,7 @@ internal class A10C_Listener : AircraftListener
     {
         if (!options.DisableLightingManagement && HasCdu)
         {
-            Register(_CONSOLE_BRT, v =>
+            RegisterUInt(_CONSOLE_BRT, v =>
             {
                 SetBacklightBrightnessPercent((int)(v * 100 / _CONSOLE_BRT!.MaxValue));
             });
@@ -69,7 +69,7 @@ internal class A10C_Listener : AircraftListener
         for (int i = 0; i < cduLines.Length; i++)
         {
             int line = bottomAligned ? i + 4 : i;
-            RegisterString(cduLines[i], s => WriteCduLine(line, s));
+            RegisterStr(cduLines[i], s => WriteCduLine(line, s));
         }
 
         if (options.DisplayCMS)
@@ -85,7 +85,7 @@ internal class A10C_Listener : AircraftListener
     {
         if (!options.DisableLightingManagement)
         {
-            Register(_CONSOLE_BRT, v =>
+            RegisterUInt(_CONSOLE_BRT, v =>
             {
                 // Convert to byte range (0-255) directly, not percentage
                 FlightDeck.ConsoleBrightness = (byte)(v * 255 / _CONSOLE_BRT!.MaxValue);

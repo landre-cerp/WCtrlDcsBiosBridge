@@ -125,11 +125,11 @@ internal class CH47F_Listener : AircraftListener
         for (int i = 0; i < MAX_CDU_LINES; i++)
         {
             int lineIndex = i;
-            RegisterString(pilotCduColorLines[lineIndex], s =>
+            RegisterStr(pilotCduColorLines[lineIndex], s =>
             {
                 _pilotColorMap[lineIndex] = NormalizeCduString(s);
             });
-            RegisterString(pilotCduLines[lineIndex], s =>
+            RegisterStr(pilotCduLines[lineIndex], s =>
             {
                 WriteCduLine(DEFAULT_PAGE, lineIndex, NormalizeCduString(s), _pilotColorMap);
             });
@@ -139,11 +139,11 @@ internal class CH47F_Listener : AircraftListener
         for (int i = 0; i < MAX_CDU_LINES; i++)
         {
             int lineIndex = i;
-            RegisterString(copilotCduColorLines[lineIndex], s =>
+            RegisterStr(copilotCduColorLines[lineIndex], s =>
             {
                 _copilotColorMap[lineIndex] = NormalizeCduString(s);
             });
-            RegisterString(copilotCduLines[lineIndex], s =>
+            RegisterStr(copilotCduLines[lineIndex], s =>
             {
                 WriteCduLine(COPILOT_PAGE, lineIndex, NormalizeCduString(s), _copilotColorMap);
             });

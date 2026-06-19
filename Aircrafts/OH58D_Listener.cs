@@ -105,13 +105,13 @@ internal class OH58D_Listener : AircraftListener
         for (int i = 0; i < 5; i++)
         {
             int idx = i;  // capture loop variable
-            Register(_rfiOutputs[idx].SelectCopilot,  v => { _rfiData[idx].SelectCopilot = v;  UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
-            Register(_rfiOutputs[idx].SelectPilot,    v => { _rfiData[idx].SelectPilot = v;    UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
-            Register(_rfiOutputs[idx].Cipher, v => { _rfiData[idx].Cipher = v==1 ? "☐" : " "; UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
-            RegisterString(_rfiOutputs[idx].Channel,  v => { _rfiData[idx].Channel = v;        UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
+            RegisterUInt(_rfiOutputs[idx].SelectCopilot,  v => { _rfiData[idx].SelectCopilot = v;  UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
+            RegisterUInt(_rfiOutputs[idx].SelectPilot,    v => { _rfiData[idx].SelectPilot = v;    UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
+            RegisterUInt(_rfiOutputs[idx].Cipher, v => { _rfiData[idx].Cipher = v==1 ? "☐" : " "; UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
+            RegisterStr(_rfiOutputs[idx].Channel,  v => { _rfiData[idx].Channel = v;        UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
             
-            RegisterString(_rfiOutputs[idx].Number,   v => { _rfiData[idx].Number = v;         UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
-            RegisterString(_rfiOutputs[idx].Frequency,v => { _rfiData[idx].Frequency = v;      UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
+            RegisterStr(_rfiOutputs[idx].Number,   v => { _rfiData[idx].Number = v;         UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
+            RegisterStr(_rfiOutputs[idx].Frequency,v => { _rfiData[idx].Frequency = v;      UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
         }
 
         RegisterStr("MPD_DISPLAY_L", v =>

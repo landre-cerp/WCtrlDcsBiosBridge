@@ -5,7 +5,7 @@ namespace WCtrlDcsBiosBridge.Aircrafts;
 
 internal enum DisplayMode { DED, NAV, RWR }
 
-internal class F16C_Listener : AircraftListener
+internal partial class F16C_Listener : AircraftListener
 {
     private const string NAV_PAGE = "NAV";
     private const string RWR_PAGE = "RWR";
@@ -13,10 +13,6 @@ internal class F16C_Listener : AircraftListener
     private readonly Key _dedDisplayKey;
     private readonly Key _navDisplayKey;
     private readonly Key _rwrDisplayKey;
-
-    private readonly F16C_Ded_Page _dedPage = new();
-    private readonly F16C_Nav_Page _navPage = new();
-    private readonly F16C_Rwr_Page _rwrPage = new();
 
     public F16C_Listener(UserOptions options)
         : base(AircraftRegistry.F16C, options)
@@ -59,16 +55,16 @@ internal class F16C_Listener : AircraftListener
         {
             case DisplayMode.DED:
                 _currentPage = DEFAULT_PAGE;
-                _dedPage.InvalidateCache();
-                _dedPage.Render(GetCompositor(DEFAULT_PAGE));
+                InvalidateDedCache();
+                RenderDed();
                 break;
             case DisplayMode.NAV:
                 _currentPage = NAV_PAGE;
-                _navPage.Render(GetCompositor(NAV_PAGE));
+                RenderNav();
                 break;
             case DisplayMode.RWR:
                 _currentPage = RWR_PAGE;
-                _rwrPage.Render(GetCompositor(RWR_PAGE));
+                RenderRwr();
                 break;
         }
     }
@@ -91,9 +87,9 @@ internal class F16C_Listener : AircraftListener
 
         RegisterUInt("LIGHT_MASTER_CAUTION", v => SetCduLeds(fail: v == 1));
 
-        _dedPage.RegisterControls(Register, RegisterString, () => GetCompositor(DEFAULT_PAGE));
-        _navPage.RegisterControls(Register, RegisterString, () => GetCompositor(NAV_PAGE));
-        _rwrPage.RegisterControls(Register, RegisterString, () => GetCompositor(RWR_PAGE));
+        RegisterDedControls();
+        RegisterNavControls();
+        RegisterRwrControls();
     }
 
     protected override void RegisterFrontpanelControls()
