@@ -109,6 +109,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
 
     // Dispatch unique : implémentation explicite des interfaces pour que les
     // classes filles ne puissent plus l'override. Elles passent par RegisterUInt/RegisterStr.
+    void IDcsBiosDataListener.DcsBiosDataReceived(object sender, DCSBIOSDataEventArgs e)
     {
         try
         {
