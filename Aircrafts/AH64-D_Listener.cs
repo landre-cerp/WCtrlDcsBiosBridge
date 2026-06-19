@@ -35,17 +35,17 @@ internal class AH64D_Listener : AircraftListener
             GetCompositor(DEFAULT_PAGE).Line(0).Green().WriteLine($"{data.Substring(0, 10)}    {data.Substring(46, 10)}");
         });
 
-        RegisterStr("PLT_EUFD_LINE1",  s => GetCompositor(DEFAULT_PAGE).Line(1).Green().WriteLine(NormalizeEufdString(s).Substring(38, 17)));
-        RegisterStr("PLT_EUFD_LINE2",  s => GetCompositor(DEFAULT_PAGE).Line(2).Green().WriteLine(NormalizeEufdString(s).Substring(38, 17)));
-        RegisterStr("PLT_EUFD_LINE3",  s => GetCompositor(DEFAULT_PAGE).Line(3).Green().WriteLine(NormalizeEufdString(s).Substring(38, 17)));
-        RegisterStr("PLT_EUFD_LINE4",  s => GetCompositor(DEFAULT_PAGE).Line(4).Green().WriteLine(NormalizeEufdString(s).Substring(38, 17)));
-        RegisterStr("PLT_EUFD_LINE5",  s => GetCompositor(DEFAULT_PAGE).Line(5).Green().WriteLine(NormalizeEufdString(s).Substring(38, 17)));
+        for (int i = 1; i <= 5; i++)
+        {
+            int line = i;
+            RegisterStr($"PLT_EUFD_LINE{line}", s => GetCompositor(DEFAULT_PAGE).Line(line).Green().WriteLine(NormalizeEufdString(s).Substring(38, 17)));
+        }
 
-        RegisterStr("PLT_EUFD_LINE8",  s => GetCompositor(DEFAULT_PAGE).Line(7).Green().WriteLine(NormalizeEufdString(s).Substring(0, 18)));
-        RegisterStr("PLT_EUFD_LINE9",  s => GetCompositor(DEFAULT_PAGE).Line(8).Green().WriteLine(NormalizeEufdString(s).Substring(0, 18)));
-        RegisterStr("PLT_EUFD_LINE10", s => GetCompositor(DEFAULT_PAGE).Line(9).Green().WriteLine(NormalizeEufdString(s).Substring(0, 18)));
-        RegisterStr("PLT_EUFD_LINE11", s => GetCompositor(DEFAULT_PAGE).Line(10).Green().WriteLine(NormalizeEufdString(s).Substring(0, 18)));
-        RegisterStr("PLT_EUFD_LINE12", s => GetCompositor(DEFAULT_PAGE).Line(11).Green().WriteLine(NormalizeEufdString(s).Substring(0, 18)));
+        for (int i = 8; i <= 12; i++)
+        {
+            int line = i;
+            RegisterStr($"PLT_EUFD_LINE{line}", s => GetCompositor(DEFAULT_PAGE).Line(line - 1).Green().WriteLine(NormalizeEufdString(s).Substring(0, 18)));
+        }
 
         GetCompositor(DEFAULT_PAGE).Line(12).Amber().WriteLine("- Keyboard -------------");
 
