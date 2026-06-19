@@ -159,8 +159,8 @@ public static readonly IReadOnlyList<AircraftDescriptor> All = new[]
 | `RegisterStr(id, s => ...)` | Resolve + register a string output in one call. |
 | `ResolveUInt(id)` | Resolve an integer output for later use (multi-use fields or array loops). |
 | `ResolveStr(id)` | Resolve a string output for later use. |
-| `Register(output, v => ...)` | Register a pre-resolved integer output. |
-| `RegisterString(output, s => ...)` | Register a pre-resolved string output. |
+| `RegisterUInt(output, v => ...)` | Register a pre-resolved integer output. |
+| `RegisterStr(output, s => ...)` | Register a pre-resolved string output. |
 | `RegisterRaw(address, v => ...)` | Low-level handler for raw bitfield registers when named DCS-BIOS outputs are unavailable or have incorrect mask/shift definitions (M-2000C uses this). `v` is the raw unmasked 16-bit register value; apply bitmasks manually. Also handles the address whitelist registration required by the protocol parser — no extra setup needed. |
 | `GetCompositor(DEFAULT_PAGE).Line(n)...` | Write a CDU line (`.Green()`, `.White()`, `.WriteLine(...)`, ...). |
 | `SetCduLeds(fail:, fm1:, fm2:, fm:, ind:, rdy:)` | Set CDU status LEDs. |
