@@ -77,13 +77,8 @@ internal partial class F16C_Listener : AircraftListener
             CduDevice.KeyDown += HandleKeyDown;
         }
 
-        if (!options.DisableLightingManagement)
-        {
-            RegisterUInt("PRI_CONSOLES_BRT_KNB", (ctrl, v) =>
-                SetBacklightBrightnessPercent((int)(v * 100 / ctrl.MaxValue)));
-            RegisterUInt("PRI_DATA_DISPLAY_BRT_KNB", (ctrl, v) =>
-                SetDisplayBrightnessPercent((int)(v * 100 / ctrl.MaxValue)));
-        }
+        RegisterLight("PRI_CONSOLES_BRT_KNB",    (ctrl, v) => SetCduBacklightBrightnessPercent((int)(v * 100 / ctrl.MaxValue)));
+        RegisterLight("PRI_DATA_DISPLAY_BRT_KNB", (ctrl, v) => SetCduDisplayBrightnessPercent((int)(v * 100 / ctrl.MaxValue)));
 
         RegisterUInt("LIGHT_MASTER_CAUTION", v => SetCduLeds(fail: v == 1));
 

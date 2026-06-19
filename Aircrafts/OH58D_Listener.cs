@@ -72,15 +72,13 @@ internal class OH58D_Listener : AircraftListener
 
     protected override void RegisterCduControls() {
 
-        if (!options.DisableLightingManagement && HasCdu) {
-            RegisterUInt("RFI_BRIGHTNESS", (ctrl, v) =>
-            {
-                var brightness = (int)v * 100 / ctrl.MaxValue;
-                SetBacklightBrightnessPercent(brightness);
-                SetDisplayBrightnessPercent(brightness);
-                SetLedBrightnessPercent(brightness);
-            });
-        }
+        RegisterLight("RFI_BRIGHTNESS", (ctrl, v) =>
+        {
+            var brightness = (int)v * 100 / ctrl.MaxValue;
+            SetCduBacklightBrightnessPercent(brightness);
+            SetCduDisplayBrightnessPercent(brightness);
+            SetCduLedBrightnessPercent(brightness);
+        });
 
         RegisterUInt("MPD_SEL_1", v => { if (v != 0) { _mpd_selected = 1; } });
         RegisterUInt("MPD_SEL_2", v => { if (v != 0) { _mpd_selected = 2; } });

@@ -14,16 +14,13 @@ internal class AH64D_Listener : AircraftListener
 
     protected override void RegisterCduControls()
     {
-        if (!options.DisableLightingManagement && HasCdu)
+        RegisterLight("PLT_EUFD_BRT", v =>
         {
-            RegisterUInt("PLT_EUFD_BRT", v =>
-            {
-                int eufdBright = 100 * (int)v / 65536;
-                SetBacklightBrightnessPercent(eufdBright);
-                SetDisplayBrightnessPercent(eufdBright);
-                SetLedBrightnessPercent(eufdBright);
-            });
-        }
+            int eufdBright = 100 * (int)v / 65536;
+            SetCduBacklightBrightnessPercent(eufdBright);
+            SetCduDisplayBrightnessPercent(eufdBright);
+            SetCduLedBrightnessPercent(eufdBright);
+        });
 
         // Note that they share the same Address but bit is different (10 and 11)
         RegisterUInt("PLT_MASTER_CAUTION_L", v => SetCduLeds(fail: v == 1));

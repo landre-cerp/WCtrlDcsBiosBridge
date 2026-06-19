@@ -42,21 +42,16 @@ internal class A10C_Listener : AircraftListener
 
     protected override void RegisterCduControls()
     {
-        if (!options.DisableLightingManagement && HasCdu)
+        RegisterLight(_CONSOLE_BRT, v =>
+            SetCduBacklightBrightnessPercent((int)(v * 100 / _CONSOLE_BRT!.MaxValue)));
+        RegisterLight("CDU_BRT", v =>
         {
-            RegisterUInt(_CONSOLE_BRT, v =>
-            {
-                SetBacklightBrightnessPercent((int)(v * 100 / _CONSOLE_BRT!.MaxValue));
-            });
-            RegisterUInt("CDU_BRT", v =>
-            {
-                var currentBrightness = GetDisplayBrightnessPercent();
-                if (v == 0)
-                    SetDisplayBrightnessPercent(Math.Min(100, currentBrightness - BRT_STEP));
-                else if (v == 2)
-                    SetDisplayBrightnessPercent(Math.Min(100, currentBrightness + BRT_STEP));
-            });
-        }
+            var currentBrightness = GetDisplayBrightnessPercent();
+            if (v == 0)
+                SetCduDisplayBrightnessPercent(Math.Min(100, currentBrightness - BRT_STEP));
+            else if (v == 2)
+                SetCduDisplayBrightnessPercent(Math.Min(100, currentBrightness + BRT_STEP));
+        });
 
         // --- LEDs ---
         RegisterUInt("CANOPY_UNLOCKED",    v => SetCduLeds(fm2: v == 1));
@@ -83,22 +78,15 @@ internal class A10C_Listener : AircraftListener
 
     protected override void RegisterFrontpanelControls()
     {
-        if (!options.DisableLightingManagement)
+        RegisterLight(_CONSOLE_BRT, v =>
+            FlightDeck.ConsoleBrightness = (byte)(v * 255 / _CONSOLE_BRT!.MaxValue));
+        RegisterLight("UFC_INTEN", v =>
         {
-            RegisterUInt(_CONSOLE_BRT, v =>
-            {
-                // Convert to byte range (0-255) directly, not percentage
-                FlightDeck.ConsoleBrightness = (byte)(v * 255 / _CONSOLE_BRT!.MaxValue);
-            });
-
-            RegisterUInt("UFC_INTEN", v =>
-            {
-                if (v == 0)
-                    FlightDeck.SegmentBrightnessPercent = Math.Min(100, FlightDeck.SegmentBrightnessPercent - BRT_STEP);
-                if (v == 2)
-                    FlightDeck.SegmentBrightnessPercent = Math.Min(100, FlightDeck.SegmentBrightnessPercent + BRT_STEP);
-            });
-        }
+            if (v == 0)
+                FlightDeck.SegmentBrightnessPercent = Math.Min(100, FlightDeck.SegmentBrightnessPercent - BRT_STEP);
+            if (v == 2)
+                FlightDeck.SegmentBrightnessPercent = Math.Min(100, FlightDeck.SegmentBrightnessPercent + BRT_STEP);
+        });
 
         RegisterUInt("HDG_DEG", v => FlightDeck.Heading = (int)v);
 

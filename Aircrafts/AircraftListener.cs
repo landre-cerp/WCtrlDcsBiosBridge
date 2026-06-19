@@ -101,6 +101,24 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         RegisterStringCore(output, handler);
     }
 
+    protected void RegisterLight(string controlId, Action<uint> handler)
+    {
+        if (options.DisableLightingManagement) return;
+        RegisterUInt(controlId, handler);
+    }
+
+    protected void RegisterLight(string controlId, Action<DCSBIOSOutput, uint> handler)
+    {
+        if (options.DisableLightingManagement) return;
+        RegisterUInt(controlId, handler);
+    }
+
+    protected void RegisterLight(DCSBIOSOutput? output, Action<uint> handler)
+    {
+        if (options.DisableLightingManagement) return;
+        RegisterUInt(output, handler);
+    }
+
     protected DCSBIOSOutput? ResolveUInt(string controlId)
         => DCSBIOSControlLocator.GetUIntDCSBIOSOutput(controlId);
 
@@ -215,9 +233,9 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     private void InitMcduBrightness(bool disabledBrightness)
     {
         if (disabledBrightness || cdu == null) return;
-        SetBacklightBrightnessPercent(50);
-        SetLedBrightnessPercent(100);
-        SetDisplayBrightnessPercent(100);
+        SetCduBacklightBrightnessPercent(50);
+        SetCduLedBrightnessPercent(100);
+        SetCduDisplayBrightnessPercent(100);
     }
 
     public void Stop()
@@ -246,7 +264,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         }
     }
 
-    protected void SetDisplayBrightnessPercent(int value)
+    protected void SetCduDisplayBrightnessPercent(int value)
     {
         if (cdu == null) return;
         lock (cdu.State.SyncRoot)
@@ -256,7 +274,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         }
     }
 
-    protected void SetBacklightBrightnessPercent(int value)
+    protected void SetCduBacklightBrightnessPercent(int value)
     {
         if (cdu == null) return;
         lock (cdu.State.SyncRoot)
@@ -266,7 +284,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         }
     }
 
-    protected void SetLedBrightnessPercent(int value)
+    protected void SetCduLedBrightnessPercent(int value)
     {
         if (cdu == null) return;
         lock (cdu.State.SyncRoot)
