@@ -5,8 +5,8 @@ namespace WCtrlDcsBiosBridge.Aircrafts;
 
 internal partial class F16C_Listener
 {
-    private readonly string[] _dedMainText   = new string[5];
-    private readonly string[] _dedFormatText = new string[5];
+    private readonly string[] _dedMainText   = ["", "", "", "", ""];
+    private readonly string[] _dedFormatText = ["", "", "", "", ""];
     private readonly string[] _dedRenderedMain = new[] { "\xFF", "\xFF", "\xFF", "\xFF", "\xFF" };
     private readonly string[] _dedRenderedFmt  = new[] { "\xFF", "\xFF", "\xFF", "\xFF", "\xFF" };
 
