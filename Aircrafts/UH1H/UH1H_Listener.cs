@@ -10,13 +10,12 @@ internal class UH1H_Listener : AircraftListener
     private const int LINE_VHF  = 3;
     private const int LINE_UHF  = 4;
     private const int LINE_FM   = 5;
-    
+
     // ADF disabled — ADF_FREQ output is bugged in DCS-BIOS for the UH-1H
     // private const int LINE_ADF  = 7;
-    // IFF disabled — IFF_MODE*_WHEEL* outputs are bugged in DCS-BIOS for the UH-1H
-    // private const int LINE_IFF1 = 9;
-    // private const int LINE_IFF2 = 10;
-    // private const int LINE_IFF3 = 11;
+    private const int LINE_IFF1 = 9;
+    private const int LINE_IFF2 = 10;
+    private const int LINE_IFF3 = 11;
 
     public UH1H_Listener(UserOptions options) : base(AircraftRegistry.UH1H, options) { }
 
@@ -123,17 +122,17 @@ internal class UH1H_Listener : AircraftListener
         // RegisterUInt("ADF_BAND", v => { _state.adfBand = (ADFBand)v; UpdateAdfLine(); });
         // RegisterUInt("ADF_FREQ", v => { _state.adfFreqPos = (int)v;  UpdateAdfLine(); });
 
-        // ── IFF — disabled: IFF_MODE*_WHEEL* outputs are bugged in DCS-BIOS ────
-        // RegisterUInt("IFF_MASTER",        v => { _state.IffMaster = (IffMaster)v; UpdateIffLines(); });
-        // RegisterUInt("IFF_CODE",          v => { _state.IffCode   = (IffCode)v;   UpdateIffLines(); });
-        // RegisterUInt("IFF_MODE1_WHEEL1",  v => { _state.IffM1W1   = (int)v;       UpdateIffLines(); });
-        // RegisterUInt("IFF_MODE1_WHEEL2",  v => { _state.IffM1W2   = (int)v;       UpdateIffLines(); });
-        // RegisterUInt("IFF_MODE3A_WHEEL1", v => { _state.IffM3aW1  = (int)v;       UpdateIffLines(); });
-        // RegisterUInt("IFF_MODE3A_WHEEL2", v => { _state.IffM3aW2  = (int)v;       UpdateIffLines(); });
-        // RegisterUInt("IFF_MODE3A_WHEEL3", v => { _state.IffM3aW3  = (int)v;       UpdateIffLines(); });
-        // RegisterUInt("IFF_MODE3A_WHEEL4", v => { _state.IffM3aW4  = (int)v;       UpdateIffLines(); });
-        // RegisterUInt("IFF_REPLY_IND",     v => { _state.IffReply  = v != 0;        UpdateIffLines(); });
-        // RegisterUInt("IFF_TEST_IND",      v => { _state.IffTest   = v != 0;        UpdateIffLines(); });
+        // ── IFF (AN/APX-72) — re-enabled after local DCS-BIOS patch ─────────────
+        RegisterUInt("IFF_MASTER", v => { _state.IffMaster = (IffMaster)v; UpdateIffLines(); });
+        RegisterUInt("IFF_CODE", v => { _state.IffCode = (IffCode)v; UpdateIffLines(); });
+        RegisterUInt("IFF_MODE1_WHEEL1", v => { _state.IffM1W1 = (int)v; UpdateIffLines(); });
+        RegisterUInt("IFF_MODE1_WHEEL2", v => { _state.IffM1W2 = (int)v; UpdateIffLines(); });
+        RegisterUInt("IFF_MODE3A_WHEEL1", v => { _state.IffM3aW1 = (int)v; UpdateIffLines(); });
+        RegisterUInt("IFF_MODE3A_WHEEL2", v => { _state.IffM3aW2 = (int)v; UpdateIffLines(); });
+        RegisterUInt("IFF_MODE3A_WHEEL3", v => { _state.IffM3aW3 = (int)v; UpdateIffLines(); });
+        RegisterUInt("IFF_MODE3A_WHEEL4", v => { _state.IffM3aW4 = (int)v; UpdateIffLines(); });
+        RegisterUInt("IFF_REPLY_IND", v => { _state.IffReply = v != 0; UpdateIffLines(); });
+        RegisterUInt("IFF_TEST_IND", v => { _state.IffTest = v != 0; UpdateIffLines(); });
     }
 
     // ── Display update helpers ────────────────────────────────────────────
@@ -142,7 +141,7 @@ internal class UH1H_Listener : AircraftListener
     {
         var comp = GetCompositor(DEFAULT_PAGE).Line(LINE_VHF).White().Write("VHF AM  ");
         if (!_state.VhfPwr)
-            comp.Green().WriteLine("OFF");
+            comp.Red().WriteLine("OFF".PadRight(7));
         else
             comp.Green().WriteLine(_state.VhfFreq.Trim().PadRight(7));
     }
@@ -163,10 +162,10 @@ internal class UH1H_Listener : AircraftListener
             _                    => "     ",
         };
 
-        GetCompositor(DEFAULT_PAGE).Line(LINE_UHF)
-            .White().Write("UHF     ")
-            .Green().Write(freqOrOff)
-            .White().WriteLine($" {modeLabel}");
+        var uhfOff = _state.UhfFunction == UHFFunctionDial.OFF;
+        var uhfComp = GetCompositor(DEFAULT_PAGE).Line(LINE_UHF).White().Write("UHF     ");
+        if (uhfOff) uhfComp.Red().Write(freqOrOff); else uhfComp.Green().Write(freqOrOff);
+        uhfComp.White().WriteLine($" {modeLabel}");
     }
 
     private void UpdateFmLine()
@@ -176,22 +175,22 @@ internal class UH1H_Listener : AircraftListener
             VhfFmMode.TR     => "T/R   ",
             VhfFmMode.RETRAN => "RETRAN",
             VhfFmMode.HOME   => "HOME  ",
-            _                => "OFF   ",
+            _                => "      ",
         };
 
-        var freqOrOff = _state.FmMode == VhfFmMode.OFF ? "OFF   " : _state.FmFreq.PadRight(6);
+        var fmOff = _state.FmMode == VhfFmMode.OFF;
+        var freqOrOff = fmOff ? "OFF   " : _state.FmFreq.PadRight(6);
 
-        GetCompositor(DEFAULT_PAGE).Line(LINE_FM)
-            .White().Write("VHF FM  ")
-            .Green().Write(freqOrOff)
-            .White().WriteLine($" {modeLabel}");
+        var fmComp = GetCompositor(DEFAULT_PAGE).Line(LINE_FM).White().Write("VHF FM  ");
+        if (fmOff) fmComp.Red().Write(freqOrOff); else fmComp.Green().Write(freqOrOff);
+        fmComp.White().WriteLine($" {modeLabel}");
     }
 
     private void UpdateNavLine()
     {
         var comp = GetCompositor(DEFAULT_PAGE).Line(LINE_NAV).White().Write("VHF NAV ");
         if (!_state.NavPwr)
-            comp.Green().WriteLine("OFF");
+            comp.Red().WriteLine("OFF".PadRight(6));
         else
             comp.Green().WriteLine(_state.NavFreq.Trim().PadRight(6));
     }
@@ -199,8 +198,42 @@ internal class UH1H_Listener : AircraftListener
     // ADF disabled — ADF_FREQ output is bugged in DCS-BIOS for the UH-1H
     // private void UpdateAdfLine() { ... }
 
-    // IFF disabled — IFF_MODE*_WHEEL* outputs are bugged in DCS-BIOS for the UH-1H
-    // private void UpdateIffLines() { ... }
+    private void UpdateIffLines()
+    {
+        var masterLabel = _state.IffMaster switch
+        {
+            IffMaster.LOW   => "LOW  ",
+            IffMaster.NORM  => "NORM ",
+            IffMaster.EMERG => "EMERG",
+            IffMaster.OFF   => "OFF  ",
+            _               => "STBY ",
+        };
+        var codeLabel = _state.IffCode switch
+        {
+            IffCode.B    => "B   ",
+            IffCode.A    => "A   ",
+            IffCode.HOLD => "HOLD",
+            _            => "ZERO",
+        };
+        var iffOff = _state.IffMaster == IffMaster.OFF;
+        var iffComp = GetCompositor(DEFAULT_PAGE).Line(LINE_IFF1).Amber().Write("IFF  ");
+        if (iffOff) iffComp.Red().Write(masterLabel); else iffComp.Green().Write(masterLabel);
+        iffComp.White().Write(" CODE:").Green().WriteLine(codeLabel);
+
+        GetCompositor(DEFAULT_PAGE).Line(LINE_IFF2)
+            .White().Write("M1:")
+            .Green().Write(_state.IffM1Code)
+            .White().Write("  M3A:")
+            .Green().WriteLine(_state.IffM3aCode);
+
+        var replyMark = _state.IffReply ? "⬡" : " ";
+        var testMark  = _state.IffTest  ? "⬡" : " ";
+        GetCompositor(DEFAULT_PAGE).Line(LINE_IFF3)
+            .White().Write("REPLY:")
+            .Green().Write(replyMark)
+            .White().Write("  TEST:")
+            .Green().WriteLine(testMark);
+    }
 
     protected override void Dispose(bool disposing)
     {
@@ -222,6 +255,6 @@ internal class UH1H_Listener : AircraftListener
         UpdateFmLine();
         UpdateNavLine();
         // UpdateAdfLine();  — disabled, see ADF note above
-        // UpdateIffLines(); — disabled, see IFF note above
+        UpdateIffLines();
     }
 }

@@ -1,13 +1,13 @@
 # UH-1H Huey
 
-Radio panel support: VHF AM, UHF, VHF FM, and VHF NAV frequencies are shown on the CDU.
+Radio panel support: VHF AM, UHF, VHF FM, VHF NAV, and IFF are shown on the CDU.
 The Master Caution light maps to the CDU FAIL LED.
 
 ## Supported devices
 
 | Device | What it shows |
 |--------|---------------|
-| CDU (MCDU / PFP3N / PFP7 / PFP4) | Radio panel (VHF AM, UHF, VHF FM, VHF NAV) |
+| CDU (MCDU / PFP3N / PFP7 / PFP4) | Radio panel (VHF AM, UHF, VHF FM, VHF NAV, IFF) |
 
 ## CDU display
 
@@ -18,6 +18,9 @@ The Master Caution light maps to the CDU FAIL LED.
 | 3 | **UHF** (AN/ARC-51) | `UHF_FREQ` (String), `UHF_PRESET`, `UHF_MODE`, `UHF_FUNCTION` (UInt) |
 | 4 | **VHF FM** (AN/ARC-131) | `VHFFM_FREQ1`–`4`, `VHFFM_MODE` (UInt) |
 | 5 | **VHF NAV** (ARN-82) | `VHFNAV_FREQ` (String), `VHFNAV_PWR` (UInt) |
+| 9 | **IFF** (AN/APX-72) master + code | `IFF_MASTER`, `IFF_CODE` (UInt) |
+| 10 | **IFF** Mode 1 + Mode 3A codes | `IFF_MODE1_WHEEL1/2`, `IFF_MODE3A_WHEEL1`–`4` (UInt) |
+| 11 | **IFF** Reply + Test lamps | `IFF_REPLY_IND`, `IFF_TEST_IND` (UInt) |
 
 Each radio shows **OFF** when its power or mode switch is in the off position.
 
@@ -44,9 +47,8 @@ toggling the FAIL LED.
 | Feature | Reason disabled |
 |---------|-----------------|
 | **ADF** (AN/ARN-83) | `ADF_FREQ` output reports incorrect values |
-| **IFF** (AN/APX-72) | `IFF_MODE1_WHEEL*` and `IFF_MODE3A_WHEEL*` outputs are bugged |
 
-These sections are commented out in `Aircrafts/UH1H/UH1H_Listener.cs` and can be
+The ADF section is commented out in `Aircrafts/UH1H/UH1H_Listener.cs` and can be
 re-enabled once the upstream DCS-BIOS module is fixed.
 
 ## Front panels

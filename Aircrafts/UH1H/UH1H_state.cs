@@ -8,7 +8,7 @@ internal enum UHFModeDial     { PRESET = 0, MANUAL = 1, GUARD = 2 }
 
 internal enum VhfFmMode { OFF = 0, TR = 1, RETRAN = 2, HOME = 3 }
 
-internal enum IffMaster { STBY = 0, LOW = 1, NORM = 2, EMERG = 3, OUT = 4 }
+internal enum IffMaster { STBY = 1, LOW = 2, NORM = 3, EMERG = 4, OFF = 0 }
 internal enum IffCode   { ZERO = 0, B = 1, A = 2, HOLD = 3 }
 
 internal class UH1H_State
