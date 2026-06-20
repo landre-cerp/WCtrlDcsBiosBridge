@@ -79,7 +79,31 @@ public class FrontpanelHub : IDisposable
     internal void Detach()
     {
         _renderTimer.Stop();
-        _model = null;
+
+        // Blank the panels so they don't keep showing the previous aircraft's
+        // frame (AGP32 clock digits, gear LEDs, etc.) after a module exit or
+        // switch. Same mechanism as ApplyCloseReset — adapter.Reset() per device,
+        // under the render lock, only when we manage lighting — minus the
+        // configured close brightness (the next aircraft re-initializes it).
+        lock (_renderLock)
+        {
+            if (_manageLighting)
+            {
+                foreach (var adapter in _adapters)
+                {
+                    try
+                    {
+                        adapter.Reset();
+                    }
+                    catch (Exception ex)
+                    {
+                        App.Logger.Warn(ex, $"Failed to reset frontpanel {adapter.DisplayName} on detach");
+                    }
+                }
+            }
+
+            _model = null;
+        }
     }
 
     /// <summary>
@@ -158,9 +182,10 @@ public class FrontpanelHub : IDisposable
             {
                 try
                 {
-                    // Reset() blanks screen + turns LEDs off at 100 % brightness for
-                    // CommonWinWingPanel devices; for segment-only devices (AGP32)
-                    // it only restores brightness, which is then overridden below.
+                    // Reset() blanks the display and turns all LEDs off for every
+                    // device family (AGP32, FCU/EFIS, PAP3, CDU); it also restores
+                    // full brightness, which the SetBrightness below overrides with
+                    // the user's configured close-reset value.
                     adapter.Reset();
 
                     var b = opts.BrightnessByte;
