@@ -135,6 +135,48 @@
 
         <Separator Margin="0,12"/>
 
+        <!-- F-14B — disabled while F-14B is the active aircraft -->
+        <StackPanel IsEnabled="{Binding IsF14BOptionsEnabled, RelativeSource={RelativeSource AncestorType=Window}}">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                <TextBlock Text="F-14B" FontWeight="SemiBold" FontSize="13"
+                           Foreground="{DynamicResource SubtleTextForeground}"
+                           VerticalAlignment="Center"/>
+                <Border Margin="8,0,0,0" CornerRadius="4" Padding="6,2"
+                        VerticalAlignment="Center"
+                        Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=StackPanel}}" Value="False">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="Disabled while in use" FontSize="10" Foreground="#E65100"/>
+                </Border>
+            </StackPanel>
+
+            <TextBlock Text="RIO CAP / Radio page keys"
+                      Foreground="{DynamicResource SubtleTextForeground}"
+                      FontSize="11" Margin="0,0,0,8"/>
+            <StackPanel Orientation="Horizontal" Margin="0,4">
+                <TextBlock Text="Show RIO Key:" VerticalAlignment="Center" Width="120"/>
+                <ComboBox x:Name="F14RioDisplayKeyComboBox"
+                         SelectedValue="{Binding F14RioDisplayKey, Mode=TwoWay}"
+                         SelectionChanged="ComboBox_Changed" Width="150"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,4">
+                <TextBlock Text="Show Radio Key:" VerticalAlignment="Center" Width="120"/>
+                <ComboBox x:Name="F14RadioDisplayKeyComboBox"
+                         SelectedValue="{Binding F14RadioDisplayKey, Mode=TwoWay}"
+                         SelectionChanged="ComboBox_Changed" Width="150"/>
+            </StackPanel>
+        </StackPanel>
+
+        <Separator Margin="0,12"/>
+
         <!-- F-16C — disabled while F-16C is the active aircraft -->
         <StackPanel IsEnabled="{Binding IsF16COptionsEnabled, RelativeSource={RelativeSource AncestorType=Window}}">
             <StackPanel Orientation="Horizontal" Margin="0,0,0,6">

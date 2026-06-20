@@ -63,6 +63,18 @@ public class UserOptions
     public string F16CRwrDisplayKey { get; set; } = "LineSelectRight1";
 
     /// <summary>
+    /// Gets or sets the MCDU key used to show the F-14B RIO CAP display.
+    /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "PrevPage").
+    /// </summary>
+    public string F14RioDisplayKey { get; set; } = "PrevPage";
+
+    /// <summary>
+    /// Gets or sets the MCDU key used to show the F-14B radio display.
+    /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "NextPage").
+    /// </summary>
+    public string F14RadioDisplayKey { get; set; } = "NextPage";
+
+    /// <summary>
     /// Gets or sets the preferred application theme (System, Light, or Dark).
     /// </summary>
     public ThemePreference Theme { get; set; } = ThemePreference.System;
