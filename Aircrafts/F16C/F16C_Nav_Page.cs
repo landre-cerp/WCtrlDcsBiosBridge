@@ -232,7 +232,7 @@ internal partial class F16C_Listener
 
         string rng = _ehsiRangeInvalid ? "---" : (_ehsiRange.Length > 0 ? _ehsiRange : "---");
         string crs = _ehsiCourse.Length > 0 ? _ehsiCourse : "---";
-        o.Line(1).Green().WriteLine($"RNG:{rng,6}nm    CRS:{crs,3}");
+        o.Line(1).ClearRow().Green().WriteLine($"RNG:{rng,6}nm    CRS:{crs,3}");
 
         string modeL = _ehsiModeLeft.Length  > 0 ? _ehsiModeLeft  : "   ";
         string modeR = _ehsiModeRight.Length > 0 ? _ehsiModeRight : "NAV";
