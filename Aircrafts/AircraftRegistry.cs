@@ -1,3 +1,4 @@
+using WCtrlDcsBiosBridge.Aircrafts.F14;
 using WCtrlDcsBiosBridge.Aircrafts.UH1H;
 
 namespace WCtrlDcsBiosBridge.Aircrafts;
@@ -79,12 +80,17 @@ internal static class AircraftRegistry
         new[] { "UH-1H" },
         c => new UH1H_Listener(c.Options));
 
+    public static readonly AircraftDescriptor F14B = new(
+        16, "F-14B", "F-14B.json", "resources/a10c-font-21x31.json", false,
+        new[] { "F-14B", "F-14A-135-GR" },
+        c => new F14_Listener(c.Options));
+
     /// <summary>
     /// Registry order is menu order.
     /// </summary>
     public static readonly IReadOnlyList<AircraftDescriptor> All = new[]
     {
-        A10C, AH64D, FA18C, CH47, F15E, M2000C, F16C, OH58D, UH1H
+        A10C, AH64D, FA18C, CH47, F15E, M2000C, F16C, OH58D, UH1H, F14B
     };
 
     public static AircraftDescriptor Find(int moduleId) =>
