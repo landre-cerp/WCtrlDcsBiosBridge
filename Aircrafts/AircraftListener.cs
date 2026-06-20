@@ -218,7 +218,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
                 App.Logger.Error(ex, $"Failed to load font file: {fontFile}");
             }
 
-            InitMcduBrightness(options.DisableLightingManagement);
+            InitMcduBrightness();
         }
 
         BIOSEventHandler.AttachStringListener(this);
@@ -230,9 +230,9 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
 
     }
 
-    private void InitMcduBrightness(bool disabledBrightness)
+    protected virtual void InitMcduBrightness()
     {
-        if (disabledBrightness || cdu == null) return;
+        if (options.DisableLightingManagement || cdu == null) return;
         SetCduBacklightBrightnessPercent(50);
         SetCduLedBrightnessPercent(100);
         SetCduDisplayBrightnessPercent(100);
