@@ -8,6 +8,14 @@ internal class F14_Listener : AircraftListener
     private int _currentHCUMode;
     private int _currentWCSmode;
 
+    private bool _gearLOff, _gearNoseOff, _gearROff;
+
+    private string _clockH  = "00";
+    private string _clockM  = "00";
+    private string _timerT  = "00";
+    private string _timerTm = "00";
+    private string _timerTs = "00";
+
     private static readonly string[] _hcuModes = { "TID", "TCS", "RADAR", "DDD" };
     private static readonly string[] _wcsModes = { "TWS Auto", "Puls Sch", "TWS Man", "PD Sch", "PD STT", "RWS", "Puls Stt" };
     private static readonly string[] _categoryNames = { "BIT", "SPL", "NAV", "TAC DATA", "D/L", "TGT DATA" };
@@ -61,7 +69,28 @@ internal class F14_Listener : AircraftListener
         RenderPage();
     }
 
-    protected override void RegisterFrontpanelControls() { }
+    protected override void RegisterFrontpanelControls()
+    {
+        RegisterUInt("PLT_GEAR_L_IND_L",    v => FlightDeck.GearLeftDown  = v == 1);
+        RegisterUInt("PLT_GEAR_NOSE_IND_L", v => FlightDeck.GearNoseDown  = v == 1);
+        RegisterUInt("PLT_GEAR_R_IND_L",    v => FlightDeck.GearRightDown = v == 1);
+
+        RegisterUInt("PLT_GEAR_L_OFF_L",    v => { _gearLOff    = v == 1; FlightDeck.GearWarning = _gearLOff || _gearNoseOff || _gearROff; });
+        RegisterUInt("PLT_GEAR_NOSE_OFF_L", v => { _gearNoseOff = v == 1; FlightDeck.GearWarning = _gearLOff || _gearNoseOff || _gearROff; });
+        RegisterUInt("PLT_GEAR_R_OFF_L",    v => { _gearROff    = v == 1; FlightDeck.GearWarning = _gearLOff || _gearNoseOff || _gearROff; });
+
+        RegisterUInt("PLT_CLOCK_H",  (ctrl, v) => { _clockH  = ((int)(v * 12 / (ctrl.MaxValue + 1))).ToString("D2"); FlightDeck.ClockUtcTime = _clockH + _clockM + "00"; });
+        RegisterUInt("PLT_CLOCK_M",  (ctrl, v) => { _clockM  = ((int)(v * 60 / (ctrl.MaxValue + 1))).ToString("D2"); FlightDeck.ClockUtcTime = _clockH + _clockM + "00"; });
+        RegisterUInt("PLT_CLOCK_T",  (ctrl, v) => { _timerT  = ((int)(v * 12 / (ctrl.MaxValue + 1))).ToString("D2"); UpdateChrono(); });
+        RegisterUInt("PLT_CLOCK_TM", (ctrl, v) => { _timerTm = ((int)(v * 60 / (ctrl.MaxValue + 1))).ToString("D2"); UpdateChrono(); });
+        RegisterUInt("PLT_CLOCK_TS", (ctrl, v) => { _timerTs = ((int)(v * 60 / (ctrl.MaxValue + 1))).ToString("D2"); UpdateChrono(); });
+    }
+
+    private void UpdateChrono()
+    {
+        FlightDeck.ClockChrono = _timerTm + _timerTs;
+        FlightDeck.ClockElapsedTime = _timerT != "00" ? _timerT + _timerTm : null;
+    }
 
     private void RenderPage()
     {
