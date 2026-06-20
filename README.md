@@ -42,9 +42,9 @@ brightness, and any front-panel output. Click an aircraft for details.
 Contributions: Smreki F15E , Mustang038 M200C, F16C Poussedebamboo, F18 Iefi pages Martin Javorek
 
 **Front panels** (FCU/EFIS, PAP3, AGP32) render whatever the active aircraft publishes.
-Today the **A-10C** drives the full set (flight data, gear LEDs, and the chrono/UTC/ET
-clock on the AGP32), and the **OH-58D** drives the AGP32 UTC clock. See each aircraft's page
-for specifics.
+The **A-10C** drives the full set (flight data, gear LEDs, and the chrono/UTC/ET clock on the AGP32).
+The **F-14B** drives the AGP32 gear lights and clock. The **OH-58D** drives the AGP32 UTC clock.
+See each aircraft's page for specifics.
 
 ## Installation
 

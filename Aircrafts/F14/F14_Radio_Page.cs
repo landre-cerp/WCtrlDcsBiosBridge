@@ -17,6 +17,21 @@ internal partial class F14_Listener
     private int    _vuhfFmAm       = 1;  // 0=FM 1=AM
     private int    _vuhfSquelch    = 0;
 
+    // IFF (AN/APX-76) — all on RIO panel
+    private int _iffMaster  = 0;  // 0=OFF 1=STBY 2=LOW 3=NORM 4=EMER
+    private int _iffM1      = 0;  // 0=OFF 1=ON 2=TEST
+    private int _iffM1_10   = 0;  // M1 code 10s digit
+    private int _iffM1_1    = 0;  // M1 code 1s digit
+    private int _iffM2      = 0;  // 0=OFF 1=ON 2=TEST
+    private int _iffM3a     = 0;  // 0=OFF 1=ON 2=TEST
+    private int _iffM3_1000 = 0;  // M3 code 1000s digit
+    private int _iffM3_100  = 0;  // M3 code 100s digit
+    private int _iffM3_10   = 0;  // M3 code 10s digit
+    private int _iffM3_1    = 0;  // M3 code 1s digit
+    private int _iffM4      = 0;  // 0=OFF 1=ON
+    private int _iffIdent   = 0;  // 0=OFF 1=MIC 2=IDENT
+    private int _iffCode    = 0;  // 0=HOLD 1=ZERO 2=A 3=B (verify against panel)
+
     private void RegisterRadioControls()
     {
         RegisterStr("UHF_FREQ",          s => { _uhfFreq     = s.TrimEnd(); RenderRadioPage(); });
@@ -32,6 +47,20 @@ internal partial class F14_Listener
         RegisterUInt("RIO_VUHF_FREQ_MODE", v => { _vuhfFreqMode  = (int)v; RenderRadioPage(); });
         RegisterUInt("RIO_VUHF_FM_AM",     v => { _vuhfFmAm      = (int)v; RenderRadioPage(); });
         RegisterUInt("RIO_VUHF_SQUELCH",   v => { _vuhfSquelch   = (int)v; RenderRadioPage(); });
+
+        RegisterUInt("RIO_IFF_MASTER",  v => { _iffMaster  = (int)v; RenderRadioPage(); });
+        RegisterUInt("RIO_IFF_M1",      v => { _iffM1      = (int)v; RenderRadioPage(); });
+        RegisterUInt("RIO_IFF_M1_10",   v => { _iffM1_10   = (int)v; RenderRadioPage(); });
+        RegisterUInt("RIO_IFF_M1_1",    v => { _iffM1_1    = (int)v; RenderRadioPage(); });
+        RegisterUInt("RIO_IFF_M2",      v => { _iffM2      = (int)v; RenderRadioPage(); });
+        RegisterUInt("RIO_IFF_M3A",     v => { _iffM3a     = (int)v; RenderRadioPage(); });
+        RegisterUInt("RIO_IFF_M3_1000", v => { _iffM3_1000 = (int)v; RenderRadioPage(); });
+        RegisterUInt("RIO_IFF_M3_100",  v => { _iffM3_100  = (int)v; RenderRadioPage(); });
+        RegisterUInt("RIO_IFF_M3_10",   v => { _iffM3_10   = (int)v; RenderRadioPage(); });
+        RegisterUInt("RIO_IFF_M3_1",    v => { _iffM3_1    = (int)v; RenderRadioPage(); });
+        RegisterUInt("RIO_IFF_M4",      v => { _iffM4      = (int)v; RenderRadioPage(); });
+        RegisterUInt("RIO_IFF_IDENT",   v => { _iffIdent   = (int)v; RenderRadioPage(); });
+        RegisterUInt("RIO_IFF_CODE",    v => { _iffCode    = (int)v; RenderRadioPage(); });
 
         RenderRadioPage();
     }
@@ -72,6 +101,12 @@ internal partial class F14_Listener
     private static readonly string[] _vuhfRadioModeLabels = { "OFF", "T/R", "T/R&G", "DF", "TEST" };
     private static readonly string[] _vuhfFreqModeLabels  = { "243", "MAN", "G", "PRESET", "READ", "LOAD" };
 
+    // IFF AN/APX-76 label arrays (standard panel positions)
+    private static readonly string[] _iffMasterLabels = { "OFF", "STBY", "LOW", "NORM", "EMER" };
+    private static readonly string[] _iffModeLabels   = { "OFF", "ON ", "TST" };
+    private static readonly string[] _iffIdentLabels  = { "OFF", "MIC", "IDT" };
+    private static readonly string[] _iffCodeLabels   = { "HLD", "A  ", "B  ", "ZRO" };
+
     private void RenderRadioPage()
     {
         var c = GetCompositor(RADIO_PAGE);
@@ -98,8 +133,30 @@ internal partial class F14_Listener
             c.Cyan().Line(4).WriteLine(string.Format("  {0,-4}  {1,-7}  {2}  {3,-3}",
                 VuhfChannelLabel(), _vuhfFreq, _vuhfFmAm == 0 ? "FM" : "AM", _vuhfSquelch == 1 ? "SQL" : ""));
 
-        for (int r = 5; r < Metrics.Lines - 1; r++)
-            c.White().Line(r).Write(new string(' ', Metrics.Columns));
+        // IFF AN/APX-76 section — lines 5-10
+        c.White().Line(5).Write(new string('-', Metrics.Columns));
+
+        string iffMaster = _iffMaster < _iffMasterLabels.Length ? _iffMasterLabels[_iffMaster] : "?";
+        // "IFF  MASTER:{0,-4}        " = 12 + 4 + 8 = 24
+        c.White().Line(6).WriteLine(string.Format("IFF  MASTER:{0,-4}        ", iffMaster));
+
+        string m1  = _iffM1  < _iffModeLabels.Length ? _iffModeLabels[_iffM1]  : "?  ";
+        string m2  = _iffM2  < _iffModeLabels.Length ? _iffModeLabels[_iffM2]  : "?  ";
+        string m3a = _iffM3a < _iffModeLabels.Length ? _iffModeLabels[_iffM3a] : "?  ";
+        // "M1:xxx  M2:xxx  M3:xxx  " = 3+3+2+3+3+2+3+3+2 = 24
+        c.White().Line(7).WriteLine(string.Format("M1:{0}  M2:{1}  M3:{2}  ", m1, m2, m3a));
+
+        string m4    = _iffM4    == 1 ? "ON " : "OFF";
+        string ident = _iffIdent < _iffIdentLabels.Length ? _iffIdentLabels[_iffIdent] : "?  ";
+        string code  = _iffCode  < _iffCodeLabels.Length  ? _iffCodeLabels[_iffCode]   : "?  ";
+        // "M4:xxx  IDT:xxx  COD:xxx" = 3+3+2+4+3+2+4+3 = 24
+        c.White().Line(8).WriteLine(string.Format("M4:{0}  IDT:{1}  COD:{2}", m4, ident, code));
+
+        // "  M1:XX        M3:XXXX  " = 5+2+8+3+4+2 = 24
+        c.Cyan().Line(9).WriteLine(string.Format("  M1:{0}{1}        M3:{2}{3}{4}{5}  ",
+            _iffM1_10, _iffM1_1, _iffM3_1000, _iffM3_100, _iffM3_10, _iffM3_1));
+
+        c.White().Line(10).Write(new string(' ', Metrics.Columns));
 
         c.Line(Metrics.Lines - 1).BGBlack().White()
             .Write(new string(' ', Metrics.Columns - 7))
