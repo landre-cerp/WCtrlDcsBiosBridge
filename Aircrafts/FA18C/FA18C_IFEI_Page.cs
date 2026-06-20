@@ -1,115 +1,64 @@
-using DCS_BIOS.ControlLocator;
-using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Aircrafts;
 
-internal class FA18C_IFEI_Page
+internal partial class FA18C_Listener
 {
-    private DCSBIOSOutput? _ifeiFuelUp;
-    private DCSBIOSOutput? _ifeiFuelDown;
-    private DCSBIOSOutput? _ifeiBingo;
-    private DCSBIOSOutput? _ifeiFfL;
-    private DCSBIOSOutput? _ifeiFfR;
-    private DCSBIOSOutput? _ifeiRpmL;
-    private DCSBIOSOutput? _ifeiRpmR;
-    private DCSBIOSOutput? _ifeiTempL;
-    private DCSBIOSOutput? _ifeiTempR;
-    private DCSBIOSOutput? _ifeiOilPressL;
-    private DCSBIOSOutput? _ifeiOilPressR;
-    private DCSBIOSOutput? _ifeiClockH;
-    private DCSBIOSOutput? _ifeiClockM;
-    private DCSBIOSOutput? _ifeiClockS;
-    private DCSBIOSOutput? _ifeiTimerH;
-    private DCSBIOSOutput? _ifeiTimerM;
-    private DCSBIOSOutput? _ifeiTimerS;
+    private string _fuelUp    = "      ";
+    private string _fuelDown  = "      ";
+    private string _bingo     = "     ";
+    private string _ffL       = "   ";
+    private string _ffR       = "   ";
+    private string _rpmL      = "   ";
+    private string _rpmR      = "   ";
+    private string _tempL     = "   ";
+    private string _tempR     = "   ";
+    private string _oilPressL = "   ";
+    private string _oilPressR = "   ";
+    private string _clockH    = "  ";
+    private string _clockM    = "  ";
+    private string _clockS    = "  ";
+    private string _timerH    = "  ";
+    private string _timerM    = "  ";
+    private string _timerS    = "  ";
 
-    string _fuelUp = "      ";
-    string _fuelDown = "      ";
-    string _bingo = "     ";
-    string _ffL = "   ";
-    string _ffR = "   ";
-    string _rpmL = "   ";
-    string _rpmR = "   ";
-    string _tempL = "   ";
-    string _tempR = "   ";
-    string _oilPressL = "   ";
-    string _oilPressR = "   ";
-    string _clockH = "  ";
-    string _clockM = "  ";
-    string _clockS = "  ";
-    string _timerH = "  ";
-    string _timerM = "  ";
-    string _timerS = "  ";
-
-
-    public void InitializeControls()
+    private void RegisterIfeiControls()
     {
-        _ifeiFuelUp = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_FUEL_UP");
-        _ifeiFuelDown = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_FUEL_DOWN");
-        _ifeiBingo = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_BINGO");
-        _ifeiFfL = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_FF_L");
-        _ifeiFfR = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_FF_R");
-        _ifeiRpmL = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_RPM_L");
-        _ifeiRpmR = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_RPM_R");
-        _ifeiTempL = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_TEMP_L");
-        _ifeiTempR = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_TEMP_R");
-        _ifeiOilPressL = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_OIL_PRESS_L");
-        _ifeiOilPressR = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_OIL_PRESS_R");
-        _ifeiClockH = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_CLOCK_H");
-        _ifeiClockM = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_CLOCK_M");
-        _ifeiClockS = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_CLOCK_S");
-        _ifeiTimerH = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_TIMER_H");
-        _ifeiTimerM = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_TIMER_M");
-        _ifeiTimerS = DCSBIOSControlLocator.GetStringDCSBIOSOutput("IFEI_TIMER_S");
+        RegisterStr("IFEI_FUEL_UP",    s => { _fuelUp    = s; RenderIfei(); });
+        RegisterStr("IFEI_FUEL_DOWN",  s => { _fuelDown  = s; RenderIfei(); });
+        RegisterStr("IFEI_BINGO",      s => { _bingo     = s; RenderIfei(); });
+        RegisterStr("IFEI_FF_L",       s => { _ffL       = s; RenderIfei(); });
+        RegisterStr("IFEI_FF_R",       s => { _ffR       = s; RenderIfei(); });
+        RegisterStr("IFEI_RPM_L",      s => { _rpmL      = s; RenderIfei(); });
+        RegisterStr("IFEI_RPM_R",      s => { _rpmR      = s; RenderIfei(); });
+        RegisterStr("IFEI_TEMP_L",     s => { _tempL     = s; RenderIfei(); });
+        RegisterStr("IFEI_TEMP_R",     s => { _tempR     = s; RenderIfei(); });
+        RegisterStr("IFEI_OIL_PRESS_L",s => { _oilPressL = s; RenderIfei(); });
+        RegisterStr("IFEI_OIL_PRESS_R",s => { _oilPressR = s; RenderIfei(); });
+        RegisterStr("IFEI_CLOCK_H",    s => { _clockH = s; RenderIfei(); });
+        RegisterStr("IFEI_CLOCK_M",    s => { _clockM = s; RenderIfei(); });
+        RegisterStr("IFEI_CLOCK_S",    s => { _clockS = s; RenderIfei(); });
+        RegisterStr("IFEI_TIMER_H",    s => { _timerH = s; RenderIfei(); });
+        RegisterStr("IFEI_TIMER_M",    s => { _timerM = s; RenderIfei(); });
+        RegisterStr("IFEI_TIMER_S",    s => { _timerS = s; RenderIfei(); });
     }
 
-    public void RegisterControls(Action<DCSBIOSOutput?, Action<string>> registerString, Action onUpdated)
+    private void RegisterIfeiFrontPanelControls()
     {
-        registerString(_ifeiFuelUp, s => { _fuelUp = s; onUpdated(); });
-        registerString(_ifeiFuelDown, s => { _fuelDown = s; onUpdated(); });
-        registerString(_ifeiBingo, s => { _bingo = s; onUpdated(); });
-        registerString(_ifeiFfL, s => { _ffL = s; onUpdated(); });
-        registerString(_ifeiFfR, s => { _ffR = s; onUpdated(); });
-        registerString(_ifeiRpmL, s => { _rpmL = s; onUpdated(); });
-        registerString(_ifeiRpmR, s => { _rpmR = s; onUpdated(); });
-        registerString(_ifeiTempL, s => { _tempL = s; onUpdated(); });
-        registerString(_ifeiTempR, s => { _tempR = s; onUpdated(); });
-        registerString(_ifeiOilPressL, s => { _oilPressL = s; onUpdated(); });
-        registerString(_ifeiOilPressR, s => { _oilPressR = s; onUpdated(); });
-        registerString(_ifeiClockH, s => { _clockH = s; onUpdated(); });
-        registerString(_ifeiClockM, s => { _clockM = s; onUpdated(); });
-        registerString(_ifeiClockS, s => { _clockS = s; onUpdated(); });
-        registerString(_ifeiTimerH, s => { _timerH = s; onUpdated(); });
-        registerString(_ifeiTimerM, s => { _timerM = s; onUpdated(); });
-        registerString(_ifeiTimerS, s => { _timerS = s; onUpdated(); });
+        RegisterStr("IFEI_CLOCK_H", s => { _clockH = s; CombineIFEIClock(); });
+        RegisterStr("IFEI_CLOCK_M", s => { _clockM = s; CombineIFEIClock(); });
+        RegisterStr("IFEI_CLOCK_S", s => { _clockS = s; CombineIFEIClock(); });
+        RegisterStr("IFEI_TIMER_H", s => { _timerH = s; CombineIFEITimer(); });
+        RegisterStr("IFEI_TIMER_M", s => { _timerM = s; CombineIFEITimer(); });
+        RegisterStr("IFEI_TIMER_S", s => { _timerS = s; CombineIFEITimer(); });
     }
 
-    public void Render(Compositor output, uint lightMode)
+    private void RenderIfei()
     {
-        //  CDU layout: 24 chars wide, 14 rows (0-13)
-        //
-        //  Row 0:  "      F/A-18C IFEI   2/2"  (title and page number)
-        //  Row 1:  "                        "
-        //  Row 2:  "                  xxxxxx"  (fuel up)
-        //  Row 3:  "                  xxxxxx"  (fuel down)
-        //  Row 4:  "                   xxxxx"  (bingo)
-        //  Row 5:  "                        "
-        //  Row 6:  "       xx:xx:xx         "  (clock)
-        //  Row 7:  "       xx:xx:xx         "  (timer)
-        //  Row 8:  "                        "
-        //  Row 9:  "              LEFT RIGHT"
-        //  Row 10: "RPM            xxx   xxx"
-        //  Row 11: "TEMP           xxx   xxx"
-        //  Row 12: "FF             xxx   xxx"
-        //  Row 13: "OIL            xxx   xxx"
+        var output = GetCompositor(IFEI_PAGE);
+        bool isDay = _lightMode == 0;
 
-        bool isDay = lightMode == 0;
-
-        if (isDay)
-            output.White();
-        else
-            output.Yellow();
+        if (isDay) output.White(); else output.Yellow();
         output.Line(0).Centered("F/A-18C IFEI").Column(21).Write("2/2");
 
         output.Line(1).ClearRow();
@@ -129,43 +78,21 @@ internal class FA18C_IFEI_Page
         output.Line(8).ClearRow();
 
         output.Line(9).WriteLine("              LEFT  RIGHT");
-
         output.Line(10).WriteLine(string.Format("RPM            {0,3}   {1,3}", _rpmL, _rpmR));
         output.Line(11).WriteLine(string.Format("TEMP           {0,3}   {1,3}", _tempL, _tempR));
         output.Line(12).WriteLine(string.Format("FF             {0,3}   {1,3}", _ffL, _ffR));
-        output
-            .Line(13)
-            .WriteLine(string.Format("OIL            {0,3}   {1,3}", _oilPressL, _oilPressR));
+        output.Line(13).WriteLine(string.Format("OIL            {0,3}   {1,3}", _oilPressL, _oilPressR));
     }
 
-
-    internal void RegisterFrontPanelControls(Action<DCSBIOSOutput?, Action<string>> registerString, FlightDeckState flightDeck)
+    private void CombineIFEIClock()
     {
-        registerString(_ifeiClockH, s => { _clockH = s; combineClock(flightDeck); });
-        registerString(_ifeiClockM, s => { _clockM = s; combineClock(flightDeck); });
-        registerString(_ifeiClockS, s => { _clockS = s; combineClock(flightDeck); });
-
-        registerString(_ifeiTimerH, s => { _timerH = s; combineTimer(flightDeck); });
-        registerString(_ifeiTimerM, s => { _timerM = s; combineTimer(flightDeck); });
-        registerString(_ifeiTimerS, s => { _timerS = s; combineTimer(flightDeck); });
+        FlightDeck.ClockUtcTime = $"{_clockH}{_clockM}{_clockS}";
     }
 
-    internal void combineClock(FlightDeckState flightDeck)
+    private void CombineIFEITimer()
     {
-        flightDeck.ClockUtcTime = $"{_clockH}{_clockM}{_clockS}";
-
-    }
-
-    internal void combineTimer(FlightDeckState flightDeck)
-    {
-
-        flightDeck.ClockElapsedTime = $"{_timerM}{_timerS}";
+        FlightDeck.ClockElapsedTime = $"{_timerM}{_timerS}";
         if (_timerH != " 0" && _timerH != "  ")
-        {
-            flightDeck.ClockChrono = $"{_timerH}{_timerM}";
-        }
-
-
+            FlightDeck.ClockChrono = $"{_timerH}{_timerM}";
     }
-
 }

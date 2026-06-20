@@ -56,7 +56,10 @@ public class DeviceManager
                 try
                 {
                     var cdu = await Task.Run(() => CduFactory.ConnectLocal(deviceId), cancellationToken).ConfigureAwait(false);
-                    InitializeCdu(cdu);
+                    // No default/menu font is flashed here on purpose. Flashing a throwaway
+                    // font during detection and then the aircraft font moments later corrupts
+                    // the device's glyph RAM (garbled glyphs, only cleared by a USB replug).
+                    // The aircraft font flashed by the listener is the single font upload.
                     if (resetDevices) cdu.Reset();
                     var displayName = GetDeviceName(deviceId);
                     var deviceInfo = new DeviceInfo(cdu, deviceId, displayName);
@@ -120,16 +123,6 @@ public class DeviceManager
             progress?.Report(new DeviceDetectionProgress(0, 0, $"Detection error: {ex.Message}"));
         }
         return detectedDevices;
-    }
-
-    private static void InitializeCdu(ICdu mcdu)
-    {
-        // Load A-10C font as default for menu display
-        // Will be replaced by aircraft-specific font when listener starts
-        using var fileStream = new FileStream("resources/a10c-font-21x31.json", FileMode.Open, FileAccess.Read);
-        using var reader = new StreamReader(fileStream);
-        var fontJson = reader.ReadToEnd();
-        mcdu.UseFont(JsonConvert.DeserializeObject<McduFontFile>(fontJson), true);
     }
 
     /// <summary>

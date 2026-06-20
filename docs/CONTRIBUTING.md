@@ -16,9 +16,10 @@ https://github.com/DCS-Skunkworks/dcs-bios (v0.11.0 or later for CH-47F)
 
 ### Recommended Tools
 Bort https://github.com/DCS-Skunkworks/Bort or any other Dcsbios Reference tool to help you find the right addresses and values.
-This is where you get "CDU_BRT" you use as a parameter to DCSBIOSControlLocator.Get...
+This is where you get "CDU_BRT" you use as a parameter to `RegisterUInt` / `RegisterStr` / `RegisterLight`:
 ```csharp
-_CDU_BRT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CDU_BRT");
+RegisterUInt("CDU_BRT", v => { /* handle v */ });
+RegisterStr("UFC_LINE1", s => { /* handle s */ });
 ```
 
 ### 1. Fork & Clone
@@ -58,21 +59,19 @@ Aircraft are now driven by a single registry and detected automatically from the
 Look up the aircraft's module number in `dcs-bios_modules.txt` (for example: F-14 = 16) and its `_ACFT_NAME` value (use Bort, or run the program and start the aircraft in DCS — the wait screen shows the name as "unsupported").
 
 #### 2. Create a listener
-Add a class in `Aircrafts/` deriving from `AircraftListener`. You implement three methods: resolve the DCS-BIOS outputs, wire the CDU, and wire the frontpanels. (See the existing `Aircrafts/*_Listener.cs` for real examples.)
+Add a class in `Aircrafts/` deriving from `AircraftListener`. You implement two methods: wire the CDU and wire the frontpanels. Use `RegisterUInt` / `RegisterStr` to resolve and register in one call — no field declarations needed for single-use outputs. (See the existing `Aircrafts/*_Listener.cs` for real examples.)
 
 ```csharp
-using DCS_BIOS.ControlLocator;
-using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Aircrafts;
 
 internal class F14_Listener : AircraftListener
 {
-    // DCS-BIOS outputs (names come from Bort / the module JSON)
-    private DCSBIOSOutput? _PLT_CAP_DISPLAY;   // a string display line
-    private DCSBIOSOutput? _MASTER_CAUTION;     // an integer light
-    private DCSBIOSOutput? _CONSOLE_BRT;        // a brightness knob
+    // Only declare a field when the same output is used in MORE than one method.
+    // Example: a brightness knob registered in both RegisterCduControls and
+    // RegisterFrontpanelControls needs its MaxValue in both handlers.
+    private DCSBIOSOutput? _CONSOLE_BRT;
 
     // The registry factory passes UserOptions; forward it with the matching
     // descriptor to the base class.
@@ -81,45 +80,46 @@ internal class F14_Listener : AircraftListener
     {
     }
 
-    // 1) Resolve every DCS-BIOS output you need, by name.
+    // Only override InitializeDcsBiosOutputs when you need array loops or
+    // multi-use fields. Leave it out entirely for simple listeners.
     protected override void InitializeDcsBiosOutputs()
     {
-        _PLT_CAP_DISPLAY = DCSBIOSControlLocator.GetStringDCSBIOSOutput("PLT_CAP_DISPLAY");
-        _MASTER_CAUTION  = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("MASTER_CAUTION");
-        _CONSOLE_BRT     = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CONSOLE_BRT");
+        _CONSOLE_BRT = ResolveUInt("CONSOLE_BRT");
     }
 
-    // 2) Wire CDU outputs. Runs only when a CDU is connected.
+    // Wire CDU outputs. Runs only when a CDU is connected.
     protected override void RegisterCduControls()
     {
-        // String output -> a CDU line. GetCompositor builds the page.
-        RegisterString(_PLT_CAP_DISPLAY, s =>
+        // Single-use string output → CDU line, resolved and registered in one call.
+        RegisterStr("PLT_CAP_DISPLAY", s =>
             GetCompositor(DEFAULT_PAGE).Line(0).Green().WriteLine(s));
 
-        // Integer output -> a CDU status LED.
-        Register(_MASTER_CAUTION, v => SetCduLeds(fail: v == 1));
+        // Single-use integer output → CDU status LED.
+        RegisterUInt("MASTER_CAUTION", v => SetCduLeds(fail: v == 1));
 
-        // Optional: follow a cockpit brightness knob (respect the user option).
-        if (!options.DisableLightingManagement)
+        // Multi-use field: _CONSOLE_BRT was resolved in InitializeDcsBiosOutputs.
+        // RegisterLight automatically skips registration when DisableLightingManagement is on.
+        RegisterLight(_CONSOLE_BRT, v =>
         {
-            Register(_CONSOLE_BRT, v =>
-            {
-                int percent = (int)(v * 100 / _CONSOLE_BRT!.MaxValue);
-                SetBacklightBrightnessPercent(percent);
-                SetDisplayBrightnessPercent(percent);
-                SetLedBrightnessPercent(percent);
-            });
-        }
+            int percent = (int)(v * 100 / _CONSOLE_BRT!.MaxValue);
+            SetBacklightBrightnessPercent(percent);
+            SetDisplayBrightnessPercent(percent);
+            SetLedBrightnessPercent(percent);
+        });
     }
 
-    // 3) Wire frontpanel outputs (FCU/EFIS, PAP3, AGP32...). Always runs, even
-    //    with no CDU, because a frontpanel-only setup still needs the data.
-    //    Write semantic values into FlightDeck; renderers show what they can.
+    // Wire frontpanel outputs (FCU/EFIS, PAP3, AGP32...). Always runs, even
+    // with no CDU, because a frontpanel-only setup still needs the data.
+    // Write semantic values into FlightDeck; renderers show what they can.
     protected override void RegisterFrontpanelControls()
     {
         // Leave empty if the aircraft has no frontpanel data, or populate
         // FlightDeck like the A-10C does, e.g.:
-        // Register(_IAS, v => FlightDeck.Speed = (int)v);
+        // RegisterUInt("IAS_US_INT", v => FlightDeck.Speed = (int)v);
+
+        // For outputs that need MaxValue inside the handler, use the (ctrl, v) overload:
+        // RegisterUInt("CONSOLE_BRT", (ctrl, v) =>
+        //     FlightDeck.ConsoleBrightness = (byte)(v * 255 / ctrl.MaxValue));
     }
 }
 ```
@@ -152,8 +152,16 @@ public static readonly IReadOnlyList<AircraftDescriptor> All = new[]
 
 | Helper | Use |
 |--------|-----|
-| `Register(output, v => ...)` | Handle an integer output (`v` is the decoded `uint`). |
-| `RegisterString(output, s => ...)` | Handle a string output. |
+| `RegisterUInt(id, v => ...)` | Resolve + register an integer output in one call. |
+| `RegisterUInt(id, (ctrl, v) => ...)` | Same, but passes the resolved `DCSBIOSOutput` as `ctrl` so you can read `ctrl.MaxValue` inside the handler. |
+| `RegisterStr(id, s => ...)` | Resolve + register a string output in one call. |
+| `ResolveUInt(id)` | Resolve an integer output for later use (multi-use fields or array loops). |
+| `ResolveStr(id)` | Resolve a string output for later use. |
+| `RegisterUInt(output, v => ...)` | Register a pre-resolved integer output. |
+| `RegisterStr(output, s => ...)` | Register a pre-resolved string output. |
+| `RegisterLight(id, v => ...)` | Like `RegisterUInt`, but skipped automatically when the user has **Disable Lighting Management** turned on. Use for brightness knobs and cockpit light controls. |
+| `RegisterLight(id, (ctrl, v) => ...)` | Same, but passes the resolved `DCSBIOSOutput` as `ctrl` so you can read `ctrl.MaxValue` inside the handler. |
+| `RegisterLight(output, v => ...)` | Same, for a pre-resolved output. |
 | `RegisterRaw(address, v => ...)` | Low-level handler for raw bitfield registers when named DCS-BIOS outputs are unavailable or have incorrect mask/shift definitions (M-2000C uses this). `v` is the raw unmasked 16-bit register value; apply bitmasks manually. Also handles the address whitelist registration required by the protocol parser — no extra setup needed. |
 | `GetCompositor(DEFAULT_PAGE).Line(n)...` | Write a CDU line (`.Green()`, `.White()`, `.WriteLine(...)`, ...). |
 | `SetCduLeds(fail:, fm1:, fm2:, fm:, ind:, rdy:)` | Set CDU status LEDs. |

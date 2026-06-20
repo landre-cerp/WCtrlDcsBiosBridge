@@ -41,41 +41,92 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     private readonly Dictionary<uint, List<Action<uint>>> _dataHandlers = new();
     private readonly Dictionary<uint, List<Action<string>>> _stringHandlers = new();
 
-    // Enregistre un handler pour un output entier
-    protected void Register(DCSBIOSOutput? output, Action<uint> handler)
+    private void RegisterCore(DCSBIOSOutput output, Action<uint> handler)
     {
-        if (output is null) return;
         if (!_dataHandlers.TryGetValue(output.Address, out var list))
             _dataHandlers[output.Address] = list = new();
-        // capture l'output pour décoder la valeur correctement
         list.Add(data => handler(output.GetUIntValue(data)));
     }
 
-    // Registers a handler for a raw (undecoded) address — value is passed as-is, no mask/shift.
-    // Use for bitfield registers when DCS-BIOS named outputs are missing or have incorrect definitions.
-    // NOTE: DCSBIOSProtocolParser only dispatches events for addresses on its broadcast whitelist.
-    // Named outputs (Register/RegisterString) get whitelisted automatically via DCSBIOSOutput.Address setter.
-    // RegisterRaw bypasses that path, so it must whitelist the address explicitly by setting it on a
-    // throw-away DCSBIOSOutput — the setter calls DCSBIOSProtocolParser.RegisterAddressToBroadCast.
-    protected void RegisterRaw(uint address, Action<uint> handler)
+    private void RegisterStringCore(DCSBIOSOutput output, Action<string> handler)
     {
-        _ = new DCSBIOSOutput { Address = address }; // side effect: registers address with protocol parser whitelist
-        if (!_dataHandlers.TryGetValue(address, out var list))
-            _dataHandlers[address] = list = new();
-        list.Add(handler);
-    }
-
-    // Enregistre un handler pour un output string
-    protected void RegisterString(DCSBIOSOutput? output, Action<string> handler)
-    {
-        if (output is null) return;
         if (!_stringHandlers.TryGetValue(output.Address, out var list))
             _stringHandlers[output.Address] = list = new();
         list.Add(handler);
     }
 
+    // Use for bitfield registers when named DCS-BIOS outputs are unavailable or have incorrect
+    // mask/shift definitions. The value passed to the handler is the raw unmasked 16-bit register.
+    // NOTE: DCSBIOSProtocolParser only dispatches events for addresses on its broadcast whitelist.
+    // Named outputs get whitelisted automatically via DCSBIOSOutput.Address setter.
+    // RegisterRaw bypasses that path and whitelists the address explicitly via a throw-away output.
+    protected void RegisterRaw(uint address, Action<uint> handler)
+    {
+        _ = new DCSBIOSOutput { Address = address }; // side effect: whitelists address with protocol parser
+        if (!_dataHandlers.TryGetValue(address, out var list))
+            _dataHandlers[address] = list = new();
+        list.Add(handler);
+    }
+
+    protected void RegisterUInt(string controlId, Action<uint> handler)
+    {
+        var ctrl = DCSBIOSControlLocator.GetUIntDCSBIOSOutput(controlId);
+        if (ctrl is null) return;
+        RegisterCore(ctrl, handler);
+    }
+
+    protected void RegisterUInt(string controlId, Action<DCSBIOSOutput, uint> handler)
+    {
+        var ctrl = DCSBIOSControlLocator.GetUIntDCSBIOSOutput(controlId);
+        if (ctrl is null) return;
+        RegisterCore(ctrl, v => handler(ctrl, v));
+    }
+
+    protected void RegisterUInt(DCSBIOSOutput? output, Action<uint> handler)
+    {
+        if (output is null) return;
+        RegisterCore(output, handler);
+    }
+
+    protected void RegisterStr(string controlId, Action<string> handler)
+    {
+        var ctrl = DCSBIOSControlLocator.GetStringDCSBIOSOutput(controlId);
+        if (ctrl is null) return;
+        RegisterStringCore(ctrl, handler);
+    }
+
+    protected void RegisterStr(DCSBIOSOutput? output, Action<string> handler)
+    {
+        if (output is null) return;
+        RegisterStringCore(output, handler);
+    }
+
+    protected void RegisterLight(string controlId, Action<uint> handler)
+    {
+        if (options.DisableLightingManagement) return;
+        RegisterUInt(controlId, handler);
+    }
+
+    protected void RegisterLight(string controlId, Action<DCSBIOSOutput, uint> handler)
+    {
+        if (options.DisableLightingManagement) return;
+        RegisterUInt(controlId, handler);
+    }
+
+    protected void RegisterLight(DCSBIOSOutput? output, Action<uint> handler)
+    {
+        if (options.DisableLightingManagement) return;
+        RegisterUInt(output, handler);
+    }
+
+    protected DCSBIOSOutput? ResolveUInt(string controlId)
+        => DCSBIOSControlLocator.GetUIntDCSBIOSOutput(controlId);
+
+    protected DCSBIOSOutput? ResolveStr(string controlId)
+        => DCSBIOSControlLocator.GetStringDCSBIOSOutput(controlId);
+
     // Dispatch unique : implémentation explicite des interfaces pour que les
-    // classes filles ne puissent plus l'override. Elles passent par Register/RegisterString.
+    // classes filles ne puissent plus l'override. Elles passent par RegisterUInt/RegisterStr.
     void IDcsBiosDataListener.DcsBiosDataReceived(object sender, DCSBIOSDataEventArgs e)
     {
         try
@@ -182,9 +233,9 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     private void InitMcduBrightness(bool disabledBrightness)
     {
         if (disabledBrightness || cdu == null) return;
-        SetBacklightBrightnessPercent(50);
-        SetLedBrightnessPercent(100);
-        SetDisplayBrightnessPercent(100);
+        SetCduBacklightBrightnessPercent(50);
+        SetCduLedBrightnessPercent(100);
+        SetCduDisplayBrightnessPercent(100);
     }
 
     public void Stop()
@@ -213,7 +264,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         }
     }
 
-    protected void SetDisplayBrightnessPercent(int value)
+    protected void SetCduDisplayBrightnessPercent(int value)
     {
         if (cdu == null) return;
         lock (cdu.State.SyncRoot)
@@ -223,7 +274,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         }
     }
 
-    protected void SetBacklightBrightnessPercent(int value)
+    protected void SetCduBacklightBrightnessPercent(int value)
     {
         if (cdu == null) return;
         lock (cdu.State.SyncRoot)
@@ -233,7 +284,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         }
     }
 
-    protected void SetLedBrightnessPercent(int value)
+    protected void SetCduLedBrightnessPercent(int value)
     {
         if (cdu == null) return;
         lock (cdu.State.SyncRoot)
@@ -264,7 +315,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         }
     }
 
-    protected abstract void InitializeDcsBiosOutputs();
+    protected virtual void InitializeDcsBiosOutputs() { }
     protected abstract void RegisterCduControls();
 
     /// <summary>

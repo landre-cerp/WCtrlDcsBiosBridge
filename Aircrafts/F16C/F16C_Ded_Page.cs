@@ -1,20 +1,14 @@
-using DCS_BIOS.ControlLocator;
-using DCS_BIOS.Serialized;
 using System.Text;
 using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Aircrafts;
 
-internal class F16C_Ded_Page
+internal partial class F16C_Listener
 {
-    private readonly DCSBIOSOutput?[] _dedMainLines = new DCSBIOSOutput?[5];
-    private readonly DCSBIOSOutput?[] _dedSecLines = new DCSBIOSOutput?[5];
-    private readonly DCSBIOSOutput?[] _dedFormats = new DCSBIOSOutput?[5];
-
-    private readonly string[] _dedMainText = new string[5];
-    private readonly string[] _dedFormatText = new string[5];
-    private readonly string[] _dedRenderedMain = new string[5];
-    private readonly string[] _dedRenderedFmt = new string[5];
+    private readonly string[] _dedMainText   = ["", "", "", "", ""];
+    private readonly string[] _dedFormatText = ["", "", "", "", ""];
+    private readonly string[] _dedRenderedMain = new[] { "\xFF", "\xFF", "\xFF", "\xFF", "\xFF" };
+    private readonly string[] _dedRenderedFmt  = new[] { "\xFF", "\xFF", "\xFF", "\xFF", "\xFF" };
 
     private static readonly Dictionary<char, char> DedCharMap = new()
     {
@@ -46,92 +40,54 @@ internal class F16C_Ded_Page
         { 'a', 'Δ'  },
     };
 
-    public F16C_Ded_Page()
-    {
-        for (int i = 0; i < 5; i++)
-        {
-            _dedMainText[i] = string.Empty;
-            _dedFormatText[i] = string.Empty;
-            _dedRenderedMain[i] = "\xFF";
-            _dedRenderedFmt[i] = "\xFF";
-        }
-    }
-
-    public void InitializeControls()
-    {
-        _dedMainLines[0] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_LINE_1");
-        _dedMainLines[1] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_LINE_2");
-        _dedMainLines[2] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_LINE_3");
-        _dedMainLines[3] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_LINE_4");
-        _dedMainLines[4] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_LINE_5");
-
-        _dedSecLines[0] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L1");
-        _dedSecLines[1] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L2");
-        _dedSecLines[2] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L3");
-        _dedSecLines[3] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L4");
-        _dedSecLines[4] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L5");
-
-        _dedFormats[0] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L1_FORMAT");
-        _dedFormats[1] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L2_FORMAT");
-        _dedFormats[2] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L3_FORMAT");
-        _dedFormats[3] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L4_FORMAT");
-        _dedFormats[4] = DCSBIOSControlLocator.GetStringDCSBIOSOutput("DED_L5_FORMAT");
-    }
-
-    public void RegisterControls(
-        Action<DCSBIOSOutput?, Action<uint>> register,
-        Action<DCSBIOSOutput?, Action<string>> registerString,
-        Func<Compositor> compositor)
+    private void RegisterDedControls()
     {
         for (int i = 0; i < 5; i++)
         {
             int idx = i;
-            registerString(_dedMainLines[idx], s => { _dedMainText[idx] = s; Render(compositor()); });
-            registerString(_dedFormats[idx], s => { _dedFormatText[idx] = s; Render(compositor()); });
+            RegisterStr($"DED_LINE_{i + 1}",    s => { _dedMainText[idx]   = s; RenderDed(); });
+            RegisterStr($"DED_L{i + 1}_FORMAT", s => { _dedFormatText[idx] = s; RenderDed(); });
         }
     }
 
-    public void Render(Compositor output)
+    private void InvalidateDedCache()
     {
         for (int i = 0; i < 5; i++)
         {
+            _dedRenderedMain[i] = "\xFF";
+            _dedRenderedFmt[i]  = "\xFF";
+        }
+    }
+
+    private void RenderDed()
+    {
+        var output = GetCompositor(DEFAULT_PAGE);
+
+        for (int i = 0; i < 5; i++)
+        {
             string text = NormaliseDedLine(ApplyDedCharacterMap(_dedMainText[i]));
-            string fmt = _dedFormatText[i];
+            string fmt  = _dedFormatText[i];
 
             if (text == _dedRenderedMain[i] && fmt == _dedRenderedFmt[i])
-            {
                 continue;
-            }
 
             _dedRenderedMain[i] = text;
-            _dedRenderedFmt[i] = fmt;
+            _dedRenderedFmt[i]  = fmt;
 
             RenderDedLine(output, i, text, fmt);
         }
 
         for (int r = 5; r < Metrics.Lines - 1; r++)
-        {
             output.Line(r).BGBlack().Green().Write(new string(' ', Metrics.Columns));
-        }
 
         output.Line(Metrics.Lines - 1).BGBlack().Green()
             .Write(new string(' ', Metrics.Columns - 5))
             .Amber().Write("(DED)");
     }
 
-    public void InvalidateCache()
-    {
-        for (int i = 0; i < 5; i++)
-        {
-            _dedRenderedMain[i] = "\xFF";
-            _dedRenderedFmt[i] = "\xFF";
-        }
-    }
-
     private static void RenderDedLine(Compositor output, int row, string text, string fmt)
     {
         string safeFmt = fmt.PadRight(text.Length);
-
         output.Line(row);
 
         int pos = 0;
@@ -139,45 +95,29 @@ internal class F16C_Ded_Page
         {
             bool isInverse = safeFmt[pos] == 'i';
             int start = pos;
-
             while (pos < text.Length && (safeFmt[pos] == 'i') == isInverse)
-            {
                 pos++;
-            }
 
             string segment = text[start..pos];
-
             if (isInverse)
-            {
                 output.Black().BGGreen().Write(segment);
-            }
             else
-            {
                 output.Green().BGBlack().Write(segment);
-            }
         }
     }
 
     private static string ApplyDedCharacterMap(string raw)
     {
         if (string.IsNullOrEmpty(raw))
-        {
             return string.Empty;
-        }
 
         var sb = new StringBuilder(raw.Length);
         foreach (char c in raw)
-        {
             sb.Append(DedCharMap.TryGetValue(c, out char mapped) ? mapped : c);
-        }
 
         return sb.ToString();
     }
 
-    private static string NormaliseDedLine(string text)
-    {
-        return text.Length >= Metrics.Columns
-            ? text[..Metrics.Columns]
-            : text.PadRight(Metrics.Columns);
-    }
+    private static string NormaliseDedLine(string text) =>
+        text.Length >= Metrics.Columns ? text[..Metrics.Columns] : text.PadRight(Metrics.Columns);
 }

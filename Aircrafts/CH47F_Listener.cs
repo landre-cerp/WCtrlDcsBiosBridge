@@ -1,4 +1,3 @@
-using DCS_BIOS.ControlLocator;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 using System.Linq;
@@ -16,17 +15,6 @@ internal class CH47F_Listener : AircraftListener
 
     private readonly DCSBIOSOutput?[] copilotCduLines = new DCSBIOSOutput?[MAX_CDU_LINES];
     private readonly DCSBIOSOutput?[] copilotCduColorLines = new DCSBIOSOutput?[MAX_CDU_LINES];
-
-    private DCSBIOSOutput? _MSTR_CAUTION;
-    private DCSBIOSOutput? _PLT_CDU_BACKLIGHT;
-    private DCSBIOSOutput? _CPLT_CDU_BACKLIGHT;
-    private DCSBIOSOutput? _SEAT_POSITION;
-
-    private DCSBIOSOutput? _PLT_CDU_BRT;
-    private DCSBIOSOutput? _CPLT_CDU_BRT;
-
-    private DCSBIOSOutput? _PLT_CDU_DIM;
-    private DCSBIOSOutput? _CPLT_CDU_DIM;
 
     private int _pilot_cdu_brightness = 100;
     private int _copilot_cdu_brightness = 100;
@@ -82,51 +70,48 @@ internal class CH47F_Listener : AircraftListener
     protected override void RegisterCduControls()
     {
         // --- LED ---
-        Register(_MSTR_CAUTION, v => SetCduLeds(fail: v != 0));
+        RegisterUInt("PLT_MASTER_CAUTION_LIGHT", v => SetCduLeds(fail: v != 0));
 
         // --- Brightness (display step knob) ---
-        if (!options.DisableLightingManagement && HasCdu)
+        RegisterLight("PLT_CDU_BRT", v =>
         {
-            Register(_PLT_CDU_BRT, v =>
-            {
-                if (v == 1) _pilot_cdu_brightness = Math.Min(_pilot_cdu_brightness + BRT_STEP, 100);
-                ApplyBrightness();
-            });
-            Register(_PLT_CDU_DIM, v =>
-            {
-                if (v == 1) _pilot_cdu_brightness = Math.Max(0, _pilot_cdu_brightness - BRT_STEP);
-                ApplyBrightness();
-            });
-            Register(_CPLT_CDU_BRT, v =>
-            {
-                if (v == 1) _copilot_cdu_brightness = Math.Min(_copilot_cdu_brightness + BRT_STEP, 100);
-                ApplyBrightness();
-            });
-            Register(_CPLT_CDU_DIM, v =>
-            {
-                if (v == 1) _copilot_cdu_brightness = Math.Max(0, _copilot_cdu_brightness - BRT_STEP);
-                ApplyBrightness();
-            });
-            Register(_PLT_CDU_BACKLIGHT, v =>
-            {
-                int bright = (int)v * 100 / 65536;
-                _pilot_key_brightness = bright;
-                _pilot_led_brightness = bright;
-                ApplyBrightness();
-            });
-            Register(_CPLT_CDU_BACKLIGHT, v =>
-            {
-                int bright = (int)v * 100 / 65536;
-                _copilot_key_brightness = bright;
-                _copilot_led_brightness = bright;
-                ApplyBrightness();
-            });
-        }
+            if (v == 1) _pilot_cdu_brightness = Math.Min(_pilot_cdu_brightness + BRT_STEP, 100);
+            ApplyBrightness();
+        });
+        RegisterLight("PLT_CDU_DIM", v =>
+        {
+            if (v == 1) _pilot_cdu_brightness = Math.Max(0, _pilot_cdu_brightness - BRT_STEP);
+            ApplyBrightness();
+        });
+        RegisterLight("CPLT_CDU_BRT", v =>
+        {
+            if (v == 1) _copilot_cdu_brightness = Math.Min(_copilot_cdu_brightness + BRT_STEP, 100);
+            ApplyBrightness();
+        });
+        RegisterLight("CPLT_CDU_DIM", v =>
+        {
+            if (v == 1) _copilot_cdu_brightness = Math.Max(0, _copilot_cdu_brightness - BRT_STEP);
+            ApplyBrightness();
+        });
+        RegisterLight("PLT_INT_LIGHT_CDU", v =>
+        {
+            int bright = (int)v * 100 / 65536;
+            _pilot_key_brightness = bright;
+            _pilot_led_brightness = bright;
+            ApplyBrightness();
+        });
+        RegisterLight("CPLT_INT_LIGHT_CDU", v =>
+        {
+            int bright = (int)v * 100 / 65536;
+            _copilot_key_brightness = bright;
+            _copilot_led_brightness = bright;
+            ApplyBrightness();
+        });
 
         // --- Seat-position switching ---
         if (switchWithSeat)
         {
-            Register(_SEAT_POSITION, v =>
+            RegisterUInt("SEAT_POSITION", v =>
             {
                 seatPosition = (int)v;
                 _currentPage = seatPosition == PILOT_SEAT ? DEFAULT_PAGE : COPILOT_PAGE;
@@ -137,11 +122,11 @@ internal class CH47F_Listener : AircraftListener
         for (int i = 0; i < MAX_CDU_LINES; i++)
         {
             int lineIndex = i;
-            RegisterString(pilotCduColorLines[lineIndex], s =>
+            RegisterStr(pilotCduColorLines[lineIndex], s =>
             {
                 _pilotColorMap[lineIndex] = NormalizeCduString(s);
             });
-            RegisterString(pilotCduLines[lineIndex], s =>
+            RegisterStr(pilotCduLines[lineIndex], s =>
             {
                 WriteCduLine(DEFAULT_PAGE, lineIndex, NormalizeCduString(s), _pilotColorMap);
             });
@@ -151,11 +136,11 @@ internal class CH47F_Listener : AircraftListener
         for (int i = 0; i < MAX_CDU_LINES; i++)
         {
             int lineIndex = i;
-            RegisterString(copilotCduColorLines[lineIndex], s =>
+            RegisterStr(copilotCduColorLines[lineIndex], s =>
             {
                 _copilotColorMap[lineIndex] = NormalizeCduString(s);
             });
-            RegisterString(copilotCduLines[lineIndex], s =>
+            RegisterStr(copilotCduLines[lineIndex], s =>
             {
                 WriteCduLine(COPILOT_PAGE, lineIndex, NormalizeCduString(s), _copilotColorMap);
             });
@@ -170,38 +155,26 @@ internal class CH47F_Listener : AircraftListener
         // even if we are only interested in one of them with 2 CDU connected
         for (int i = 0; i < MAX_CDU_LINES; i++)
         {
-            pilotCduLines[i] = DCSBIOSControlLocator.GetStringDCSBIOSOutput($"PLT_CDU_LINE{i+1}");
-            pilotCduColorLines[i] = DCSBIOSControlLocator.GetStringDCSBIOSOutput($"PLT_CDU_LINE{i+1}_COLOR");
-            copilotCduLines[i] = DCSBIOSControlLocator.GetStringDCSBIOSOutput($"CPLT_CDU_LINE{i + 1}");
-            copilotCduColorLines[i] = DCSBIOSControlLocator.GetStringDCSBIOSOutput($"CPLT_CDU_LINE{i + 1}_COLOR");
-
+            pilotCduLines[i]      = ResolveStr($"PLT_CDU_LINE{i+1}");
+            pilotCduColorLines[i] = ResolveStr($"PLT_CDU_LINE{i+1}_COLOR");
+            copilotCduLines[i]      = ResolveStr($"CPLT_CDU_LINE{i+1}");
+            copilotCduColorLines[i] = ResolveStr($"CPLT_CDU_LINE{i+1}_COLOR");
         }
-
-        _MSTR_CAUTION = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("PLT_MASTER_CAUTION_LIGHT");
-        _PLT_CDU_BACKLIGHT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("PLT_INT_LIGHT_CDU");
-        _CPLT_CDU_BACKLIGHT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CPLT_INT_LIGHT_CDU");
-        _SEAT_POSITION = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("SEAT_POSITION");
-
-        _PLT_CDU_BRT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("PLT_CDU_BRT");
-        _CPLT_CDU_BRT = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CPLT_CDU_BRT");
-        _PLT_CDU_DIM = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("PLT_CDU_DIM");
-        _CPLT_CDU_DIM = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("CPLT_CDU_DIM");
     }
 
     private void ApplyBrightness()
     {
-        if (options.DisableLightingManagement || !HasCdu) return;
         if (seatPosition == PILOT_SEAT)
         {
-            SetDisplayBrightnessPercent(_pilot_cdu_brightness);
-            SetBacklightBrightnessPercent(_pilot_key_brightness);
-            SetLedBrightnessPercent(_pilot_led_brightness);
+            SetCduDisplayBrightnessPercent(_pilot_cdu_brightness);
+            SetCduBacklightBrightnessPercent(_pilot_key_brightness);
+            SetCduLedBrightnessPercent(_pilot_led_brightness);
         }
         else
         {
-            SetDisplayBrightnessPercent(_copilot_cdu_brightness);
-            SetBacklightBrightnessPercent(_copilot_key_brightness);
-            SetLedBrightnessPercent(_copilot_led_brightness);
+            SetCduDisplayBrightnessPercent(_copilot_cdu_brightness);
+            SetCduBacklightBrightnessPercent(_copilot_key_brightness);
+            SetCduLedBrightnessPercent(_copilot_led_brightness);
         }
     }
 
