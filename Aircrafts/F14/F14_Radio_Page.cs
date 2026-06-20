@@ -30,7 +30,7 @@ internal partial class F14_Listener
     private int _iffM3_1    = 0;  // M3 code 1s digit
     private int _iffM4      = 0;  // 0=OFF 1=ON
     private int _iffIdent   = 0;  // 0=OFF 1=MIC 2=IDENT
-    private int _iffCode    = 0;  // 0=HOLD 1=ZERO 2=A 3=B (verify against panel)
+    private int _iffCode    = 0;  // 0=HLD 1=A 2=B 3=ZRO
 
     private void RegisterRadioControls()
     {
