@@ -20,9 +20,8 @@ internal class F14_Listener : AircraftListener
     private static readonly string[] _wcsModes = { "TWS Auto", "Puls Sch", "TWS Man", "PD Sch", "PD STT", "RWS", "Puls Stt" };
     private static readonly string[] _categoryNames = { "BIT", "SPL", "NAV", "TAC DATA", "D/L", "TGT DATA" };
 
-    // Each CAP page is two string[5] arrays: odd indices are the upper lines, even are the lower lines.
+    // Each CAP page is two string[5] arrays: even indices are the upper lines, odd are the lower lines.
     // Layout: _categoryLabelPages[2*page] = upper lines, _categoryLabelPages[2*page+1] = lower lines.
-    private static readonly string[][] _categoryLabelPages =
     {
         // BIT
         new[] { "-   disp        rcvr   -", "-   cmptr       xmtr   -", "- amcs conf    ant ir  -", "- mas moat      stt    -", "-   fault     spl test -" },
