@@ -89,7 +89,7 @@ internal class F14_Listener : AircraftListener
     private void UpdateChrono()
     {
         FlightDeck.ClockChrono = _timerTm + _timerTs;
-        FlightDeck.ClockElapsedTime = _timerT != "00" ? _timerT + _timerTm : null;
+        FlightDeck.ClockElapsedTime = _timerT != "00" ? _timerT + _timerTm : string.Empty;
     }
 
     private void RenderPage()
