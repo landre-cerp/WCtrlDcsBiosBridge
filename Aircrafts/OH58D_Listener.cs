@@ -1,5 +1,3 @@
-using DCS_BIOS.ControlLocator;
-using DCS_BIOS.EventArgs;
 using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 
@@ -7,28 +5,8 @@ namespace WCtrlDcsBiosBridge.Aircrafts;
 
 internal class OH58D_Listener : AircraftListener
 {
-    private DCSBIOSOutput? _MPD_NG_DISPLAY_FULL;
-    private DCSBIOSOutput? _MPD_DISPLAY_L;
-    private DCSBIOSOutput? _MPD_DISPLAY_R;
-    private DCSBIOSOutput? _TGT_DISPLAY;
-    private DCSBIOSOutput? _TRQ_DISPLAY;
-    private DCSBIOSOutput? _CMWS_LINE_1;
-    private DCSBIOSOutput? _CMWS_LINE_2;
-
     // RFI (Radio Frequency Indicator) - 5 lines
     private readonly RFILineOutputs[] _rfiOutputs = new RFILineOutputs[5];
-
-    private DCSBIOSOutput? _MPD_SEL_1;
-    private DCSBIOSOutput? _MPD_SEL_2;
-    private DCSBIOSOutput? _MPD_SEL_3;
-    private DCSBIOSOutput? _MPD_SEL_4;
-    private DCSBIOSOutput? _MPD_SEL_5;
-
-    private DCSBIOSOutput? _RFI_BRIGHTNESS;
-
-    private DCSBIOSOutput? _CLOCK_HOURS;
-    private DCSBIOSOutput? _CLOCK_MINUTES;
-    private DCSBIOSOutput? _CLOCK_SECONDS;
 
     private string _mpdLeft = "---";
     private string _mpdRight = "---";
@@ -73,40 +51,20 @@ internal class OH58D_Listener : AircraftListener
     }
     protected override void InitializeDcsBiosOutputs()
     {
-        _MPD_NG_DISPLAY_FULL = DCSBIOSControlLocator.GetStringDCSBIOSOutput("MPD_NG_DISPLAY_FULL");
-        _MPD_DISPLAY_L = DCSBIOSControlLocator.GetStringDCSBIOSOutput("MPD_DISPLAY_L");
-        _MPD_DISPLAY_R = DCSBIOSControlLocator.GetStringDCSBIOSOutput("MPD_DISPLAY_R");
-        _TGT_DISPLAY = DCSBIOSControlLocator.GetStringDCSBIOSOutput("TGT_DISPLAY");
-        _TRQ_DISPLAY = DCSBIOSControlLocator.GetStringDCSBIOSOutput("TRQ_DISPLAY");
-        _CMWS_LINE_1 = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CMWS_LINE_1");
-        _CMWS_LINE_2 = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CMWS_LINE_2");
-
         // Initialize RFI outputs for all 5 lines
         for (int i = 0; i < 5; i++)
         {
             int lineNum = i + 1;
             _rfiOutputs[i] = new RFILineOutputs
             {
-                Channel = DCSBIOSControlLocator.GetStringDCSBIOSOutput($"RFI_LINE_{lineNum}_CHANNEL"),
-                Cipher = DCSBIOSControlLocator.GetUIntDCSBIOSOutput($"RFI_LINE_{lineNum}_CIPHER"),
-                Number = DCSBIOSControlLocator.GetStringDCSBIOSOutput($"RFI_LINE_{lineNum}_NUMBER"),
-                Frequency = DCSBIOSControlLocator.GetStringDCSBIOSOutput($"RFI_LINE_{lineNum}_FREQUENCY"),
-                SelectCopilot = DCSBIOSControlLocator.GetUIntDCSBIOSOutput($"RFI_LINE_{lineNum}_SELECT_COPILOT"),
-                SelectPilot = DCSBIOSControlLocator.GetUIntDCSBIOSOutput($"RFI_LINE_{lineNum}_SELECT_PILOT")
+                Channel       = ResolveStr($"RFI_LINE_{lineNum}_CHANNEL"),
+                Cipher        = ResolveUInt($"RFI_LINE_{lineNum}_CIPHER"),
+                Number        = ResolveStr($"RFI_LINE_{lineNum}_NUMBER"),
+                Frequency     = ResolveStr($"RFI_LINE_{lineNum}_FREQUENCY"),
+                SelectCopilot = ResolveUInt($"RFI_LINE_{lineNum}_SELECT_COPILOT"),
+                SelectPilot   = ResolveUInt($"RFI_LINE_{lineNum}_SELECT_PILOT")
             };
         }
-
-        _MPD_SEL_1 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("MPD_SEL_1");
-        _MPD_SEL_2 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("MPD_SEL_2");
-        _MPD_SEL_3 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("MPD_SEL_3");
-        _MPD_SEL_4 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("MPD_SEL_4");
-        _MPD_SEL_5 = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("MPD_SEL_5");
-
-        _RFI_BRIGHTNESS = DCSBIOSControlLocator.GetUIntDCSBIOSOutput("RFI_BRIGHTNESS");
-
-        _CLOCK_MINUTES = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CLOCK_MINUTES");
-        _CLOCK_SECONDS = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CLOCK_SECONDS");
-        _CLOCK_HOURS = DCSBIOSControlLocator.GetStringDCSBIOSOutput("CLOCK_HOURS");
 
         InitializeDisplay();
     }
@@ -114,31 +72,29 @@ internal class OH58D_Listener : AircraftListener
 
     protected override void RegisterCduControls() {
 
-        if (!options.DisableLightingManagement && HasCdu) {
-            Register(_RFI_BRIGHTNESS, v =>
-            {
-                var brightness = (int) v * 100 / _RFI_BRIGHTNESS!.MaxValue;
-                SetBacklightBrightnessPercent(brightness);
-                SetDisplayBrightnessPercent(brightness);
-                SetLedBrightnessPercent(brightness);
-            });
-        }
+        RegisterLight("RFI_BRIGHTNESS", (ctrl, v) =>
+        {
+            var brightness = (int)v * 100 / ctrl.MaxValue;
+            SetCduBacklightBrightnessPercent(brightness);
+            SetCduDisplayBrightnessPercent(brightness);
+            SetCduLedBrightnessPercent(brightness);
+        });
 
-        Register(_MPD_SEL_1, v => { if (v != 0) { _mpd_selected = 1; } });
-        Register(_MPD_SEL_2, v => { if (v != 0) { _mpd_selected = 2; } });
-        Register(_MPD_SEL_3, v => { if (v != 0) { _mpd_selected = 3; } });
-        Register(_MPD_SEL_4, v => { if (v != 0) { _mpd_selected = 4; } });
-        Register(_MPD_SEL_5, v => { if (v != 0) { _mpd_selected = 5; } });
+        RegisterUInt("MPD_SEL_1", v => { if (v != 0) { _mpd_selected = 1; } });
+        RegisterUInt("MPD_SEL_2", v => { if (v != 0) { _mpd_selected = 2; } });
+        RegisterUInt("MPD_SEL_3", v => { if (v != 0) { _mpd_selected = 3; } });
+        RegisterUInt("MPD_SEL_4", v => { if (v != 0) { _mpd_selected = 4; } });
+        RegisterUInt("MPD_SEL_5", v => { if (v != 0) { _mpd_selected = 5; } });
 
-        RegisterString(_CMWS_LINE_1, v =>
+        RegisterStr("CMWS_LINE_1", v =>
         {
             GetCompositor(DEFAULT_PAGE).Line(9).Green().WriteLine($"1 {FormatValue(v, 4, "----")}");
         });
-        RegisterString(_CMWS_LINE_2, v => {
+        RegisterStr("CMWS_LINE_2", v => {
             GetCompositor(DEFAULT_PAGE).Line(10).Green().WriteLine($"2 {FormatValue(v, 4, "----")}");
         });
-        
-        RegisterString(_MPD_NG_DISPLAY_FULL, v =>
+
+        RegisterStr("MPD_NG_DISPLAY_FULL", v =>
         {
             GetCompositor(DEFAULT_PAGE).Line(NG_LINE).White().Write("NG ").Green().WriteLine(FormatValue(v, 5, "---"));
         });
@@ -147,35 +103,35 @@ internal class OH58D_Listener : AircraftListener
         for (int i = 0; i < 5; i++)
         {
             int idx = i;  // capture loop variable
-            Register(_rfiOutputs[idx].SelectCopilot,  v => { _rfiData[idx].SelectCopilot = v;  UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
-            Register(_rfiOutputs[idx].SelectPilot,    v => { _rfiData[idx].SelectPilot = v;    UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
-            Register(_rfiOutputs[idx].Cipher, v => { _rfiData[idx].Cipher = v==1 ? "☐" : " "; UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
-            RegisterString(_rfiOutputs[idx].Channel,  v => { _rfiData[idx].Channel = v;        UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
+            RegisterUInt(_rfiOutputs[idx].SelectCopilot,  v => { _rfiData[idx].SelectCopilot = v;  UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
+            RegisterUInt(_rfiOutputs[idx].SelectPilot,    v => { _rfiData[idx].SelectPilot = v;    UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
+            RegisterUInt(_rfiOutputs[idx].Cipher, v => { _rfiData[idx].Cipher = v==1 ? "☐" : " "; UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
+            RegisterStr(_rfiOutputs[idx].Channel,  v => { _rfiData[idx].Channel = v;        UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
             
-            RegisterString(_rfiOutputs[idx].Number,   v => { _rfiData[idx].Number = v;         UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
-            RegisterString(_rfiOutputs[idx].Frequency,v => { _rfiData[idx].Frequency = v;      UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
+            RegisterStr(_rfiOutputs[idx].Number,   v => { _rfiData[idx].Number = v;         UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
+            RegisterStr(_rfiOutputs[idx].Frequency,v => { _rfiData[idx].Frequency = v;      UpdateRFILine(RFI_START_LINE + idx, _rfiData[idx]); });
         }
 
-        RegisterString(_MPD_DISPLAY_L, v =>
+        RegisterStr("MPD_DISPLAY_L", v =>
         {
             _mpdLeft = v;
             var (leftLabel, rightLabel) = GetActiveLabels();
             GetCompositor(DEFAULT_PAGE)
                 .Line(MPD_LINE).White().Write($"{leftLabel} ").Green().Write($"{FormatValue(_mpdLeft, 3, "---")}");
-            
+
         });
 
-        RegisterString(_MPD_DISPLAY_R, v =>
+        RegisterStr("MPD_DISPLAY_R", v =>
         {
             _mpdRight = v;
             var (leftLabel, rightLabel) = GetActiveLabels();
             GetCompositor(DEFAULT_PAGE)
                 .Line(MPD_LINE + 1).White().Write($"{rightLabel} ").Green().Write($"{FormatValue(_mpdRight, 3, "---")}");
-            
+
         });
 
-        RegisterString(_TGT_DISPLAY, v => { _tgt = v; UpdateTgtTrq(); });
-        RegisterString(_TRQ_DISPLAY, v => { _trq = v;UpdateTgtTrq(); } );
+        RegisterStr("TGT_DISPLAY", v => { _tgt = v; UpdateTgtTrq(); });
+        RegisterStr("TRQ_DISPLAY", v => { _trq = v; UpdateTgtTrq(); });
     }
 
     private void UpdateClock()
@@ -188,9 +144,9 @@ internal class OH58D_Listener : AircraftListener
     // a frontpanel-only setup never gets the clock.
     protected override void RegisterFrontpanelControls()
     {
-        RegisterString(_CLOCK_HOURS, v => { _clockHh = FormatValue(v, 2, "00"); UpdateClock(); });
-        RegisterString(_CLOCK_MINUTES, v => { _clockMm = FormatValue(v, 2, "00"); UpdateClock(); });
-        RegisterString(_CLOCK_SECONDS, v => { _clockSs = FormatValue(v, 2, "00"); UpdateClock(); });
+        RegisterStr("CLOCK_HOURS",   v => { _clockHh = FormatValue(v, 2, "00"); UpdateClock(); });
+        RegisterStr("CLOCK_MINUTES", v => { _clockMm = FormatValue(v, 2, "00"); UpdateClock(); });
+        RegisterStr("CLOCK_SECONDS", v => { _clockSs = FormatValue(v, 2, "00"); UpdateClock(); });
     }
 
 
