@@ -75,7 +75,7 @@ internal static class AircraftRegistry
         c => new OH58D_Listener(c.Options));
 
     public static readonly AircraftDescriptor UH1H = new(
-        38, "UH-1H", "UH-1H.json", "resources/uh1h-font-21x31.json", false,
+        38, "UH-1H", "UH-1H.json", "resources/a10c-font-21x31.json", false,
         new[] { "UH-1H" },
         c => new UH1H_Listener(c.Options));
 
