@@ -37,14 +37,14 @@ At least one of these devices.
 Each aircraft has its own page describing the supported devices, CDU display, LEDs,
 brightness, and any front-panel output. Click an aircraft for details.
 
-[A-10C](docs/A-10C.md) | [AH-64D](docs/AH-64D.md) | [F/A-18C](docs/FA-18C.md) | [CH-47F](docs/CH-47F.md) | [OH-58D](docs/OH-58D.md) | [F-15E](docs/F-15E.md) | [F-16C](docs/F-16C.md) | [M-2000C](docs/M-2000C.md) | [UH-1H](docs/UH-1H.md)
+[A-10C](docs/A-10C.md) | [AH-64D](docs/AH-64D.md) | [F/A-18C](docs/FA-18C.md) | [CH-47F](docs/CH-47F.md) | [OH-58D](docs/OH-58D.md) | [F-14B](docs/F-14B.md) | [F-15E](docs/F-15E.md) | [F-16C](docs/F-16C.md) | [M-2000C](docs/M-2000C.md) | [UH-1H](docs/UH-1H.md)
 
 Contributions: Smreki F15E , Mustang038 M200C, F16C Poussedebamboo, F18 Iefi pages Martin Javorek
 
 **Front panels** (FCU/EFIS, PAP3, AGP32) render whatever the active aircraft publishes.
-Today the **A-10C** drives the full set (flight data, gear LEDs, and the chrono/UTC/ET
-clock on the AGP32), and the **OH-58D** drives the AGP32 UTC clock. See each aircraft's page
-for specifics.
+The **A-10C** drives the full set (flight data, gear LEDs, and the chrono/UTC/ET clock on the AGP32).
+The **F-14B** drives the AGP32 gear lights and clock. The **OH-58D** drives the AGP32 UTC clock.
+See each aircraft's page for specifics.
 
 ## Installation
 

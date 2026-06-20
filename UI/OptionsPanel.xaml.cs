@@ -31,6 +31,16 @@ public partial class OptionsPanel : UserControl
             prevPageCombo.ItemsSource = keyNames;
         }
 
+        if (FindName("F14RioDisplayKeyComboBox") is ComboBox f14RioCombo)
+        {
+            f14RioCombo.ItemsSource = keyNames;
+        }
+
+        if (FindName("F14RadioDisplayKeyComboBox") is ComboBox f14RadioCombo)
+        {
+            f14RadioCombo.ItemsSource = keyNames;
+        }
+
         if (FindName("F16CNextDisplayKeyComboBox") is ComboBox f16cNextCombo)
         {
             f16cNextCombo.ItemsSource = keyNames;
