@@ -22,6 +22,7 @@ internal class F14_Listener : AircraftListener
 
     // Each CAP page is two string[5] arrays: even indices are the upper lines, odd are the lower lines.
     // Layout: _categoryLabelPages[2*page] = upper lines, _categoryLabelPages[2*page+1] = lower lines.
+    private static readonly string[][] _categoryLabelPages =
     {
         // BIT
         new[] { "-   disp        rcvr   -", "-   cmptr       xmtr   -", "- amcs conf    ant ir  -", "- mas moat      stt    -", "-   fault     spl test -" },
