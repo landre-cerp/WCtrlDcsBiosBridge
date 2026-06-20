@@ -16,7 +16,7 @@ https://github.com/DCS-Skunkworks/dcs-bios (v0.11.0 or later for CH-47F)
 
 ### Recommended Tools
 Bort https://github.com/DCS-Skunkworks/Bort or any other Dcsbios Reference tool to help you find the right addresses and values.
-This is where you get "CDU_BRT" you use as a parameter to `RegisterUInt` / `RegisterStr`:
+This is where you get "CDU_BRT" you use as a parameter to `RegisterUInt` / `RegisterStr` / `RegisterLight`:
 ```csharp
 RegisterUInt("CDU_BRT", v => { /* handle v */ });
 RegisterStr("UFC_LINE1", s => { /* handle s */ });
@@ -98,16 +98,14 @@ internal class F14_Listener : AircraftListener
         RegisterUInt("MASTER_CAUTION", v => SetCduLeds(fail: v == 1));
 
         // Multi-use field: _CONSOLE_BRT was resolved in InitializeDcsBiosOutputs.
-        if (!options.DisableLightingManagement)
+        // RegisterLight automatically skips registration when DisableLightingManagement is on.
+        RegisterLight(_CONSOLE_BRT, v =>
         {
-            Register(_CONSOLE_BRT, v =>
-            {
-                int percent = (int)(v * 100 / _CONSOLE_BRT!.MaxValue);
-                SetBacklightBrightnessPercent(percent);
-                SetDisplayBrightnessPercent(percent);
-                SetLedBrightnessPercent(percent);
-            });
-        }
+            int percent = (int)(v * 100 / _CONSOLE_BRT!.MaxValue);
+            SetBacklightBrightnessPercent(percent);
+            SetDisplayBrightnessPercent(percent);
+            SetLedBrightnessPercent(percent);
+        });
     }
 
     // Wire frontpanel outputs (FCU/EFIS, PAP3, AGP32...). Always runs, even
@@ -161,6 +159,9 @@ public static readonly IReadOnlyList<AircraftDescriptor> All = new[]
 | `ResolveStr(id)` | Resolve a string output for later use. |
 | `RegisterUInt(output, v => ...)` | Register a pre-resolved integer output. |
 | `RegisterStr(output, s => ...)` | Register a pre-resolved string output. |
+| `RegisterLight(id, v => ...)` | Like `RegisterUInt`, but skipped automatically when the user has **Disable Lighting Management** turned on. Use for brightness knobs and cockpit light controls. |
+| `RegisterLight(id, (ctrl, v) => ...)` | Same, but passes the resolved `DCSBIOSOutput` as `ctrl` so you can read `ctrl.MaxValue` inside the handler. |
+| `RegisterLight(output, v => ...)` | Same, for a pre-resolved output. |
 | `RegisterRaw(address, v => ...)` | Low-level handler for raw bitfield registers when named DCS-BIOS outputs are unavailable or have incorrect mask/shift definitions (M-2000C uses this). `v` is the raw unmasked 16-bit register value; apply bitmasks manually. Also handles the address whitelist registration required by the protocol parser — no extra setup needed. |
 | `GetCompositor(DEFAULT_PAGE).Line(n)...` | Write a CDU line (`.Green()`, `.White()`, `.WriteLine(...)`, ...). |
 | `SetCduLeds(fail:, fm1:, fm2:, fm:, ind:, rdy:)` | Set CDU status LEDs. |
