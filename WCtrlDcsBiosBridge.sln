@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassLibraryCommon", "libs\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WW-Devices-Dotnet", "libs\WwDevicesDotnet\WW-Devices-Dotnet.csproj", "{57496D8F-8F12-7296-1D78-E6181559D88A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "a10c-perf-lib", "libs\A10C-PerfLib\PerformanceLib\a10c-perf-lib.csproj", "{72CD8B54-B409-78A3-C72F-64809EE79E5E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{57496D8F-8F12-7296-1D78-E6181559D88A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57496D8F-8F12-7296-1D78-E6181559D88A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{57496D8F-8F12-7296-1D78-E6181559D88A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72CD8B54-B409-78A3-C72F-64809EE79E5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72CD8B54-B409-78A3-C72F-64809EE79E5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72CD8B54-B409-78A3-C72F-64809EE79E5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72CD8B54-B409-78A3-C72F-64809EE79E5E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
