@@ -39,6 +39,7 @@
   <ItemGroup>
     <ProjectReference Include="libs\DCSFPCommon\src\DCS-BIOS\DCS-BIOS.csproj" />
     <ProjectReference Include="libs\WwDevicesDotnet\WW-Devices-Dotnet.csproj" />
+    <ProjectReference Include="libs\A10C-PerfLib\PerformanceLib\a10c-perf-lib.csproj" />
   </ItemGroup>
 
 
