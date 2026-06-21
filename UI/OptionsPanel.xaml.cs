@@ -31,6 +31,11 @@ public partial class OptionsPanel : UserControl
             prevPageCombo.ItemsSource = keyNames;
         }
 
+        if (FindName("PerfPageKeyComboBox") is ComboBox perfPageCombo)
+        {
+            perfPageCombo.ItemsSource = keyNames;
+        }
+
         if (FindName("F14RioDisplayKeyComboBox") is ComboBox f14RioCombo)
         {
             f14RioCombo.ItemsSource = keyNames;

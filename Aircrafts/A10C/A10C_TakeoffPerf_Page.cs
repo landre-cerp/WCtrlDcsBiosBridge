@@ -68,8 +68,8 @@ internal partial class A10C_Listener
             case Key.LineSelectRight5: CycleTaxi(); break;
 
             default:
-                // FuelPred toggles the page; nav keys also leave. Back to the live A-10C CDU.
-                if (key == _nextPageKey || key == _prevPageKey || key == Key.FuelPred)
+                // The perf-page key toggles the page; nav keys also leave. Back to the live CDU.
+                if (key == _nextPageKey || key == _prevPageKey || key == _perfPageKey)
                 {
                     Scratchpad.Clear();
                     _currentPage = DEFAULT_PAGE; // refreshed by the display timer + DCS-BIOS handlers

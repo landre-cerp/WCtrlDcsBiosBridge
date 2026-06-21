@@ -11,6 +11,8 @@ internal partial class A10C_Listener : AircraftListener
 
     private readonly Key _nextPageKey;
     private readonly Key _prevPageKey;
+    private readonly Key _perfPageKey;
+    private readonly bool _perfPagesEnabled;
 
     // multi-use: registered in both RegisterCduControls and RegisterFrontpanelControls
     private DCSBIOSOutput? _CONSOLE_BRT;
@@ -32,8 +34,13 @@ internal partial class A10C_Listener : AircraftListener
         _prevPageKey = Enum.TryParse<Key>(options.PrevPageKey, out var prevKey)
             ? prevKey
             : Key.PrevPage;
+        _perfPageKey = Enum.TryParse<Key>(options.PerfPageKey, out var perfKey)
+            ? perfKey
+            : Key.FuelPred;
+        _perfPagesEnabled = options.EnablePerfPages;
 
-        AddNewPage(TAKEOFF_PAGE);
+        if (_perfPagesEnabled)
+            AddNewPage(TAKEOFF_PAGE);
     }
 
     ~A10C_Listener()
@@ -53,11 +60,14 @@ internal partial class A10C_Listener : AircraftListener
                 break;
 
             default:
-                // Default (live) page: FuelPred opens the takeoff page; every other key is
-                // forwarded to the real A-10C CDU over DCS-BIOS (users unbind these in DCS).
-                // Rendering happens on this (input) thread only.
-                if (e.Key == Key.FuelPred) { _currentPage = TAKEOFF_PAGE; Compute(); RenderTakeoffPage(); }
-                else ForwardCduKeyToSim(e.Key);
+                // Default (live) page. The perf-page key opens the takeoff page when perf
+                // pages are enabled; other keys are forwarded to the real A-10C CDU over
+                // DCS-BIOS when forwarding is on (i.e. the user unbound them in DCS). The two
+                // are independent. Rendering happens on this (input) thread only.
+                if (_perfPagesEnabled && e.Key == _perfPageKey)
+                { _currentPage = TAKEOFF_PAGE; Compute(); RenderTakeoffPage(); }
+                else if (options.ForwardCduKeysToSim)
+                    ForwardCduKeyToSim(e.Key);
                 break;
         }
     }

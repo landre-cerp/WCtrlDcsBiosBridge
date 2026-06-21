@@ -89,6 +89,21 @@
                      IsChecked="{Binding DisplayCMS, Mode=TwoWay}"
                      Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
                      Margin="0,4"/>
+            <CheckBox Content="Enable Takeoff Performance Page"
+                     IsChecked="{Binding EnablePerfPages, Mode=TwoWay}"
+                     Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+                     Margin="0,4"/>
+            <StackPanel Orientation="Horizontal" Margin="0,4"
+                        IsEnabled="{Binding EnablePerfPages}">
+                <TextBlock Text="Perf Page Key:" VerticalAlignment="Center" Width="120"/>
+                <ComboBox x:Name="PerfPageKeyComboBox"
+                         SelectedValue="{Binding PerfPageKey, Mode=TwoWay}"
+                         SelectionChanged="ComboBox_Changed" Width="150"/>
+            </StackPanel>
+            <CheckBox Content="Forward CDU keys to sim (unbind LSK/digits/&quot;/&quot; in DCS)"
+                     IsChecked="{Binding ForwardCduKeysToSim, Mode=TwoWay}"
+                     Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+                     Margin="0,4"/>
         </StackPanel>
 
         <Separator Margin="0,12"/>
