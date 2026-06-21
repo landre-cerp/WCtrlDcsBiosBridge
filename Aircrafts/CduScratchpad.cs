@@ -3,10 +3,10 @@ using WwDevicesDotNet;
 namespace WCtrlDcsBiosBridge.Aircrafts;
 
 /// <summary>
-/// CDU scratchpad buffer for Perf/calc pages.
+/// CDU scratchpad buffer for Perf input pages (e.g. the A-10C takeoff page).
 /// Collects typed characters from the CDU keyboard and exposes helpers for
 /// committing values to input fields. Page routing is the caller's concern:
-/// only call <see cref="HandleKey"/> while the Perf/calc page is active.
+/// only call <see cref="HandleKey"/> while the input page is active.
 /// </summary>
 internal sealed class CduScratchpad
 {

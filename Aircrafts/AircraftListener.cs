@@ -165,7 +165,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         };
 
     /// <summary>
-    /// CDU scratchpad for Perf/calc pages. Call <see cref="CduScratchpad.HandleKey"/>
+    /// CDU scratchpad for Perf input pages (e.g. the A-10C takeoff page). Call <see cref="CduScratchpad.HandleKey"/>
     /// in the key handler only while the relevant page is active; call
     /// <see cref="CduScratchpad.Clear"/> when navigating away.
     /// </summary>
