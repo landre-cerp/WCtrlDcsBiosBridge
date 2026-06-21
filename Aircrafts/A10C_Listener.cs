@@ -7,6 +7,7 @@ internal partial class A10C_Listener : AircraftListener
 {
     private const int BRT_STEP = 5;
     private const string TAKEOFF_PAGE = "TAKEOFF";
+    private const string LANDING_PAGE = "LANDING";
     private readonly DCSBIOSOutput?[] cduLines = new DCSBIOSOutput?[10];
 
     private readonly Key _nextPageKey;
@@ -40,7 +41,10 @@ internal partial class A10C_Listener : AircraftListener
         _perfPagesEnabled = options.EnablePerfPages;
 
         if (_perfPagesEnabled)
+        {
             AddNewPage(TAKEOFF_PAGE);
+            AddNewPage(LANDING_PAGE);
+        }
     }
 
     ~A10C_Listener()
@@ -57,6 +61,11 @@ internal partial class A10C_Listener : AircraftListener
                 // Anything it doesn't consume (LSKs, navigation) goes to the page.
                 if (!Scratchpad.HandleKey(e.Key))
                     HandleTakeoffKey(e.Key);
+                break;
+
+            case LANDING_PAGE:
+                if (!Scratchpad.HandleKey(e.Key))
+                    HandleLandingKey(e.Key);
                 break;
 
             default:
@@ -92,6 +101,7 @@ internal partial class A10C_Listener : AircraftListener
         }
 
         RegisterTakeoffControls();
+        RegisterLandingControls();
 
         RegisterLight(_CONSOLE_BRT, v =>
             SetCduBacklightBrightnessPercent((int)(v * 100 / _CONSOLE_BRT!.MaxValue)));

@@ -68,11 +68,17 @@ internal partial class A10C_Listener
             case Key.LineSelectRight5: CycleTaxi(); break;
 
             default:
-                // The perf-page key toggles the page; nav keys also leave. Back to the live CDU.
-                if (key == _nextPageKey || key == _prevPageKey || key == _perfPageKey)
+                if (key == _nextPageKey || key == _prevPageKey)
                 {
                     Scratchpad.Clear();
-                    _currentPage = DEFAULT_PAGE; // refreshed by the display timer + DCS-BIOS handlers
+                    _currentPage = LANDING_PAGE;
+                    ComputeLanding();
+                    RenderLandingPage();
+                }
+                else if (key == _perfPageKey)
+                {
+                    Scratchpad.Clear();
+                    _currentPage = DEFAULT_PAGE;
                 }
                 return;
         }
@@ -155,7 +161,7 @@ internal partial class A10C_Listener
         var c = GetCompositor(TAKEOFF_PAGE);
         c.Clear();
 
-        c.Line(0).White().Centered("A-10C TKOFF");
+        c.Line(0).Small().White().Write("1/2").Centered("TKOFF");
         c.Column(Metrics.Columns - 3).White().Write("FL7");
 
         // Units sit next to the label: right of left-side labels, left of right-side labels.
