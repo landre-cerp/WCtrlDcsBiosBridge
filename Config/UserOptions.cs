@@ -17,6 +17,24 @@ public class UserOptions
     public bool DisplayCMS { get; set; }
 
     /// <summary>
+    /// Gets or sets whether the A-10C takeoff performance page is available.
+    /// </summary>
+    public bool EnablePerfPages { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the MCDU key that opens the A-10C takeoff performance page.
+    /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "FuelPred").
+    /// </summary>
+    public string PerfPageKey { get; set; } = "FuelPred";
+
+    /// <summary>
+    /// Gets or sets whether the A-10C CDU line-select keys, digits and slash are forwarded to
+    /// the sim over DCS-BIOS while the live CDU page is shown. Enable this after unbinding
+    /// those keys in DCS. Independent of <see cref="EnablePerfPages"/>.
+    /// </summary>
+    public bool ForwardCduKeysToSim { get; set; }
+
+    /// <summary>
     /// Gets or sets whether lighting management should be disabled (for SimApp Pro users).
     /// </summary>
     public bool DisableLightingManagement { get; set; }

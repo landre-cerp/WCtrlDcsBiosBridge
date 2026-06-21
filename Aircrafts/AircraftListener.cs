@@ -164,6 +164,24 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
               [DEFAULT_PAGE] = new Screen()
         };
 
+    /// <summary>
+    /// CDU scratchpad for Perf input pages (e.g. the A-10C takeoff page). Call <see cref="CduScratchpad.HandleKey"/>
+    /// in the key handler only while the relevant page is active; call
+    /// <see cref="CduScratchpad.Clear"/> when navigating away.
+    /// </summary>
+    protected CduScratchpad Scratchpad { get; } = new();
+
+    /// <summary>
+    /// Returns a boxed placeholder of <paramref name="width"/> '.' characters
+    /// when <paramref name="value"/> is null, or the value right-padded to
+    /// <paramref name="width"/> when set.
+    /// </summary>
+    protected static string BoxField(string? value, int width)
+    {
+        if (value is null) return new string('.', width);
+        return value.Length >= width ? value[..width] : value.PadRight(width);
+    }
+
     public AircraftListener(AircraftDescriptor descriptor, UserOptions options)
     {
         this.descriptor = descriptor;

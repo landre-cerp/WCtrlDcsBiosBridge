@@ -3,10 +3,16 @@ using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Aircrafts;
 
-internal class A10C_Listener : AircraftListener
+internal partial class A10C_Listener : AircraftListener
 {
     private const int BRT_STEP = 5;
+    private const string TAKEOFF_PAGE = "TAKEOFF";
     private readonly DCSBIOSOutput?[] cduLines = new DCSBIOSOutput?[10];
+
+    private readonly Key _nextPageKey;
+    private readonly Key _prevPageKey;
+    private readonly Key _perfPageKey;
+    private readonly bool _perfPagesEnabled;
 
     // multi-use: registered in both RegisterCduControls and RegisterFrontpanelControls
     private DCSBIOSOutput? _CONSOLE_BRT;
@@ -22,11 +28,48 @@ internal class A10C_Listener : AircraftListener
 
     public A10C_Listener(
         UserOptions options) : base(AircraftRegistry.A10C, options) {
+        _nextPageKey = Enum.TryParse<Key>(options.NextPageKey, out var nextKey)
+            ? nextKey
+            : Key.NextPage;
+        _prevPageKey = Enum.TryParse<Key>(options.PrevPageKey, out var prevKey)
+            ? prevKey
+            : Key.PrevPage;
+        _perfPageKey = Enum.TryParse<Key>(options.PerfPageKey, out var perfKey)
+            ? perfKey
+            : Key.FuelPred;
+        _perfPagesEnabled = options.EnablePerfPages;
+
+        if (_perfPagesEnabled)
+            AddNewPage(TAKEOFF_PAGE);
     }
 
     ~A10C_Listener()
     {
         Dispose(false);
+    }
+
+    private void HandleKeyDown(object? sender, KeyEventArgs e)
+    {
+        switch (_currentPage)
+        {
+            case TAKEOFF_PAGE:
+                // Typing keys (digits, letters, CLR…) feed the scratchpad first.
+                // Anything it doesn't consume (LSKs, navigation) goes to the page.
+                if (!Scratchpad.HandleKey(e.Key))
+                    HandleTakeoffKey(e.Key);
+                break;
+
+            default:
+                // Default (live) page. The perf-page key opens the takeoff page when perf
+                // pages are enabled; other keys are forwarded to the real A-10C CDU over
+                // DCS-BIOS when forwarding is on (i.e. the user unbound them in DCS). The two
+                // are independent. Rendering happens on this (input) thread only.
+                if (_perfPagesEnabled && e.Key == _perfPageKey)
+                { _currentPage = TAKEOFF_PAGE; Compute(); RenderTakeoffPage(); }
+                else if (options.ForwardCduKeysToSim)
+                    ForwardCduKeyToSim(e.Key);
+                break;
+        }
     }
 
     protected override void InitializeDcsBiosOutputs()
@@ -42,6 +85,14 @@ internal class A10C_Listener : AircraftListener
 
     protected override void RegisterCduControls()
     {
+        if (CduDevice != null)
+        {
+            CduDevice.KeyDown -= HandleKeyDown;
+            CduDevice.KeyDown += HandleKeyDown;
+        }
+
+        RegisterTakeoffControls();
+
         RegisterLight(_CONSOLE_BRT, v =>
             SetCduBacklightBrightnessPercent((int)(v * 100 / _CONSOLE_BRT!.MaxValue)));
         RegisterLight("CDU_BRT", v =>
@@ -282,5 +333,14 @@ internal class A10C_Listener : AircraftListener
         if (trimmed.Length == 1 && char.IsDigit(trimmed[0])) return "0" + trimmed;
         if (trimmed.Length >= 2) return trimmed[..2];
         return "00";
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && CduDevice != null)
+        {
+            CduDevice.KeyDown -= HandleKeyDown;
+        }
+        base.Dispose(disposing);
     }
 }

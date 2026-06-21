@@ -24,20 +24,15 @@ internal partial class FA18C_Listener : AircraftListener
             : Key.PrevPage;
 
         AddNewPage(IFEI_PAGE);
+        
     }
 
     private void HandleKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key == _nextPageKey)
-        {
-            _currentPage = IFEI_PAGE;
-            RenderIfei();
-        }
-        else if (e.Key == _prevPageKey)
-        {
-            _currentPage = DEFAULT_PAGE;
-            RenderUfc();
-        }
+               
+        if (e.Key == _nextPageKey) { _currentPage = IFEI_PAGE;   RenderIfei(); }
+        else if (e.Key == _prevPageKey) { _currentPage = DEFAULT_PAGE; RenderUfc(); }
+        
     }
 
     protected override void RegisterCduControls()
