@@ -81,7 +81,7 @@ internal static class AircraftRegistry
         c => new UH1H_Listener(c.Options));
 
     public static readonly AircraftDescriptor F14B = new(
-        16, "F-14B", "F-14B.json", "resources/a10c-font-21x31.json", false,
+        16, "F-14B", "F-14.json", "resources/a10c-font-21x31.json", false,
         new[] { "F-14B", "F-14A-135-GR" },
         c => new F14_Listener(c.Options));
 
