@@ -12,7 +12,6 @@ We welcome all contributions, whether it’s bug reports, feature requests, code
 - Visual Studio
 - .NET 8 SDK
 - DCS-BIOS installed in your DCS World Saved Games folder. ( check project README for details)
-https://github.com/DCS-Skunkworks/dcs-bios (v0.11.0 or later for CH-47F)
 
 ### Recommended Tools
 Bort https://github.com/DCS-Skunkworks/Bort or any other Dcsbios Reference tool to help you find the right addresses and values.
@@ -217,14 +216,6 @@ Populate these in `RegisterFrontpanelControls()`. Renderers read whatever proper
 ---
 
 ## ❓ FAQ
-
-**Q: Keeps complaining that it can't find Aircraft 50 (CH47F)**
-A: Add the CH-47F to the supported aircraft list in dcs-bios_modules.txt after the last entry (49)
-It's because the CH-47F is not yet handled in the DCSFPCommon library.
-```
-OH-58D|49|OH-58D Kiowa Warrior
-CH-47F|50|CH-47F Chinook
-```
 
 **Q: What if I found a bug?**  
 A: Please check if the bug is already reported. If not, feel free to open a new issue with steps to reproduce the bug.
