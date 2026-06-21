@@ -12,6 +12,7 @@ namespace WCtrlDcsBiosBridge.Aircrafts;
 /// page — and picks taxi fuel (100/200/300 lb). Takeoff weight TOW = GW − taxi fuel, and all
 /// performance is computed against that.
 /// </para>
+/// <para>
 /// QNH is taken silently from the aircraft altimeter
 /// (<see cref="FlightDeckState.BaroPressure"/>), falling back to standard 29.92 inHg.
 /// Flaps fixed at 7° (<see cref="FLAPS.TO"/>). Computes PTFS, rotate/takeoff speed, ground
