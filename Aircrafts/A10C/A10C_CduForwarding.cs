@@ -4,12 +4,12 @@ using WwDevicesDotNet;
 namespace WCtrlDcsBiosBridge.Aircrafts;
 
 /// <summary>
-/// Forwards CDU line-select keys to the sim over DCS-BIOS while the live (default) page is
-/// shown. The physical MCDU keys are also bound inside DCS, so when a custom page (e.g. the
-/// takeoff-perf page) uses them for its own input they would otherwise also drive the real
-/// aircraft CDU. The intended workflow: the user unbinds these keys in DCS, and the bridge
-/// drives the real A-10C CDU here — but only on the default page. On a custom page the keys
-/// are consumed locally and nothing is sent to the sim.
+/// Forwards selected CDU keys (LSKs + a subset of typing keys like digits and '/') to the sim
+/// over DCS-BIOS while the live (default) page is shown. The physical MCDU keys are also bound
+/// inside DCS, so when a custom page (e.g. the takeoff-perf page) uses them for its own input
+/// they would otherwise also drive the real aircraft CDU. The intended workflow: the user
+/// unbinds these keys in DCS, and the bridge drives the real A-10C CDU here — but only on the
+/// default page. On a custom page the keys are consumed locally and nothing is sent to the sim.
 /// </summary>
 internal partial class A10C_Listener
 {
