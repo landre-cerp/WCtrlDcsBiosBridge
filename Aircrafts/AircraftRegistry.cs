@@ -41,9 +41,9 @@ internal static class AircraftRegistry
         c => new A10C_Listener(c.Options));
 
     public static readonly AircraftDescriptor AH64D = new(
-        46, "AH-64D", "AH-64D.json", "resources/ah64d-font-21x31.json", false,
+        46, "AH-64D", "AH-64D.json", "resources/ah64d-font-21x31.json", true,
         new[] { "AH-64D" },
-        c => new AH64D_Listener(c.Options));
+        c => new AH64D_Listener(c.Options, c.IsPilot, c.Ch47SwitchWithSeat));
 
     public static readonly AircraftDescriptor FA18C = new(
         20, "F/A-18C", "FA-18C_hornet.json", "resources/a10c-font-21x31.json", false,
