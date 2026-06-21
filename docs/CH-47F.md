@@ -9,7 +9,8 @@ feed. The CH-47F is the only aircraft with a **seat choice** (see below).
 |--------|---------------|
 | CDU (MCDU / PFP3N / PFP7 / PFP4) | Pilot or co-pilot CDU pages |
 
-**Requires DCS-BIOS v0.11.0 or later (v0.11.4 recommended)** for the CH-47F CDU pages and
+**Requires DCS-BIOS v0.11.0 or later** 
+**(Nightly build 2026-6-29 recommended)** for the CH-47F CDU pages and
 seat-position support.
 
 ## Single vs Multiple CDUs
