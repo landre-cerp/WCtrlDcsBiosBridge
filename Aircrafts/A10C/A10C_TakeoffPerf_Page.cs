@@ -123,25 +123,22 @@ internal partial class A10C_Listener
             if (temp.HasValue && elev.HasValue)
                 _toIndex = CalcTakeoffIndex(temp.Value, new PressureAltitude(elev.Value, qnh));
 
-            if (_tow is double tow)
+            if (_tow is double tow && _toIndex.HasValue)
             {
-                _takeoff = TakeOffSpeed(tow, FLAPS.TO);
-                _rotate = RotationSpeed(tow, FLAPS.TO);
+                double headwind = 0;
+                if (qfu.HasValue && windDir.HasValue && windSpd.HasValue)
+                    headwind = windSpd.Value * Math.Cos((windDir.Value - qfu.Value) * Math.PI / 180.0);
 
-                if (_toIndex.HasValue)
+                var result = Takeoff(_toIndex.Value, new GrossWeight(tow), headwind, FLAPS.TO, ThrustSetting.Max, _rcr);
+                _takeoff = result.TakeoffSpeedKts;
+                _rotate = result.RotationSpeedKts;
+                _groundRun = result.GroundRunFt;
+                _cfl = result.CriticalFieldFt;
+
+                if (rwy.HasValue)
                 {
-                    double headwind = 0;
-                    if (qfu.HasValue && windDir.HasValue && windSpd.HasValue)
-                        headwind = windSpd.Value * Math.Cos((windDir.Value - qfu.Value) * Math.PI / 180.0);
-
-                    _groundRun = TakeoffGroundRun(_toIndex.Value, (GrossWeight)tow, headwind, FLAPS.TO);
-                    _cfl = CriticalFieldLength(_toIndex.Value, (GrossWeight)tow, headwind, FLAPS.TO, _rcr);
-
-                    if (rwy.HasValue)
-                    {
-                        _rwyTooShort = _groundRun > rwy.Value;
-                        _cflTooLong = _cfl > rwy.Value;
-                    }
+                    _rwyTooShort = _groundRun > rwy.Value;
+                    _cflTooLong = _cfl > rwy.Value;
                 }
             }
         }
