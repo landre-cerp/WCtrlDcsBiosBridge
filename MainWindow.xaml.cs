@@ -168,23 +168,16 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private static readonly SolidColorBrush CardDisconnectedDot    = new(Color.FromRgb(0xE5, 0x39, 0x35));
     private static readonly SolidColorBrush CardDisconnectedBorder = new(Color.FromRgb(0xB7, 0x1C, 0x1C));
 
-    private static Brush ThemeBrush(string key, Color fallback) =>
-        Application.Current.TryFindResource(key) as Brush ?? new SolidColorBrush(fallback);
-
     private Border CreateDeviceCard(DeviceInfo deviceInfo)
     {
-        var connectedBorder = ThemeBrush("CardConnectedBorderBrush", Color.FromRgb(0x2E, 0x7D, 0x32));
-        var connectedBg     = ThemeBrush("CardConnectedBgBrush",     Color.FromArgb(0x18, 0x2E, 0x7D, 0x32));
-        var connectedDot    = ThemeBrush("CardConnectedDotBrush",    Color.FromRgb(0x43, 0xA0, 0x47));
-
         var dot = new Ellipse
         {
             Width = 7,
             Height = 7,
-            Fill = connectedDot,
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 7, 0)
         };
+        dot.SetResourceReference(Shape.FillProperty, "CardConnectedDotBrush");
 
         var label = new TextBlock
         {
@@ -201,12 +194,12 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         {
             CornerRadius = new CornerRadius(6),
             BorderThickness = new Thickness(1),
-            BorderBrush = connectedBorder,
-            Background = connectedBg,
             Padding = new Thickness(10, 5, 10, 5),
             Margin = new Thickness(0, 0, 8, 6),
             Child = inner
         };
+        card.SetResourceReference(Border.BorderBrushProperty, "CardConnectedBorderBrush");
+        card.SetResourceReference(Border.BackgroundProperty,  "CardConnectedBgBrush");
 
         if (deviceInfo.Frontpanel != null)
         {
