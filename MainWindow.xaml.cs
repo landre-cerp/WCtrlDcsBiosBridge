@@ -12,6 +12,7 @@ using WCtrlDcsBiosBridge.Devices;
 using WCtrlDcsBiosBridge.Services;
 using WCtrlDcsBiosBridge.Aircrafts;
 using Microsoft.Win32;
+using System.Windows.Navigation;
 
 namespace WCtrlDcsBiosBridge;
 
@@ -606,5 +607,18 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         {
             Logger.Warn(ex, "Failed to open update URL");
         }
+    }
+
+    private void DocsLink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn(ex, "Failed to open docs URL");
+        }
+        e.Handled = true;
     }
 }

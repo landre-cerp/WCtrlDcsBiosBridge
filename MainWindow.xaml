@@ -187,7 +187,7 @@
                                 <TextBlock Text="1" FontSize="10" HorizontalAlignment="Center"
                                            VerticalAlignment="Center" Foreground="{DynamicResource StepForeground}"/>
                             </Border>
-                            <TextBlock Text="Connect your Winwing device(s) via USB. They appear in the Dashboard once detected."
+                            <TextBlock Text="Connect your Winwing device(s) via USB"
                                        TextWrapping="Wrap" FontSize="12"
                                        Foreground="{DynamicResource HelpTextForeground}" VerticalAlignment="Center"/>
                         </DockPanel>
@@ -199,7 +199,7 @@
                                 <TextBlock Text="2" FontSize="10" HorizontalAlignment="Center"
                                            VerticalAlignment="Center" Foreground="{DynamicResource StepForeground}"/>
                             </Border>
-                            <TextBlock Text="Click Start Bridge on the Dashboard tab."
+                            <TextBlock Text="Click Start Bridge on the Dashboard tab. Connected devices will be listed."
                                        TextWrapping="Wrap" FontSize="12"
                                        Foreground="{DynamicResource HelpTextForeground}" VerticalAlignment="Center"/>
                         </DockPanel>
@@ -230,21 +230,12 @@
 
                         <Separator Margin="0,12"/>
 
-                        <TextBlock Text="DCS-BIOS network" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                        <Border Background="{DynamicResource InfoBoxBackground}"
-                                BorderBrush="{DynamicResource InfoBoxBorderBrush}"
-                                BorderThickness="1" CornerRadius="4" Padding="10,7">
-                            <TextBlock FontSize="12" Foreground="{DynamicResource InfoBoxForeground}" TextWrapping="Wrap">
-                                Default receive: <Run FontWeight="SemiBold">239.255.50.10:5010</Run>&#160; · &#160;Default send: <Run FontWeight="SemiBold">127.0.0.1:7778</Run><LineBreak/>
-                                Only change these if your DCS-BIOS uses non-default ports — use <Run FontStyle="Italic">Edit DCS-BIOS Configuration</Run> in the Configuration tab.
-                            </TextBlock>
-                        </Border>
-
-                        <Separator Margin="0,12"/>
-
-                        <TextBlock Text="Supported aircraft" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                        <TextBlock Text="A-10C · AH-64D · F/A-18C · F-15E · F-16C · CH-47F (pilot &amp; copilot) · M-2000C"
-                                   FontSize="12" Foreground="{DynamicResource HelpTextForeground}" TextWrapping="Wrap"/>
+                        <TextBlock FontSize="12" TextWrapping="Wrap">
+                            <Hyperlink NavigateUri="https://github.com/landre-cerp/WCtrlDcsBiosBridge/tree/main/docs"
+                                       RequestNavigate="DocsLink_RequestNavigate">
+                                Supported aircraft"
+                            </Hyperlink>
+                        </TextBlock>
 
                         <Separator Margin="0,12"/>
 
