@@ -7,9 +7,55 @@ using WCtrlDcsBiosBridge.Config;
 /// </summary>
 public class UserOptions
 {
-    // ── App-wide ─────────────────────────────────────────────────────────────
+    /// <summary>
+    /// Gets or sets whether the A10C display should be aligned to the bottom of the screen.
+    /// </summary>
+    public bool DisplayBottomAligned { get; set; }
 
-    /// <summary>Disable lighting management (for SimApp Pro users).</summary>
+    /// <summary>
+    /// Gets or sets whether the A10C CMS should be displayed.
+    /// </summary>
+    public bool DisplayCMS { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the A-10C takeoff performance page is available.
+    /// </summary>
+    public bool EnablePerfPages { get; set; } = true;
+
+    /// <summary>
+    /// When true, the A-10C listener receives live payload/fuel/wind data from the
+    /// a10c-calc.lua DCS export module (UDP port 31090) and uses it to pre-populate
+    /// the GW and WIND fields on the takeoff performance page.
+    /// Requires a10c-calc.lua to be installed in DCS Scripts/Export.lua.
+    /// </summary>
+    public bool EnableLiveExport { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the MCDU key that opens the A-10C takeoff performance page.
+    /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "FuelPred").
+    /// </summary>
+    public string PerfPageKey { get; set; } = "FuelPred";
+
+    /// <summary>
+    /// Key to advance through A-10C perf pages (TKOFF → LOADOUT → LANDING).
+    /// </summary>
+    public string A10CNextPageKey { get; set; } = "NextPage";
+
+    /// <summary>
+    /// Key to go back through A-10C perf pages (LANDING → LOADOUT → TKOFF).
+    /// </summary>
+    public string A10CPrevPageKey { get; set; } = "PrevPage";
+
+    /// <summary>
+    /// Gets or sets whether the A-10C CDU line-select keys, digits and slash are forwarded to
+    /// the sim over DCS-BIOS while the live CDU page is shown. Enable this after unbinding
+    /// those keys in DCS. Independent of <see cref="EnablePerfPages"/>.
+    /// </summary>
+    public bool ForwardCduKeysToSim { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether lighting management should be disabled (for SimApp Pro users).
+    /// </summary>
     public bool DisableLightingManagement { get; set; }
 
     /// <summary>Automatically start the bridge once conditions are met.</summary>

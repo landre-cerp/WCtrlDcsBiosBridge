@@ -1,4 +1,5 @@
 using DCS_BIOS.Serialized;
+using WCtrlDcsBiosBridge.Services;
 using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Aircrafts;
@@ -7,6 +8,7 @@ internal partial class A10C_Listener : AircraftListener
 {
     private const int BRT_STEP = 10;
     private const string TAKEOFF_PAGE = "TAKEOFF";
+    private const string LOADOUT_PAGE = "LOADOUT";
     private const string LANDING_PAGE = "LANDING";
     private readonly DCSBIOSOutput?[] cduLines = new DCSBIOSOutput?[10];
 
@@ -14,6 +16,13 @@ internal partial class A10C_Listener : AircraftListener
     private readonly Key _prevPageKey;
     private readonly Key _perfPageKey;
     private readonly bool _perfPagesEnabled;
+
+    private A10CExportReceiver? _exportReceiver;
+    private volatile A10CExportData? _lastExportData;
+    private bool _gwManuallySet;
+    private bool _windManuallySet;
+    private bool _elevManuallySet;
+    private bool _gwHasUnknown;
 
     // multi-use: registered in both RegisterCduControls and RegisterFrontpanelControls
     private DCSBIOSOutput? _CONSOLE_BRT;
@@ -43,7 +52,15 @@ internal partial class A10C_Listener : AircraftListener
         if (_perfPagesEnabled)
         {
             AddNewPage(TAKEOFF_PAGE);
+            AddNewPage(LOADOUT_PAGE);
             AddNewPage(LANDING_PAGE);
+        }
+        
+        if (_perfPagesEnabled && options.EnableLiveExport)
+        {
+            _exportReceiver = new A10CExportReceiver();
+            _exportReceiver.DataReceived += OnLiveExportData;
+            _exportReceiver.Start();
         }
     }
 
@@ -56,6 +73,10 @@ internal partial class A10C_Listener : AircraftListener
                 // Anything it doesn't consume (LSKs, navigation) goes to the page.
                 if (!Scratchpad.HandleKey(e.Key))
                     HandleTakeoffKey(e.Key);
+                break;
+
+            case LOADOUT_PAGE:
+                HandleLoadoutKey(e.Key);
                 break;
 
             case LANDING_PAGE:
@@ -340,11 +361,41 @@ internal partial class A10C_Listener : AircraftListener
         return "00";
     }
 
+    // Runs on the UDP receiver thread. Updates all model fields then rebuilds the LOADOUT
+    // screen buffer so the render timer can display it whenever _currentPage == LOADOUT_PAGE.
+    private void OnLiveExportData(A10CExportData data)
+    {
+        _lastExportData = data;
+
+        if (!_gwManuallySet)
+        {
+            var (gw, hasUnknown) = A10CWeightTable.ComputeGw(data);
+            _gw = gw.ToString();
+            _gwHasUnknown = hasUnknown;
+        }
+
+        if (!_windManuallySet
+            && data.Environment?.WindDirectionDeg.HasValue == true
+            && data.Environment?.WindSpeedKts.HasValue == true)
+        {
+            _wind = $"{data.Environment.WindDirectionDeg}/{(int)data.Environment.WindSpeedKts.Value}";
+        }
+
+        if (!_elevManuallySet && data.Position?.AltFt.HasValue == true)
+            _elevFt = ((int)Math.Round(data.Position.AltFt.Value)).ToString();
+
+        RenderLoadoutPage();
+    }
+
     protected override void Dispose(bool disposing)
     {
-        if (disposing && CduDevice != null)
+        if (disposing)
         {
-            CduDevice.KeyDown -= HandleKeyDown;
+            if (CduDevice != null)
+                CduDevice.KeyDown -= HandleKeyDown;
+
+            _exportReceiver?.Dispose();
+            _exportReceiver = null;
         }
         base.Dispose(disposing);
     }

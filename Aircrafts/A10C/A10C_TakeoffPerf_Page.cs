@@ -58,17 +58,35 @@ internal partial class A10C_Listener
     {
         switch (key)
         {
-            case Key.LineSelectLeft1: Scratchpad.CommitToField(ref _elevFt); break;
+            case Key.LineSelectLeft1:
+                bool elevDelete = Scratchpad.IsDeleteMode;
+                Scratchpad.CommitToField(ref _elevFt);
+                _elevManuallySet = !elevDelete && _elevFt != null;
+                break;
             case Key.LineSelectLeft2: Scratchpad.CommitToField(ref _rwyLenFt); break;
             case Key.LineSelectLeft3: Scratchpad.CommitToField(ref _qfuDeg); break;
-            case Key.LineSelectLeft4: Scratchpad.CommitToField(ref _wind); break;
-            case Key.LineSelectLeft5: Scratchpad.CommitToField(ref _gw); break;
+            case Key.LineSelectLeft4:
+                bool windDelete = Scratchpad.IsDeleteMode;
+                Scratchpad.CommitToField(ref _wind);
+                _windManuallySet = !windDelete && _wind != null;
+                break;
+            case Key.LineSelectLeft5:
+                bool gwDelete = Scratchpad.IsDeleteMode;
+                Scratchpad.CommitToField(ref _gw);
+                _gwManuallySet = !gwDelete && _gw != null;
+                break;
             case Key.LineSelectRight1: Scratchpad.CommitToField(ref _tempC); break;
             case Key.LineSelectRight3: CycleRcr(); break;
             case Key.LineSelectRight5: CycleTaxi(); break;
 
             default:
-                if (key == _nextPageKey || key == _prevPageKey)
+                if (key == _nextPageKey)
+                {
+                    Scratchpad.Clear();
+                    _currentPage = LOADOUT_PAGE;
+                    RenderLoadoutPage();
+                }
+                else if (key == _prevPageKey)
                 {
                     Scratchpad.Clear();
                     _currentPage = LANDING_PAGE;
@@ -158,7 +176,7 @@ internal partial class A10C_Listener
         var c = GetCompositor(TAKEOFF_PAGE);
         c.Clear();
 
-        c.Line(0).Small().White().Write("1/2").Centered("TKOFF");
+        c.Line(0).Small().White().Write("1/3").Centered("TKOFF");
         c.Column(Metrics.Columns - 3).White().Write("FL7");
 
         // Units sit next to the label: right of left-side labels, left of right-side labels.
@@ -181,7 +199,9 @@ internal partial class A10C_Listener
         LabelRight(c, 7, "PTFS");         PlainRight(c, 8, Fmt(_ptfs, "0")); // moved up
 
         // Gross weight (boxed input, L5) + takeoff weight (middle) + taxi fuel (cycle, R5).
-        LabelLeft(c, 9, "GW ");
+        // Append "?" when live GW has unrecognized stations (lower bound only).
+        string gwLabel = !_gwManuallySet && _gwHasUnknown ? "GW ? " : "GW ";
+        LabelLeft(c, 9, gwLabel);
         c.Line(9).Column(9).Small().White().Write("TOW");
         LabelRight(c, 9, "(lbs)TAXI");
 

@@ -6,204 +6,262 @@
     <StackPanel>
 
         <!-- General — always editable -->
-        <TextBlock x:Name="GeneralHeader" x:Uid="GeneralHeader" Text="GENERAL" FontWeight="SemiBold" FontSize="11"
-                   Foreground="{StaticResource SubtleTextForeground}" Margin="0,0,0,8"/>
+        <TextBlock x:Name="GeneralHeader" x:Uid="GeneralHeader" Text="GENERAL" FontWeight="SemiBold"
+            FontSize="11"
+            Foreground="{StaticResource SubtleTextForeground}" Margin="0,0,0,8" />
 
-        <CheckBox x:Name="DisableLightingManagementOption" x:Uid="DisableLightingManagementOption" Content="Disable Lighting Management (for SimApp Pro users)"
-                  IsChecked="{Binding DisableLightingManagement, Mode=TwoWay}"
-                  Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
-                  Margin="0,4"/>
-        <CheckBox x:Name="AutoStartOption" x:Uid="AutoStartOption" Content="Auto-Start Bridge when Ready"
-                  IsChecked="{Binding AutoStart, Mode=TwoWay}"
-                  Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
-                  Margin="0,4"/>
-        <CheckBox x:Name="MinimizeOnStartOption" x:Uid="MinimizeOnStartOption" Content="Minimize Window on Start"
-                  IsChecked="{Binding MinimizeOnStart, Mode=TwoWay}"
-                  Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
-                  Margin="0,4"/>
+        <CheckBox x:Name="DisableLightingManagementOption" x:Uid="DisableLightingManagementOption"
+            Content="Disable Lighting Management (for SimApp Pro users)"
+            IsChecked="{Binding DisableLightingManagement, Mode=TwoWay}"
+            Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+            Margin="0,4" />
+        <CheckBox x:Name="AutoStartOption" x:Uid="AutoStartOption"
+            Content="Auto-Start Bridge when Ready"
+            IsChecked="{Binding AutoStart, Mode=TwoWay}"
+            Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+            Margin="0,4" />
+        <CheckBox x:Name="MinimizeOnStartOption" x:Uid="MinimizeOnStartOption"
+            Content="Minimize Window on Start"
+            IsChecked="{Binding MinimizeOnStart, Mode=TwoWay}"
+            Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+            Margin="0,4" />
 
-        <Border Height="1" Background="{StaticResource CardBorderBrush}" Margin="0,12"/>
+        <Border Height="1" Background="{StaticResource CardBorderBrush}" Margin="0,12" />
 
         <!-- On-close reset — disabled when lighting management is off -->
-        <ContentControl x:Name="OnCloseSection" HorizontalContentAlignment="Stretch" IsTabStop="False">
+        <ContentControl x:Name="OnCloseSection" HorizontalContentAlignment="Stretch"
+            IsTabStop="False">
             <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                    <TextBlock x:Name="OnCloseHeader" x:Uid="OnCloseHeader" Text="ON CLOSE" FontWeight="SemiBold" FontSize="11"
-                               Foreground="{StaticResource SubtleTextForeground}"
-                               VerticalAlignment="Center"/>
+                    <TextBlock x:Name="OnCloseHeader" x:Uid="OnCloseHeader" Text="ON CLOSE"
+                        FontWeight="SemiBold" FontSize="11"
+                        Foreground="{StaticResource SubtleTextForeground}"
+                        VerticalAlignment="Center" />
                     <Border x:Name="OnCloseBadge" Margin="8,0,0,0" CornerRadius="4" Padding="6,2"
-                            VerticalAlignment="Center" Visibility="Collapsed"
-                            Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
-                        <TextBlock x:Name="LightingManagementDisabledBadge" x:Uid="LightingManagementDisabledBadge" Text="Lighting Management disabled" FontSize="10" Foreground="#E65100"/>
+                        VerticalAlignment="Center" Visibility="Collapsed"
+                        Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
+                        <TextBlock x:Name="LightingManagementDisabledBadge"
+                            x:Uid="LightingManagementDisabledBadge"
+                            Text="Lighting Management disabled" FontSize="10" Foreground="#E65100" />
                     </Border>
                 </StackPanel>
 
-                <CheckBox x:Name="TurnOffBacklightsOption" x:Uid="TurnOffBacklightsOption" Content="Turn Off Backlights (brightness → 0 %)"
-                          IsChecked="{Binding CloseResetBacklight, Mode=TwoWay}"
-                          Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
-                          Margin="0,4"/>
-                <CheckBox x:Name="TurnOffMarkersOption" x:Uid="TurnOffMarkersOption" Content="Turn Off Markers (LEDs)"
-                          IsChecked="{Binding CloseResetMarkers, Mode=TwoWay}"
-                          Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
-                          Margin="0,4"/>
+                <CheckBox x:Name="TurnOffBacklightsOption" x:Uid="TurnOffBacklightsOption"
+                    Content="Turn Off Backlights (brightness → 0 %)"
+                    IsChecked="{Binding CloseResetBacklight, Mode=TwoWay}"
+                    Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+                    Margin="0,4" />
+                <CheckBox x:Name="TurnOffMarkersOption" x:Uid="TurnOffMarkersOption"
+                    Content="Turn Off Markers (LEDs)"
+                    IsChecked="{Binding CloseResetMarkers, Mode=TwoWay}"
+                    Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+                    Margin="0,4" />
             </StackPanel>
         </ContentControl>
 
-        <Border Height="1" Background="{StaticResource CardBorderBrush}" Margin="0,12"/>
+        <Border Height="1" Background="{StaticResource CardBorderBrush}" Margin="0,12" />
 
         <!-- A-10C -->
         <ContentControl x:Name="A10CSection" HorizontalContentAlignment="Stretch" IsTabStop="False">
             <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                     <TextBlock Text="A-10C" FontWeight="SemiBold" FontSize="13"
-                               Foreground="{StaticResource SubtleTextForeground}" VerticalAlignment="Center"/>
+                        Foreground="{StaticResource SubtleTextForeground}"
+                        VerticalAlignment="Center" />
                     <Border x:Name="A10CBadge" Margin="8,0,0,0" CornerRadius="4" Padding="6,2"
-                            VerticalAlignment="Center" Visibility="Collapsed"
-                            Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
-                        <TextBlock x:Name="DisabledWhileInUseA10CBadge" x:Uid="DisabledWhileInUseA10CBadge" Text="Disabled while in use" FontSize="10" Foreground="#E65100"/>
+                        VerticalAlignment="Center" Visibility="Collapsed"
+                        Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
+                        <TextBlock x:Name="DisabledWhileInUseA10CBadge"
+                            x:Uid="DisabledWhileInUseA10CBadge" Text="Disabled while in use"
+                            FontSize="10" Foreground="#E65100" />
                     </Border>
                 </StackPanel>
-                <CheckBox x:Name="AlignCduBottomOption" x:Uid="AlignCduBottomOption" Content="Align CDU Display to Bottom"
-                          IsChecked="{Binding A10C.DisplayBottomAligned, Mode=TwoWay}"
-                          Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
-                          Margin="0,4"/>
-                <CheckBox x:Name="DisplayCmsOption" x:Uid="DisplayCmsOption" Content="Display CMS on CDU"
-                          IsChecked="{Binding A10C.DisplayCMS, Mode=TwoWay}"
-                          Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
-                          Margin="0,4"/>
+                <CheckBox x:Name="AlignCduBottomOption" x:Uid="AlignCduBottomOption"
+                    Content="Align CDU Display to Bottom"
+                    IsChecked="{Binding A10C.DisplayBottomAligned, Mode=TwoWay}"
+                    Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+                    Margin="0,4" />
+                <CheckBox x:Name="DisplayCmsOption" x:Uid="DisplayCmsOption"
+                    Content="Display CMS on CDU"
+                    IsChecked="{Binding A10C.DisplayCMS, Mode=TwoWay}"
+                    Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+                    Margin="0,4" />
                 <CheckBox x:Name="A10CEnablePerfPagesCheckBox"
-                          x:Uid="EnablePerfPagesOption"
-                          Content="Enable Performance Pages"
-                          IsChecked="{Binding A10C.EnablePerfPages, Mode=TwoWay}"
-                          Checked="A10CEnablePerfPages_Changed" Unchecked="A10CEnablePerfPages_Changed"
-                          Margin="0,4"/>
-                <ContentControl x:Name="A10CPerfPagesPanel" HorizontalContentAlignment="Stretch" IsTabStop="False">
+                    x:Uid="EnablePerfPagesOption"
+                    Content="Enable Performance Pages"
+                    IsChecked="{Binding A10C.EnablePerfPages, Mode=TwoWay}"
+                    Checked="A10CEnablePerfPages_Changed" Unchecked="A10CEnablePerfPages_Changed"
+                    Margin="0,4" />
+                <ContentControl x:Name="A10CPerfPagesPanel" HorizontalContentAlignment="Stretch"
+                    IsTabStop="False">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,4">
-                            <TextBlock x:Name="PerfPageKeyLabel" x:Uid="PerfPageKeyLabel" Text="Perf Page Key:" VerticalAlignment="Center" Width="120"/>
+                            <TextBlock x:Name="PerfPageKeyLabel" x:Uid="PerfPageKeyLabel"
+                                Text="Perf Page Key:" VerticalAlignment="Center" Width="120" />
                             <ComboBox x:Name="A10CPerfPageKeyCombo"
-                                      SelectedValue="{Binding A10C.PerfPageKey, Mode=TwoWay}"
-                                      SelectionChanged="ComboBox_Changed" Width="150"/>
+                                SelectedValue="{Binding A10C.PerfPageKey, Mode=TwoWay}"
+                                SelectionChanged="ComboBox_Changed" Width="150" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,4">
-                            <TextBlock x:Name="NextPageKeyLabel" x:Uid="NextPageKeyLabel" Text="Next Page Key:" VerticalAlignment="Center" Width="120"/>
+                            <TextBlock x:Name="NextPageKeyLabel" x:Uid="NextPageKeyLabel"
+                                Text="Next Page Key:" VerticalAlignment="Center" Width="120" />
                             <ComboBox x:Name="A10CNextPageKeyCombo"
-                                      SelectedValue="{Binding A10C.NextPageKey, Mode=TwoWay}"
-                                      SelectionChanged="ComboBox_Changed" Width="150"/>
+                                SelectedValue="{Binding A10C.NextPageKey, Mode=TwoWay}"
+                                SelectionChanged="ComboBox_Changed" Width="150" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,4">
-                            <TextBlock x:Name="PrevPageKeyLabel" x:Uid="PrevPageKeyLabel" Text="Prev Page Key:" VerticalAlignment="Center" Width="120"/>
+                            <TextBlock x:Name="PrevPageKeyLabel" x:Uid="PrevPageKeyLabel"
+                                Text="Prev Page Key:" VerticalAlignment="Center" Width="120" />
                             <ComboBox x:Name="A10CPrevPageKeyCombo"
-                                      SelectedValue="{Binding A10C.PrevPageKey, Mode=TwoWay}"
-                                      SelectionChanged="ComboBox_Changed" Width="150"/>
+                                SelectedValue="{Binding A10C.PrevPageKey, Mode=TwoWay}"
+                                SelectionChanged="ComboBox_Changed" Width="150" />
                         </StackPanel>
                     </StackPanel>
                 </ContentControl>
-                <CheckBox x:Name="ForwardCduKeysOption" x:Uid="ForwardCduKeysOption" Content="Forward CDU keys to sim (unbind LSK/digits/&quot;/&quot; in DCS)"
-                          IsChecked="{Binding A10C.ForwardCduKeysToSim, Mode=TwoWay}"
-                          Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
-                          Margin="0,4"/>
+                <StackPanel Orientation="Horizontal" Margin="0,4"
+                    IsEnabled="{Binding EnablePerfPages}">
+                    <TextBlock Text="Next Page Key:" VerticalAlignment="Center" Width="120" />
+                    <ComboBox x:Name="A10CNextPageKeyComboBox"
+                        SelectedValue="{Binding A10CNextPageKey, Mode=TwoWay}"
+                        SelectionChanged="ComboBox_Changed" Width="150" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,4"
+                    IsEnabled="{Binding EnablePerfPages}">
+                    <TextBlock Text="Prev Page Key:" VerticalAlignment="Center" Width="120" />
+                    <ComboBox x:Name="A10CPrevPageKeyComboBox"
+                        SelectedValue="{Binding A10CPrevPageKey, Mode=TwoWay}"
+                        SelectionChanged="ComboBox_Changed" Width="150" />
+                </StackPanel>
+                <CheckBox Content="Use a10c live data(requires a10c-calc.lua)"
+                    IsChecked="{Binding EnableLiveExport, Mode=TwoWay}"
+                    IsEnabled="{Binding EnablePerfPages}"
+                    Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+                    Margin="0,4" />
+                <CheckBox x:Name="ForwardCduKeysOption" x:Uid="ForwardCduKeysOption"
+                    Content="Forward CDU keys to sim (unbind LSK/digits/&quot;/&quot; in DCS)"
+                    IsChecked="{Binding A10C.ForwardCduKeysToSim, Mode=TwoWay}"
+                    Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+                    Margin="0,4" />
             </StackPanel>
         </ContentControl>
 
-        <Border Height="1" Background="{StaticResource CardBorderBrush}" Margin="0,12"/>
+        <Border Height="1" Background="{StaticResource CardBorderBrush}" Margin="0,12" />
 
         <!-- F/A-18C -->
         <ContentControl x:Name="FA18CSection" HorizontalContentAlignment="Stretch" IsTabStop="False">
             <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                     <TextBlock Text="F/A-18C" FontWeight="SemiBold" FontSize="13"
-                               Foreground="{StaticResource SubtleTextForeground}" VerticalAlignment="Center"/>
+                        Foreground="{StaticResource SubtleTextForeground}"
+                        VerticalAlignment="Center" />
                     <Border x:Name="FA18CBadge" Margin="8,0,0,0" CornerRadius="4" Padding="6,2"
-                            VerticalAlignment="Center" Visibility="Collapsed"
-                            Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
-                        <TextBlock x:Name="DisabledWhileInUseFA18CBadge" x:Uid="DisabledWhileInUseFA18CBadge" Text="Disabled while in use" FontSize="10" Foreground="#E65100"/>
+                        VerticalAlignment="Center" Visibility="Collapsed"
+                        Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
+                        <TextBlock x:Name="DisabledWhileInUseFA18CBadge"
+                            x:Uid="DisabledWhileInUseFA18CBadge" Text="Disabled while in use"
+                            FontSize="10" Foreground="#E65100" />
                     </Border>
                 </StackPanel>
-                <TextBlock x:Name="IfeiPageNavHeader" x:Uid="IfeiPageNavHeader" Text="IFEI page navigation keys"
-                           Foreground="{StaticResource SubtleTextForeground}"
-                           FontSize="11" Margin="0,0,0,8"/>
+                <TextBlock x:Name="IfeiPageNavHeader" x:Uid="IfeiPageNavHeader"
+                    Text="IFEI page navigation keys"
+                    Foreground="{StaticResource SubtleTextForeground}"
+                    FontSize="11" Margin="0,0,0,8" />
                 <StackPanel Orientation="Horizontal" Margin="0,4">
-                    <TextBlock x:Name="ShowIfeiKeyLabel" x:Uid="ShowIfeiKeyLabel" Text="Show IFEI Key:" VerticalAlignment="Center" Width="120"/>
+                    <TextBlock x:Name="ShowIfeiKeyLabel" x:Uid="ShowIfeiKeyLabel"
+                        Text="Show IFEI Key:" VerticalAlignment="Center" Width="120" />
                     <ComboBox x:Name="FA18CShowIfeiKeyCombo"
-                              SelectedValue="{Binding FA18C.ShowIfeiKey, Mode=TwoWay}"
-                              SelectionChanged="ComboBox_Changed" Width="150"/>
+                        SelectedValue="{Binding FA18C.ShowIfeiKey, Mode=TwoWay}"
+                        SelectionChanged="ComboBox_Changed" Width="150" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,4">
-                    <TextBlock x:Name="ShowUfcKeyLabel" x:Uid="ShowUfcKeyLabel" Text="Show UFC Key:" VerticalAlignment="Center" Width="120"/>
+                    <TextBlock x:Name="ShowUfcKeyLabel" x:Uid="ShowUfcKeyLabel" Text="Show UFC Key:"
+                        VerticalAlignment="Center" Width="120" />
                     <ComboBox x:Name="FA18CShowUfcKeyCombo"
-                              SelectedValue="{Binding FA18C.ShowUfcKey, Mode=TwoWay}"
-                              SelectionChanged="ComboBox_Changed" Width="150"/>
+                        SelectedValue="{Binding FA18C.ShowUfcKey, Mode=TwoWay}"
+                        SelectionChanged="ComboBox_Changed" Width="150" />
                 </StackPanel>
             </StackPanel>
         </ContentControl>
 
-        <Border Height="1" Background="{StaticResource CardBorderBrush}" Margin="0,12"/>
+        <Border Height="1" Background="{StaticResource CardBorderBrush}" Margin="0,12" />
 
         <!-- F-14B -->
         <ContentControl x:Name="F14Section" HorizontalContentAlignment="Stretch" IsTabStop="False">
             <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                     <TextBlock Text="F-14B" FontWeight="SemiBold" FontSize="13"
-                               Foreground="{StaticResource SubtleTextForeground}" VerticalAlignment="Center"/>
+                        Foreground="{StaticResource SubtleTextForeground}"
+                        VerticalAlignment="Center" />
                     <Border x:Name="F14Badge" Margin="8,0,0,0" CornerRadius="4" Padding="6,2"
-                            VerticalAlignment="Center" Visibility="Collapsed"
-                            Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
-                        <TextBlock x:Name="DisabledWhileInUseF14Badge" x:Uid="DisabledWhileInUseF14Badge" Text="Disabled while in use" FontSize="10" Foreground="#E65100"/>
+                        VerticalAlignment="Center" Visibility="Collapsed"
+                        Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
+                        <TextBlock x:Name="DisabledWhileInUseF14Badge"
+                            x:Uid="DisabledWhileInUseF14Badge" Text="Disabled while in use"
+                            FontSize="10" Foreground="#E65100" />
                     </Border>
                 </StackPanel>
-                <TextBlock x:Name="RioCapRadioHeader" x:Uid="RioCapRadioHeader" Text="RIO CAP / Radio page keys"
-                           Foreground="{StaticResource SubtleTextForeground}"
-                           FontSize="11" Margin="0,0,0,8"/>
+                <TextBlock x:Name="RioCapRadioHeader" x:Uid="RioCapRadioHeader"
+                    Text="RIO CAP / Radio page keys"
+                    Foreground="{StaticResource SubtleTextForeground}"
+                    FontSize="11" Margin="0,0,0,8" />
                 <StackPanel Orientation="Horizontal" Margin="0,4">
-                    <TextBlock x:Name="ShowRioKeyLabel" x:Uid="ShowRioKeyLabel" Text="Show RIO Key:" VerticalAlignment="Center" Width="120"/>
+                    <TextBlock x:Name="ShowRioKeyLabel" x:Uid="ShowRioKeyLabel" Text="Show RIO Key:"
+                        VerticalAlignment="Center" Width="120" />
                     <ComboBox x:Name="F14RioKeyCombo"
-                              SelectedValue="{Binding F14.RioKey, Mode=TwoWay}"
-                              SelectionChanged="ComboBox_Changed" Width="150"/>
+                        SelectedValue="{Binding F14.RioKey, Mode=TwoWay}"
+                        SelectionChanged="ComboBox_Changed" Width="150" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,4">
-                    <TextBlock x:Name="ShowRadioKeyLabel" x:Uid="ShowRadioKeyLabel" Text="Show Radio Key:" VerticalAlignment="Center" Width="120"/>
+                    <TextBlock x:Name="ShowRadioKeyLabel" x:Uid="ShowRadioKeyLabel"
+                        Text="Show Radio Key:" VerticalAlignment="Center" Width="120" />
                     <ComboBox x:Name="F14RadioKeyCombo"
-                              SelectedValue="{Binding F14.RadioKey, Mode=TwoWay}"
-                              SelectionChanged="ComboBox_Changed" Width="150"/>
+                        SelectedValue="{Binding F14.RadioKey, Mode=TwoWay}"
+                        SelectionChanged="ComboBox_Changed" Width="150" />
                 </StackPanel>
             </StackPanel>
         </ContentControl>
 
-        <Border Height="1" Background="{StaticResource CardBorderBrush}" Margin="0,12"/>
+        <Border Height="1" Background="{StaticResource CardBorderBrush}" Margin="0,12" />
 
         <!-- F-16C -->
         <ContentControl x:Name="F16CSection" HorizontalContentAlignment="Stretch" IsTabStop="False">
             <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                     <TextBlock Text="F-16C" FontWeight="SemiBold" FontSize="13"
-                               Foreground="{StaticResource SubtleTextForeground}" VerticalAlignment="Center"/>
+                        Foreground="{StaticResource SubtleTextForeground}"
+                        VerticalAlignment="Center" />
                     <Border x:Name="F16CBadge" Margin="8,0,0,0" CornerRadius="4" Padding="6,2"
-                            VerticalAlignment="Center" Visibility="Collapsed"
-                            Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
-                        <TextBlock x:Name="DisabledWhileInUseF16CBadge" x:Uid="DisabledWhileInUseF16CBadge" Text="Disabled while in use" FontSize="10" Foreground="#E65100"/>
+                        VerticalAlignment="Center" Visibility="Collapsed"
+                        Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
+                        <TextBlock x:Name="DisabledWhileInUseF16CBadge"
+                            x:Uid="DisabledWhileInUseF16CBadge" Text="Disabled while in use"
+                            FontSize="10" Foreground="#E65100" />
                     </Border>
                 </StackPanel>
-                <TextBlock x:Name="DedNavRwrHeader" x:Uid="DedNavRwrHeader" Text="DED / NAV / RWR page keys"
-                           Foreground="{StaticResource SubtleTextForeground}"
-                           FontSize="11" Margin="0,0,0,8"/>
+                <TextBlock x:Name="DedNavRwrHeader" x:Uid="DedNavRwrHeader"
+                    Text="DED / NAV / RWR page keys"
+                    Foreground="{StaticResource SubtleTextForeground}"
+                    FontSize="11" Margin="0,0,0,8" />
                 <StackPanel Orientation="Horizontal" Margin="0,4">
-                    <TextBlock x:Name="ShowDedKeyLabel" x:Uid="ShowDedKeyLabel" Text="Show DED Key:" VerticalAlignment="Center" Width="120"/>
+                    <TextBlock x:Name="ShowDedKeyLabel" x:Uid="ShowDedKeyLabel" Text="Show DED Key:"
+                        VerticalAlignment="Center" Width="120" />
                     <ComboBox x:Name="F16CDedKeyCombo"
-                              SelectedValue="{Binding F16C.DedKey, Mode=TwoWay}"
-                              SelectionChanged="ComboBox_Changed" Width="150"/>
+                        SelectedValue="{Binding F16C.DedKey, Mode=TwoWay}"
+                        SelectionChanged="ComboBox_Changed" Width="150" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,4">
-                    <TextBlock x:Name="ShowNavKeyLabel" x:Uid="ShowNavKeyLabel" Text="Show NAV Key:" VerticalAlignment="Center" Width="120"/>
+                    <TextBlock x:Name="ShowNavKeyLabel" x:Uid="ShowNavKeyLabel" Text="Show NAV Key:"
+                        VerticalAlignment="Center" Width="120" />
                     <ComboBox x:Name="F16CNavKeyCombo"
-                              SelectedValue="{Binding F16C.NavKey, Mode=TwoWay}"
-                              SelectionChanged="ComboBox_Changed" Width="150"/>
+                        SelectedValue="{Binding F16C.NavKey, Mode=TwoWay}"
+                        SelectionChanged="ComboBox_Changed" Width="150" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,4">
-                    <TextBlock x:Name="ShowRwrKeyLabel" x:Uid="ShowRwrKeyLabel" Text="Show RWR Key:" VerticalAlignment="Center" Width="120"/>
+                    <TextBlock x:Name="ShowRwrKeyLabel" x:Uid="ShowRwrKeyLabel" Text="Show RWR Key:"
+                        VerticalAlignment="Center" Width="120" />
                     <ComboBox x:Name="F16CRwrKeyCombo"
-                              SelectedValue="{Binding F16C.RwrKey, Mode=TwoWay}"
-                              SelectionChanged="ComboBox_Changed" Width="150"/>
+                        SelectedValue="{Binding F16C.RwrKey, Mode=TwoWay}"
+                        SelectionChanged="ComboBox_Changed" Width="150" />
                 </StackPanel>
             </StackPanel>
         </ContentControl>
