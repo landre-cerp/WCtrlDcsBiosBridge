@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using NLog;
 using System.IO;
+using System.Linq;
 using WwDevicesDotNet;
 using WCtrlDcsBiosBridge.Config;
 using WCtrlDcsBiosBridge.Devices;
@@ -55,17 +56,11 @@ public class DeviceManager
                 progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, $"Connecting CDU device {i + 1}/{cduDeviceIdentifiers.Count}..."));
                 try
                 {
-                    var cdu = await Task.Run(() => CduFactory.ConnectLocal(deviceId), cancellationToken).ConfigureAwait(false);
-                    // No default/menu font is flashed here on purpose. Flashing a throwaway
-                    // font during detection and then the aircraft font moments later corrupts
-                    // the device's glyph RAM (garbled glyphs, only cleared by a USB replug).
-                    // The aircraft font flashed by the listener is the single font upload.
-                    if (resetDevices) cdu.Reset();
-                    var displayName = GetDeviceName(deviceId);
-                    var deviceInfo = new DeviceInfo(cdu, deviceId, displayName);
+                    var deviceInfo = await ConnectDeviceAsync(deviceId, resetDevices, cancellationToken).ConfigureAwait(false)
+                        ?? throw new InvalidOperationException("Failed to connect to CDU device: ConnectLocal returned null");
                     detectedDevices.Add(deviceInfo);
                     currentIndex++;
-                    progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, $"Connected {displayName} ({currentIndex}/{totalDevices})"));
+                    progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, $"Connected {deviceInfo.DisplayName} ({currentIndex}/{totalDevices})"));
                 }
                 catch (Exception ex)
                 {
@@ -84,24 +79,12 @@ public class DeviceManager
                 try
                 {
                     Logger.Info($"About to connect frontpanel device: {deviceId.Description}");
-                    var frontpanel = await Task.Run(() => FrontpanelFactory.ConnectLocal(deviceId), cancellationToken).ConfigureAwait(false);
-                    
-                    if (frontpanel == null)
-                    {
-                        Logger.Error($"FrontpanelFactory.ConnectLocal returned null for device {deviceId.Description}");
-                        throw new InvalidOperationException($"Failed to connect to frontpanel device: ConnectLocal returned null");
-                    }
-                    
-                    Logger.Info($"Frontpanel device connected: IsConnected={frontpanel.IsConnected}, Type={frontpanel.GetType().Name}");
-
-                    if (resetDevices) frontpanel.Reset();
-
-                    var displayName = GetDeviceName(deviceId);
-                    var deviceInfo = new DeviceInfo(frontpanel, deviceId, displayName);
+                    var deviceInfo = await ConnectDeviceAsync(deviceId, resetDevices, cancellationToken).ConfigureAwait(false)
+                        ?? throw new InvalidOperationException("Failed to connect to frontpanel device: ConnectLocal returned null");
                     detectedDevices.Add(deviceInfo);
                     currentIndex++;
-                    Logger.Info($"Successfully added frontpanel device: {displayName}");
-                    progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, $"Connected {displayName} ({currentIndex}/{totalDevices})"));
+                    Logger.Info($"Successfully added frontpanel device: {deviceInfo.DisplayName}");
+                    progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, $"Connected {deviceInfo.DisplayName} ({currentIndex}/{totalDevices})"));
                 }
                 catch (Exception ex)
                 {
@@ -124,6 +107,56 @@ public class DeviceManager
         }
         return detectedDevices;
     }
+
+    /// <summary>
+    /// Connects to a single device (CDU or frontpanel) identified by <paramref name="deviceId"/>.
+    /// Returns the wrapped <see cref="DeviceInfo"/>, or <see langword="null"/> if the
+    /// underlying factory could not produce a device. Connection failures (e.g. the USB
+    /// stream cannot be opened) propagate as exceptions for the caller to handle.
+    /// </summary>
+    /// <param name="resetDevices">
+    /// Reset the device to its known-good state after connecting. No throwaway font is ever
+    /// flashed here: flashing a menu font now and the aircraft font moments later corrupts
+    /// the device's glyph RAM. The aircraft font flashed by the listener is the single upload.
+    /// </param>
+    public static async Task<DeviceInfo?> ConnectDeviceAsync(
+        DeviceIdentifier deviceId,
+        bool resetDevices = true,
+        CancellationToken cancellationToken = default)
+    {
+        var displayName = GetDeviceName(deviceId);
+
+        if (IsCdu(deviceId))
+        {
+            var cdu = await Task.Run(() => CduFactory.ConnectLocal(deviceId), cancellationToken).ConfigureAwait(false);
+            if (cdu == null) return null;
+            if (resetDevices) cdu.Reset();
+            return new DeviceInfo(cdu, deviceId, displayName);
+        }
+
+        var frontpanel = await Task.Run(() => FrontpanelFactory.ConnectLocal(deviceId), cancellationToken).ConfigureAwait(false);
+        if (frontpanel == null) return null;
+        if (resetDevices) frontpanel.Reset();
+        return new DeviceInfo(frontpanel, deviceId, displayName);
+    }
+
+    /// <summary>
+    /// Returns the identifiers of every supported CDU and frontpanel currently present on
+    /// the local machine. Used by the device watcher to diff arrivals and removals.
+    /// </summary>
+    public static IReadOnlyList<DeviceIdentifier> FindLocalSupportedDevices()
+    {
+        var result = new List<DeviceIdentifier>();
+        result.AddRange(CduFactory.FindLocalDevices());
+        result.AddRange(FrontpanelFactory.FindLocalDevices());
+        return result;
+    }
+
+    /// <summary>
+    /// True if the identifier denotes a CDU device (as opposed to a frontpanel).
+    /// </summary>
+    public static bool IsCdu(DeviceIdentifier deviceId) =>
+        SupportedDevices.AllSupportedDevices.Any(d => d.Equals(deviceId));
 
     /// <summary>
     /// Gets a friendly name for a device

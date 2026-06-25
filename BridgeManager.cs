@@ -2,6 +2,7 @@ using ClassLibraryCommon;
 using DCS_BIOS;
 using DCS_BIOS.ControlLocator;
 using NLog;
+using WwDevicesDotNet;
 using WCtrlDcsBiosBridge.Config;
 using WCtrlDcsBiosBridge.Aircrafts;
 using WCtrlDcsBiosBridge.Devices;
@@ -18,7 +19,21 @@ public class BridgeManager : IDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    /// <summary>
+    /// True once an aircraft is detected and listeners are running. Drives the "running"
+    /// UI state. It is <c>false</c> during the waiting phase even though the bridge loop
+    /// is alive — use <see cref="IsLoopActive"/> for "is the bridge loop running at all".
+    /// </summary>
     public bool IsStarted { get; private set; }
+
+    /// <summary>
+    /// True for the entire bridge lifetime — from the moment <see cref="StartAsync"/>
+    /// enters its detection loop (the waiting phase included) until it stops. Hot-plug
+    /// commands are only meaningful, and shutdown only needs to call <see cref="Stop"/>,
+    /// while this is true.
+    /// </summary>
+    public bool IsLoopActive { get; private set; }
+
     internal List<CduDeviceContext>? Contexts { get; private set; }
 
     private DCSBIOS? dcsBios;
@@ -28,8 +43,19 @@ public class BridgeManager : IDisposable
     private CloseResetOptions _closeReset = new(true, true);
     private bool _disposed = false;
 
-    // Coordinates CDU waiting-screen writes between the detection loop and the
-    // DCS-BIOS version callback (which arrives on a background thread).
+    private UserOptions _options = new();
+    private bool _ch47SwitchWithSeat;
+
+    private List<DeviceInfo>? _devices;
+
+    private AircraftDescriptor? _activeDescriptor;
+    private AircraftListener? _modelSource;
+
+    
+    private readonly System.Collections.Concurrent.ConcurrentQueue<Action> _deviceCommands = new();
+    private readonly object _signalLock = new();
+    private TaskCompletionSource<bool> _deviceSignalTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
     private readonly object _waitingScreenLock = new();
     private bool _isWaiting;
     private string? _waitingUnsupportedName;
@@ -68,22 +94,17 @@ public class BridgeManager : IDisposable
 
         try
         {
-            var options = userOptions ?? new UserOptions();
-            _manageLighting = !options.DisableLightingManagement;
-            _closeReset = CloseResetOptions.From(options);
-            var cduDevices = devices.Where(d => d.Cdu != null).ToList();
+            _options = userOptions ?? new UserOptions();
+            _manageLighting = !_options.DisableLightingManagement;
+            _closeReset = CloseResetOptions.From(_options);
+            _devices = devices.ToList();
+            var cduDevices = _devices.Where(d => d.Cdu != null).ToList();
 
-            // Zero or one CDU behave the same: no pilot/copilot prompt, and the
-            // CH-47F uses seat-switch mode (follows the seat position at runtime).
-            // Only multiple CDUs each pick a seat. A frontpanel-only setup (no CDU)
-            // is driven by a headless listener using this same single-CDU logic.
-            var multipleCdus = cduDevices.Count > 1;
-            var ch47SwitchWithSeat = !multipleCdus;
+            _ch47SwitchWithSeat = cduDevices.Count <= 1;
 
-            // One context per CDU; frontpanel devices are driven by the hub below.
-            Contexts = cduDevices.Select(d => new CduDeviceContext(d.Cdu!, options, ch47SwitchWithSeat)).ToList();
+            Contexts = cduDevices.Select(d => new CduDeviceContext(d.Cdu!, _options, _ch47SwitchWithSeat)).ToList();
 
-            frontpanelHub = BuildFrontpanelHub(devices, manageLighting: _manageLighting);
+            frontpanelHub = BuildFrontpanelHub(_devices, manageLighting: _manageLighting);
             Logger.Info($"Created {Contexts.Count} CDU context(s); frontpanel hub has {frontpanelHub.Count} device(s)");
 
             if (Contexts.Count == 0 && !frontpanelHub.HasFrontpanels)
@@ -91,48 +112,46 @@ public class BridgeManager : IDisposable
                 throw new InvalidOperationException("No valid devices found.");
             }
 
-            // Global DCS-BIOS metadata initialization — needed before aircraft
-            // detection AND before any listener can create its outputs.
             DCSAircraft.Init();
             DCSAircraft.FillModulesListFromDcsBios(config.DcsBiosJsonLocation, true);
             DCSBIOSControlLocator.JSONDirectory = config.DcsBiosJsonLocation;
 
-            // Start the UDP connection so we can receive metadata.
             InitializeDcsBios(config);
 
-            // The detector lives for the entire bridge lifecycle so it can
-            // signal both aircraft detection and module exit.
             using var detector = new DcsBiosAircraftDetector();
             detector.StartListening();
 
-            // The version provider also lives for the whole lifecycle: the
-            // DCS-BIOS exporter version is shown in the app title and on the CDU
-            // waiting screen. Its callback arrives on a DCS-BIOS thread, so it is
-            // serialized against the loop's waiting-screen writes.
             using var versionProvider = new DcsBiosVersionProvider();
             _dcsBiosVersion = versionProvider.CurrentVersion;
             versionProvider.VersionChanged += OnDcsBiosVersionChanged;
             versionProvider.StartListening();
 
-            // Detection loop: wait for a SUPPORTED aircraft → start listeners →
-            // wait for the aircraft to change (exit or switch) → reset → repeat.
-            // Unsupported aircraft keep the bridge in the waiting state with the
-            // detected name shown in red.
+            IsLoopActive = true;
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 ShowWaitingScreens(null);
                 DetectedAircraftChanged?.Invoke(null);
 
-                // Stay in the waiting state until a supported aircraft is loaded.
                 AircraftDescriptor? descriptor = null;
+                var nameTask = detector.WaitForChangeAsync(cancellationToken);
                 while (descriptor == null)
                 {
-                    var name = await detector.WaitForChangeAsync(cancellationToken);
+                    var deviceTask = DeviceSignalTask(cancellationToken);
+                    if (await Task.WhenAny(nameTask, deviceTask) == deviceTask)
+                    {
+                        await deviceTask;               // observe cancellation
+                        DrainDeviceCommands();           // add/remove while waiting (cases B/E)
+                        continue;                        // nameTask still pending
+                    }
+
+                    var name = await nameTask;
                     DetectedAircraftChanged?.Invoke(name);
 
                     if (name == null)
                     {
                         ShowWaitingScreens(null);
+                        nameTask = detector.WaitForChangeAsync(cancellationToken);
                         continue;
                     }
 
@@ -142,28 +161,20 @@ public class BridgeManager : IDisposable
                     if (descriptor == null)
                     {
                         ShowWaitingScreens(name);
+                        nameTask = detector.WaitForChangeAsync(cancellationToken);
                     }
                 }
 
-                // A supported aircraft is loaded: leave the waiting state so a
-                // late version update no longer redraws the waiting screen.
                 EndWaitingState();
-
-                // One change waiter for this whole cycle: reused for the seat-
-                // selection race below AND the running-phase wait further down.
-                // The detector only supports a single pending waiter, so creating
-                // it once here (instead of a second WaitForChangeAsync later)
-                // avoids orphaning a waiter and corrupting its acknowledgment state.
                 var changeTask = detector.WaitForChangeAsync(cancellationToken);
+
+                var multipleCdus = Contexts.Count > 1;
 
                 if (descriptor.HasSeatSelection && multipleCdus)
                 {
                     foreach (var ctx in Contexts)
                         ctx.ShowSeatSelectionScreen(descriptor);
 
-                    // Race the seat choice against an aircraft change. If the user
-                    // leaves the module before picking a seat, abandon the selection
-                    // and return to the detection state instead of blocking forever.
                     var selectionTask = Task.WhenAny(
                         Contexts.Select(c => c.SelectionTask.WaitAsync(cancellationToken)));
 
@@ -192,16 +203,27 @@ public class BridgeManager : IDisposable
                 foreach (var ctx in Contexts)
                     ctx.StartBridge();
 
-                AttachFrontpanels(Contexts, new AircraftSelection(descriptor.ModuleId, true), options, ch47SwitchWithSeat);
+                _activeDescriptor = descriptor;
+                RefreshFrontpanelSource(forceAttach: true);
 
                 IsStarted = true;
                 Logger.Info($"Bridge running with {ActiveDeviceCount} device(s)");
 
-                // Block here until the aircraft changes in DCS (module exit or
-                // switch), reusing the waiter created above.
-                await changeTask;
+                while (true)
+                {
+                    var deviceTask = DeviceSignalTask(cancellationToken);
+                    if (await Task.WhenAny(changeTask, deviceTask) == changeTask)
+                    {
+                        await changeTask;   // observe result / cancellation
+                        break;
+                    }
+
+                    await deviceTask;        // observe cancellation
+                    DrainDeviceCommands();   // add/remove while running (cases C/F)
+                }
                 Logger.Info("Aircraft changed, resetting bridge.");
 
+                _activeDescriptor = null;
                 StopListeners();
                 foreach (var ctx in Contexts)
                     ctx.ResetForNewCycle();
@@ -209,13 +231,6 @@ public class BridgeManager : IDisposable
         }
         catch (OperationCanceledException)
         {
-            // Normal shutdown via the cancellation token — not a failure, so don't
-            // log it as an error. We must still release resources here: if the
-            // cancellation arrived before IsStarted became true (e.g. exit from the
-            // waiting screen), the owner's Dispose() skips Stop() (it is guarded by
-            // IsStarted), so dcsBios / frontpanelHub / Contexts would otherwise leak.
-            // dcsBios is non-null only when we have not been stopped yet, so this
-            // also avoids stopping twice when the owner already did.
             if (dcsBios != null)
             {
                 try { Stop(); }
@@ -228,6 +243,10 @@ public class BridgeManager : IDisposable
             Logger.Error(ex, "Failed to start bridge");
             Stop(); // Clean up on failure
             throw;
+        }
+        finally
+        {
+            IsLoopActive = false;
         }
     }
 
@@ -317,6 +336,7 @@ public class BridgeManager : IDisposable
             DisposeContexts();
 
             IsStarted = false;
+            IsLoopActive = false;
             Logger.Info("Bridge stopped successfully");
         }
         catch (Exception ex)
@@ -336,32 +356,222 @@ public class BridgeManager : IDisposable
 
         headlessListener?.Dispose();
         headlessListener = null;
-
-        // IsStarted stays true on purpose: between two aircraft (module exit or
-        // switch) the bridge is still live and the UI should keep showing
-        // "running". It is only cleared by Stop().
+        _modelSource = null;
     }
 
     /// <summary>
-    /// Drives the frontpanels from a CDU listener's FlightDeck model when one is
-    /// present, otherwise from a headless listener created for <paramref name="fallback"/>
-    /// (e.g. a frontpanel-only setup with no CDU).
+    /// Ensures the frontpanel hub is driven by a valid model source while an aircraft is
+    /// active: a CDU listener if any CDU is running, otherwise a headless listener created
+    /// for a frontpanel-only setup. No-op while waiting or when there are no frontpanels.
+    /// Call after the hub or the CDU set changes.
     /// </summary>
-    private void AttachFrontpanels(List<CduDeviceContext> contexts, AircraftSelection fallback, UserOptions options, bool ch47SwitchWithSeat)
+    /// <param name="forceAttach">
+    /// Re-attach even when the source is unchanged — needed after the hub itself was
+    /// rebuilt (a new hub instance must be (re)attached to start its render loop).
+    /// </param>
+    private void RefreshFrontpanelSource(bool forceAttach = false)
     {
-        if (frontpanelHub == null || !frontpanelHub.HasFrontpanels) return;
+        if (frontpanelHub == null || !frontpanelHub.HasFrontpanels || _activeDescriptor == null)
+            return;
 
-        var modelSource = contexts.FirstOrDefault(c => c.Listener != null)?.Listener;
-        if (modelSource == null)
+        var source = Contexts?.FirstOrDefault(c => c.Listener != null)?.Listener;
+        if (source == null)
         {
-            var selection = contexts.FirstOrDefault()?.SelectedAircraft ?? fallback;
-            headlessListener = new AircraftListenerFactory().CreateListener(selection, null, options, ch47SwitchWithSeat);
-            headlessListener.Start();
-            modelSource = headlessListener;
+            if (headlessListener == null)
+            {
+                headlessListener = new AircraftListenerFactory().CreateListener(
+                    new AircraftSelection(_activeDescriptor.ModuleId, true), null, _options, _ch47SwitchWithSeat);
+                headlessListener.Start();
+            }
+            source = headlessListener;
         }
 
-        if (modelSource != null)
-            frontpanelHub.Attach(modelSource.FlightDeck);
+        var changed = !ReferenceEquals(_modelSource, source);
+        _modelSource = source;
+
+        if (changed || forceAttach)
+            frontpanelHub.Attach(source.FlightDeck);
+
+        // Once a CDU drives the panels, the headless listener (if any) is redundant.
+        if (!ReferenceEquals(source, headlessListener) && headlessListener != null)
+        {
+            headlessListener.Dispose();
+            headlessListener = null;
+        }
+    }
+
+    /// <summary>
+    /// Queues a newly connected device to join the running bridge. Thread-safe.
+    /// </summary>
+    public void AddDevice(DeviceInfo device)
+    {
+        if (device == null || _disposed) return;
+        _deviceCommands.Enqueue(() => ApplyAddDevice(device));
+        SignalDeviceChange();
+    }
+
+    /// <summary>
+    /// Queues removal of a device that was unplugged. Thread-safe.
+    /// </summary>
+    public void RemoveDevice(DeviceIdentifier deviceId)
+    {
+        if (deviceId == null || _disposed) return;
+        _deviceCommands.Enqueue(() => ApplyRemoveDevice(deviceId));
+        SignalDeviceChange();
+    }
+
+    /// <summary>Returns a task that completes when a device command is queued.</summary>
+    private Task DeviceSignalTask(CancellationToken cancellationToken)
+    {
+        Task task;
+        lock (_signalLock) { task = _deviceSignalTcs.Task; }
+        return cancellationToken.CanBeCanceled ? task.WaitAsync(cancellationToken) : task;
+    }
+
+    private void SignalDeviceChange()
+    {
+        lock (_signalLock) { _deviceSignalTcs.TrySetResult(true); }
+    }
+
+    /// <summary>
+    /// Applies every queued device command on the detection-loop thread, then re-arms
+    /// the signal. If a command slipped in just after draining, the signal is re-raised
+    /// so the next wait returns immediately and no command is lost.
+    /// </summary>
+    private void DrainDeviceCommands()
+    {
+        while (_deviceCommands.TryDequeue(out var apply))
+        {
+            try { apply(); }
+            catch (Exception ex) { Logger.Error(ex, "Failed to apply a device hot-plug command"); }
+        }
+
+        lock (_signalLock)
+        {
+            if (_deviceSignalTcs.Task.IsCompleted)
+                _deviceSignalTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+
+        if (!_deviceCommands.IsEmpty) SignalDeviceChange();
+    }
+
+    private void ApplyAddDevice(DeviceInfo device)
+    {
+        if (_devices == null || Contexts == null) return;
+        if (_devices.Any(d => d.DeviceId.Equals(device.DeviceId)))
+        {
+            Logger.Warn($"Ignoring duplicate hot-plug add for {device.DisplayName}");
+            return;
+        }
+        _devices.Add(device);
+
+        if (device.Cdu != null)
+            AddCduContext(device.Cdu);
+        else if (device.Frontpanel != null)
+            RebuildFrontpanelHub();
+
+        Logger.Info($"Hot-plug add applied: {device.DisplayName}; now {ActiveDeviceCount} device(s)");
+    }
+
+    private void ApplyRemoveDevice(DeviceIdentifier deviceId)
+    {
+        if (_devices == null || Contexts == null) return;
+
+        var device = _devices.FirstOrDefault(d => d.DeviceId.Equals(deviceId));
+        if (device == null) return;
+        _devices.Remove(device);
+
+        if (device.Cdu != null)
+            RemoveCduContext(device.Cdu);
+        else if (device.Frontpanel != null)
+            RebuildFrontpanelHub();
+
+        Logger.Info($"Hot-plug remove applied: {device.DisplayName}; now {ActiveDeviceCount} device(s)");
+    }
+
+    private void AddCduContext(ICdu cdu)
+    {
+        // CH-47 seat-switch mode applies only when this becomes the single CDU
+        // (option (a): existing contexts keep their captured mode).
+        var ctx = new CduDeviceContext(cdu, _options, ch47SwitchWithSeat: Contexts!.Count == 0);
+
+        lock (_waitingScreenLock)
+            Contexts.Add(ctx);
+
+        if (_activeDescriptor == null)
+        {
+            // Waiting state: show the same waiting screen the other CDUs display.
+            lock (_waitingScreenLock)
+                ctx.ShowWaitingScreen(_waitingUnsupportedName, _dcsBiosVersion);
+            return;
+        }
+
+        // Running state: join the active aircraft.
+        if (_activeDescriptor.HasSeatSelection && Contexts.Count > 1)
+        {
+            ctx.ShowSeatSelectionScreen(_activeDescriptor);
+
+            // The seat is chosen on a device-input thread; hop back onto the loop
+            // thread to start the listener (keeps screen rebuilds on the loop thread).
+            ctx.SelectionTask.ContinueWith(t =>
+            {
+                if (t.IsCompletedSuccessfully)
+                {
+                    _deviceCommands.Enqueue(() => StartHotAddedContext(ctx));
+                    SignalDeviceChange();
+                }
+            }, TaskScheduler.Default);
+        }
+        else
+        {
+            ctx.SetAircraftSelection(new AircraftSelection(_activeDescriptor.ModuleId, true));
+            StartHotAddedContext(ctx);
+        }
+    }
+
+    private void StartHotAddedContext(CduDeviceContext ctx)
+    {
+        if (_activeDescriptor == null) return;   // aircraft changed before the seat pick
+        if (!Contexts!.Contains(ctx)) return;    // context was removed (device unplugged) meanwhile
+
+        ctx.StartBridge();
+        // A CDU now exists; prefer its listener over any headless frontpanel source.
+        RefreshFrontpanelSource();
+    }
+
+    private void RemoveCduContext(ICdu cdu)
+    {
+        var ctx = Contexts!.FirstOrDefault(c => ReferenceEquals(c.Mcdu, cdu));
+        if (ctx == null) return;
+
+        var wasSource = ctx.Listener != null && ReferenceEquals(_modelSource, ctx.Listener);
+
+        lock (_waitingScreenLock)
+            Contexts!.Remove(ctx);
+        ctx.Dispose();   // disposes its listener; the USB device is closed by the owner
+
+        if (wasSource)
+        {
+            _modelSource = null;       // force a re-pick (another CDU, or headless)
+            RefreshFrontpanelSource();
+        }
+    }
+
+    /// <summary>
+    /// Rebuilds the frontpanel hub from the current device set (the hub captures its
+    /// adapter/renderer lists at construction, so a changed frontpanel set needs a new
+    /// hub). Disposing the old hub only stops its render loop — it never touches the USB
+    /// devices — so the swap is safe and leaves CDUs and DCS-BIOS untouched.
+    /// </summary>
+    private void RebuildFrontpanelHub()
+    {
+        if (_devices == null) return;
+
+        var oldHub = frontpanelHub;
+        frontpanelHub = BuildFrontpanelHub(_devices, _manageLighting);
+        oldHub?.Dispose();
+
+        RefreshFrontpanelSource(forceAttach: true);
     }
 
     private void InitializeDcsBios(DcsBiosConfig config)
@@ -430,7 +640,7 @@ public class BridgeManager : IDisposable
 
         if (disposing)
         {
-            if (IsStarted)
+            if (IsLoopActive)
             {
                 try
                 {
