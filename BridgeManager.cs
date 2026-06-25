@@ -43,32 +43,19 @@ public class BridgeManager : IDisposable
     private CloseResetOptions _closeReset = new(true, true);
     private bool _disposed = false;
 
-    // Captured at start; used to build hot-added contexts / hubs and to re-source
-    // the frontpanels when their model-source CDU is unplugged.
     private UserOptions _options = new();
     private bool _ch47SwitchWithSeat;
 
-    // The live device set the bridge owns (mutated as devices are hot-plugged).
     private List<DeviceInfo>? _devices;
 
-    // The currently running aircraft (null while waiting), and the listener whose
-    // FlightDeck model currently drives the frontpanel hub. Both are only mutated on
-    // the detection-loop thread.
     private AircraftDescriptor? _activeDescriptor;
     private AircraftListener? _modelSource;
 
-    // Hot-plug commands enqueued from the UI thread and drained on the detection-loop
-    // thread, so every CDU / listener / hub mutation happens on that one thread (this
-    // also keeps CDU screen rebuilds off arbitrary threads). The signal wakes the loop
-    // out of its blocking wait when a command is queued.
+    
     private readonly System.Collections.Concurrent.ConcurrentQueue<Action> _deviceCommands = new();
     private readonly object _signalLock = new();
     private TaskCompletionSource<bool> _deviceSignalTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-    // Coordinates CDU waiting-screen writes between the detection loop and the
-    // DCS-BIOS version callback (which arrives on a background thread). Also guards
-    // mutation of <see cref="Contexts"/> so the version callback never iterates a
-    // list that a hot-plug add/remove is changing.
     private readonly object _waitingScreenLock = new();
     private bool _isWaiting;
     private string? _waitingUnsupportedName;
@@ -107,21 +94,15 @@ public class BridgeManager : IDisposable
 
         try
         {
-            var options = userOptions ?? new UserOptions();
-            _options = options;
-            _manageLighting = !options.DisableLightingManagement;
-            _closeReset = CloseResetOptions.From(options);
+            _options = userOptions ?? new UserOptions();
+            _manageLighting = !_options.DisableLightingManagement;
+            _closeReset = CloseResetOptions.From(_options);
             _devices = devices.ToList();
             var cduDevices = _devices.Where(d => d.Cdu != null).ToList();
 
-            // Zero or one CDU behave the same: no pilot/copilot prompt, and the
-            // CH-47F uses seat-switch mode (follows the seat position at runtime).
-            // Only multiple CDUs each pick a seat. A frontpanel-only setup (no CDU)
-            // is driven by a headless listener using this same single-CDU logic.
             _ch47SwitchWithSeat = cduDevices.Count <= 1;
 
-            // One context per CDU; frontpanel devices are driven by the hub below.
-            Contexts = cduDevices.Select(d => new CduDeviceContext(d.Cdu!, options, _ch47SwitchWithSeat)).ToList();
+            Contexts = cduDevices.Select(d => new CduDeviceContext(d.Cdu!, _options, _ch47SwitchWithSeat)).ToList();
 
             frontpanelHub = BuildFrontpanelHub(_devices, manageLighting: _manageLighting);
             Logger.Info($"Created {Contexts.Count} CDU context(s); frontpanel hub has {frontpanelHub.Count} device(s)");
@@ -131,46 +112,27 @@ public class BridgeManager : IDisposable
                 throw new InvalidOperationException("No valid devices found.");
             }
 
-            // Global DCS-BIOS metadata initialization — needed before aircraft
-            // detection AND before any listener can create its outputs.
             DCSAircraft.Init();
             DCSAircraft.FillModulesListFromDcsBios(config.DcsBiosJsonLocation, true);
             DCSBIOSControlLocator.JSONDirectory = config.DcsBiosJsonLocation;
 
-            // Start the UDP connection so we can receive metadata.
             InitializeDcsBios(config);
 
-            // The detector lives for the entire bridge lifecycle so it can
-            // signal both aircraft detection and module exit.
             using var detector = new DcsBiosAircraftDetector();
             detector.StartListening();
 
-            // The version provider also lives for the whole lifecycle: the
-            // DCS-BIOS exporter version is shown in the app title and on the CDU
-            // waiting screen. Its callback arrives on a DCS-BIOS thread, so it is
-            // serialized against the loop's waiting-screen writes.
             using var versionProvider = new DcsBiosVersionProvider();
             _dcsBiosVersion = versionProvider.CurrentVersion;
             versionProvider.VersionChanged += OnDcsBiosVersionChanged;
             versionProvider.StartListening();
 
-            // The bridge loop is now live (waiting phase included); hot-plug commands
-            // can be serviced and shutdown must call Stop().
             IsLoopActive = true;
 
-            // Detection loop: wait for a SUPPORTED aircraft → start listeners →
-            // wait for the aircraft to change (exit or switch) → reset → repeat.
-            // Unsupported aircraft keep the bridge in the waiting state with the
-            // detected name shown in red.
             while (!cancellationToken.IsCancellationRequested)
             {
                 ShowWaitingScreens(null);
                 DetectedAircraftChanged?.Invoke(null);
 
-                // Stay in the waiting state until a supported aircraft is loaded.
-                // A single detector waiter is kept across iterations (the detector
-                // only supports one pending waiter); device hot-plug commands are
-                // serviced in parallel without disturbing it.
                 AircraftDescriptor? descriptor = null;
                 var nameTask = detector.WaitForChangeAsync(cancellationToken);
                 while (descriptor == null)
@@ -203,19 +165,9 @@ public class BridgeManager : IDisposable
                     }
                 }
 
-                // A supported aircraft is loaded: leave the waiting state so a
-                // late version update no longer redraws the waiting screen.
                 EndWaitingState();
-
-                // One change waiter for this whole cycle: reused for the seat-
-                // selection race below AND the running-phase wait further down.
-                // The detector only supports a single pending waiter, so creating
-                // it once here (instead of a second WaitForChangeAsync later)
-                // avoids orphaning a waiter and corrupting its acknowledgment state.
                 var changeTask = detector.WaitForChangeAsync(cancellationToken);
 
-                // Recompute against the current CDU count: devices may have been
-                // hot-plugged since the bridge started.
                 var multipleCdus = Contexts.Count > 1;
 
                 if (descriptor.HasSeatSelection && multipleCdus)
@@ -223,9 +175,6 @@ public class BridgeManager : IDisposable
                     foreach (var ctx in Contexts)
                         ctx.ShowSeatSelectionScreen(descriptor);
 
-                    // Race the seat choice against an aircraft change. If the user
-                    // leaves the module before picking a seat, abandon the selection
-                    // and return to the detection state instead of blocking forever.
                     var selectionTask = Task.WhenAny(
                         Contexts.Select(c => c.SelectionTask.WaitAsync(cancellationToken)));
 
@@ -254,17 +203,12 @@ public class BridgeManager : IDisposable
                 foreach (var ctx in Contexts)
                     ctx.StartBridge();
 
-                // Record the running aircraft first so the frontpanel source can be
-                // derived and so hot-added devices can join it.
                 _activeDescriptor = descriptor;
                 RefreshFrontpanelSource(forceAttach: true);
 
                 IsStarted = true;
                 Logger.Info($"Bridge running with {ActiveDeviceCount} device(s)");
 
-                // Block until the aircraft changes in DCS (module exit or switch),
-                // reusing the waiter created above. While running, also service
-                // device hot-plug commands without resetting the aircraft.
                 while (true)
                 {
                     var deviceTask = DeviceSignalTask(cancellationToken);
@@ -287,13 +231,6 @@ public class BridgeManager : IDisposable
         }
         catch (OperationCanceledException)
         {
-            // Normal shutdown via the cancellation token — not a failure, so don't
-            // log it as an error. We must still release resources here: if the
-            // cancellation arrived before IsStarted became true (e.g. exit from the
-            // waiting screen), the owner's Dispose() skips Stop() (it is guarded by
-            // IsStarted), so dcsBios / frontpanelHub / Contexts would otherwise leak.
-            // dcsBios is non-null only when we have not been stopped yet, so this
-            // also avoids stopping twice when the owner already did.
             if (dcsBios != null)
             {
                 try { Stop(); }
@@ -420,10 +357,6 @@ public class BridgeManager : IDisposable
         headlessListener?.Dispose();
         headlessListener = null;
         _modelSource = null;
-
-        // IsStarted stays true on purpose: between two aircraft (module exit or
-        // switch) the bridge is still live and the UI should keep showing
-        // "running". It is only cleared by Stop().
     }
 
     /// <summary>
@@ -466,11 +399,6 @@ public class BridgeManager : IDisposable
             headlessListener = null;
         }
     }
-
-    // ---- Hot-plug: live device add / remove --------------------------------
-    // Public Add/Remove enqueue a command and wake the detection loop; the command
-    // is applied on the loop thread (DrainDeviceCommands), so every CDU/listener/hub
-    // mutation — including CDU screen rebuilds — happens on that one thread.
 
     /// <summary>
     /// Queues a newly connected device to join the running bridge. Thread-safe.
@@ -712,9 +640,6 @@ public class BridgeManager : IDisposable
 
         if (disposing)
         {
-            // Stop whenever the loop is alive — including the waiting phase, where
-            // IsStarted is still false but the DCS-BIOS foreground threads are running
-            // and must be shut down or the process will not exit.
             if (IsLoopActive)
             {
                 try
