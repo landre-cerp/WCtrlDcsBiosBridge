@@ -14,10 +14,11 @@ This console application bridges DCS World with some of the WinCtrl hardware, en
 ## Quick Start
 
 1. **Install DCS-BIOS** (see detailed instructions below)
-2. **Download and extract** this application to your preferred folder
+2. **Download using the [release](https://github.com/landre-cerp/WCtrlDcsBiosBridge/releases) assets / zip file. and extract** this application to your preferred folder
 3. **Connect** your WinCtrl CDU ( before starting bridge )
-4. **Run** the application
-5. **Launch DCS** and load your aircraft — the bridge detects it automatically and starts
+4. Configure the Dcsbios json folder
+5. **Run** the application
+6. **Launch DCS** and load your aircraft — the bridge detects it automatically and starts
 
 ## Requirements
 
