@@ -76,7 +76,6 @@ if no config.json is found, it will create a default one and show you a dialog b
 
 <img width="441" height="368" alt="image" src="https://github.com/user-attachments/assets/dca3d830-970d-4741-aeb5-7358658f82f0" />
 
-⚠️ **Important:** When updating the application, do not overwrite your existing `config.json` file.
 
 ## Usage
 
