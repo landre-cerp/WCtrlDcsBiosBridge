@@ -24,6 +24,11 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private UserOptions userOptions = new();
     private readonly List<DeviceInfo> devices = new();
 
+    // Hot-plug: watches for devices arriving/being removed, and the device cards
+    // currently shown (keyed so a single card can be added/removed without a full rebuild).
+    private DeviceWatcher? _deviceWatcher;
+    private readonly Dictionary<DeviceIdentifier, Border> _deviceCards = new();
+
     private bool NeedsConfigEdit => !IsConfigValid();
 
     private bool _disposed = false;
@@ -114,7 +119,11 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             devices.AddRange(detected);
             BuildDeviceUI();
             UpdateStartButtonState();
-            
+
+            // Begin watching for hot-plug changes once, using the just-detected set as
+            // the baseline so already-connected devices are not reported as new.
+            StartDeviceWatcher();
+
             if (CanStartBridge() && userOptions.AutoStart)
             {
                 Logger.Info("Auto-starting bridge...");
@@ -137,6 +146,88 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         return IsConfigValid() && devices.Count > 0 && !IsBridgeRunning;
     }
 
+    /// <summary>
+    /// Starts the hot-plug watcher once. Its events arrive on a background thread and are
+    /// marshalled onto the UI thread here.
+    /// </summary>
+    private void StartDeviceWatcher()
+    {
+        if (_deviceWatcher != null) return;
+
+        _deviceWatcher = new DeviceWatcher();
+        _deviceWatcher.DeviceArrived += id => Dispatcher.Invoke(() => _ = OnDeviceArrivedAsync(id));
+        _deviceWatcher.DeviceRemoved += id => Dispatcher.Invoke(() => OnDeviceRemoved(id));
+        _deviceWatcher.Start();
+    }
+
+    /// <summary>
+    /// A supported device was plugged in: connect it, show its card, and — if the bridge is
+    /// already running — hand it to the bridge so it joins the live aircraft. If the bridge
+    /// is stopped and auto-start is enabled, start it now (cases A/B/C).
+    /// </summary>
+    private async Task OnDeviceArrivedAsync(DeviceIdentifier deviceId)
+    {
+        if (devices.Any(d => d.DeviceId.Equals(deviceId)))
+            return; // already connected (e.g. a duplicate watcher event)
+
+        ShowStatus($"Connecting {DeviceManager.GetDeviceName(deviceId)}...", false);
+        try
+        {
+            var info = await DeviceManager.ConnectDeviceAsync(deviceId,
+                resetDevices: !userOptions.DisableLightingManagement);
+            if (info == null)
+            {
+                ShowStatus($"Failed to connect {deviceId.Description}", true);
+                return;
+            }
+
+            devices.Add(info);
+            AddDeviceCard(info);
+
+            // The bridge loop accepts hot-plug joins during the waiting phase too, so
+            // gate on IsLoopActive — not IsStarted (which is only true once an aircraft
+            // is running).
+            if (bridgeManager?.IsLoopActive == true)
+                bridgeManager.AddDevice(info);
+
+            UpdateStartButtonState();
+            ShowStatus($"Connected {info.DisplayName}", false);
+
+            if (bridgeManager?.IsLoopActive != true && CanStartBridge() && userOptions.AutoStart)
+            {
+                Logger.Info("Auto-starting bridge after device arrival...");
+                await StartBridge();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, $"Failed to hot-connect device {deviceId.Description}");
+            ShowStatus($"Failed to connect {deviceId.Description}: {ex.Message}", true);
+        }
+    }
+
+    /// <summary>
+    /// A device was unplugged: detach it from a running bridge, drop its card, and close our
+    /// USB handle (cases D/E/F). No close-reset lighting is applied — the device is gone.
+    /// </summary>
+    private void OnDeviceRemoved(DeviceIdentifier deviceId)
+    {
+        var info = devices.FirstOrDefault(d => d.DeviceId.Equals(deviceId));
+        if (info == null) return;
+
+        if (bridgeManager?.IsLoopActive == true)
+            bridgeManager.RemoveDevice(deviceId);
+
+        devices.Remove(info);
+        RemoveDeviceCard(deviceId);
+
+        try { info.Dispose(); }
+        catch (Exception ex) { Logger.Warn(ex, "Error disposing removed device"); }
+
+        UpdateStartButtonState();
+        ShowStatus($"Disconnected {info.DisplayName}", false);
+    }
+
     private void BuildDeviceUI()
     {
         if (devices.Count == 0)
@@ -146,22 +237,34 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         }
         try
         {
-            var cduCount = devices.Count(d => d.Cdu != null);
-            var frontpanelCount = devices.Count(d => d.Frontpanel != null);
-
-            bool multipleDevices = devices.Count > 1;
             DeviceListPanel.Children.Clear();
+            _deviceCards.Clear();
 
             foreach (var deviceInfo in devices)
-            {
-                DeviceListPanel.Children.Add(CreateDeviceCard(deviceInfo));
-
-            }
+                AddDeviceCard(deviceInfo);
         }
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to build device UI");
             ShowStatus($"Failed to build device UI: {ex.Message}", true);
+        }
+    }
+
+    /// <summary>Adds a card for a device and tracks it so it can be removed individually.</summary>
+    private void AddDeviceCard(DeviceInfo deviceInfo)
+    {
+        var card = CreateDeviceCard(deviceInfo);
+        DeviceListPanel.Children.Add(card);
+        _deviceCards[deviceInfo.DeviceId] = card;
+    }
+
+    /// <summary>Removes the card for a removed (unplugged) device, if present.</summary>
+    private void RemoveDeviceCard(DeviceIdentifier deviceId)
+    {
+        if (_deviceCards.TryGetValue(deviceId, out var card))
+        {
+            DeviceListPanel.Children.Remove(card);
+            _deviceCards.Remove(deviceId);
         }
     }
 
@@ -202,18 +305,21 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         card.SetResourceReference(Border.BorderBrushProperty, "CardConnectedBorderBrush");
         card.SetResourceReference(Border.BackgroundProperty,  "CardConnectedBgBrush");
 
-        if (deviceInfo.Frontpanel != null)
-        {
-            deviceInfo.Frontpanel.Disconnected += (s, e) =>
+        // Instant red-dot feedback the moment the USB device drops (the debounced
+        // DeviceWatcher then removes the card a fraction of a second later). Both
+        // CDUs and frontpanels expose Disconnected.
+        void OnDisconnected(object? s, EventArgs e) =>
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    dot.Fill = CardDisconnectedDot;
-                    card.Background = CardDisconnectedBg;
-                    card.BorderBrush = CardDisconnectedBorder;
-                });
-            };
-        }
+                dot.Fill = CardDisconnectedDot;
+                card.Background = CardDisconnectedBg;
+                card.BorderBrush = CardDisconnectedBorder;
+            });
+
+        if (deviceInfo.Cdu != null)
+            deviceInfo.Cdu.Disconnected += OnDisconnected;
+        else if (deviceInfo.Frontpanel != null)
+            deviceInfo.Frontpanel.Disconnected += OnDisconnected;
 
         return card;
     }
@@ -514,11 +620,19 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     {
         _shutdownCts.Cancel();
 
+        try { _deviceWatcher?.Dispose(); _deviceWatcher = null; }
+        catch (Exception ex) { Logger.Warn(ex, "Error disposing device watcher during close"); }
+
         if (bridgeManager != null)
         {
             try
             {
-                if (IsBridgeRunning) bridgeManager.Stop();
+                // Stop whenever the loop is alive (waiting phase included). The bridge's
+                // StartAsync runs as UI-thread continuations, so the async cancellation
+                // path may not be pumped once the window closes — stopping here
+                // synchronously guarantees dcsBios.Shutdown() joins its foreground
+                // threads so the process actually exits.
+                if (bridgeManager.IsLoopActive) bridgeManager.Stop();
                 bridgeManager.DcsBiosVersionChanged -= OnDcsBiosVersionChanged;
                 bridgeManager.Dispose();
                 bridgeManager = null;
@@ -557,6 +671,8 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             SystemEvents.UserPreferenceChanged -= OnSystemPreferenceChanged;
             _shutdownCts.Cancel();
             _detectCts?.Cancel();
+            _deviceWatcher?.Dispose();
+            _deviceWatcher = null;
             bridgeManager?.Dispose();
             DeviceManager.DisposeDevices(devices,
                 userOptions.DisableLightingManagement ? null : CloseResetOptions.From(userOptions));

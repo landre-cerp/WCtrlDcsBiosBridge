@@ -192,9 +192,20 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         _DisplayCDUTimer = new(_TICK_DISPLAY);
         _DisplayCDUTimer.Elapsed += (_, _) =>
         {
-            if (cdu != null)
+            // A render tick must never crash the app. When a device is unplugged its
+            // USB stream dies (and is disposed on hot-removal), so Render can throw on
+            // this timer thread until the listener is stopped — swallow and log it.
+            try
             {
-                cdu.Render(pages[_currentPage]);
+                var c = cdu;
+                if (c != null)
+                {
+                    c.Render(pages[_currentPage]);
+                }
+            }
+            catch (Exception ex)
+            {
+                App.Logger.Error(ex, "CDU render tick failed");
             }
         };
     }
