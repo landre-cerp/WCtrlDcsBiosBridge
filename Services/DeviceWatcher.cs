@@ -60,12 +60,16 @@ public sealed class DeviceWatcher : IDisposable
         Logger.Info($"DeviceWatcher started; baseline {_known.Count} device(s).");
     }
 
-    private void OnHidDeviceListChanged(object? sender, DeviceListChangedEventArgs e)
+private void OnHidDeviceListChanged(object? sender, DeviceListChangedEventArgs e)
+{
+    // Collapse the burst of Changed events a single plug emits into one reconcile.
+    lock (_lock)
     {
-        // Collapse the burst of Changed events a single plug emits into one reconcile.
+        if (_disposed) return;
         _debounce.Stop();
         _debounce.Start();
     }
+}
 
     private void Reconcile()
     {
