@@ -60,12 +60,16 @@ public sealed class DeviceWatcher : IDisposable
         Logger.Info($"DeviceWatcher started; baseline {_known.Count} device(s).");
     }
 
-    private void OnHidDeviceListChanged(object? sender, DeviceListChangedEventArgs e)
+private void OnHidDeviceListChanged(object? sender, DeviceListChangedEventArgs e)
+{
+    // Collapse the burst of Changed events a single plug emits into one reconcile.
+    lock (_lock)
     {
-        // Collapse the burst of Changed events a single plug emits into one reconcile.
+        if (_disposed) return;
         _debounce.Stop();
         _debounce.Start();
     }
+}
 
     private void Reconcile()
     {
@@ -84,17 +88,19 @@ public sealed class DeviceWatcher : IDisposable
 
         // Raise removals before arrivals so a replug (remove → add of the same unit)
         // tears down the stale device before the new one is connected.
-        foreach (var id in removed)
-        {
-            Logger.Info($"Device removed: {id.Description}");
-            DeviceRemoved?.Invoke(id);
-        }
+foreach (var id in removed)
+{
+    Logger.Info($"Device removed: {id.Description}");
+    try { DeviceRemoved?.Invoke(id); }
+    catch (Exception ex) { Logger.Error(ex, $"DeviceRemoved handler failed for {id.Description}"); }
+}
 
-        foreach (var id in arrived)
-        {
-            Logger.Info($"Device arrived: {id.Description}");
-            DeviceArrived?.Invoke(id);
-        }
+foreach (var id in arrived)
+{
+    Logger.Info($"Device arrived: {id.Description}");
+    try { DeviceArrived?.Invoke(id); }
+    catch (Exception ex) { Logger.Error(ex, $"DeviceArrived handler failed for {id.Description}"); }
+}
     }
 
     public void Dispose()
