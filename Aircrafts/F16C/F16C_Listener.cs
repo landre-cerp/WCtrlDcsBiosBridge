@@ -17,13 +17,13 @@ internal partial class F16C_Listener : AircraftListener
     public F16C_Listener(UserOptions options)
         : base(AircraftRegistry.F16C, options)
     {
-        _dedDisplayKey = Enum.TryParse<Key>(options.F16CPrevDisplayKey, out var prevKey)
+        _dedDisplayKey = Enum.TryParse<Key>(options.F16C.DedKey, out var prevKey)
             ? prevKey
             : Key.PrevPage;
-        _navDisplayKey = Enum.TryParse<Key>(options.F16CNextDisplayKey, out var nextKey)
+        _navDisplayKey = Enum.TryParse<Key>(options.F16C.NavKey, out var nextKey)
             ? nextKey
             : Key.NextPage;
-        _rwrDisplayKey = Enum.TryParse<Key>(options.F16CRwrDisplayKey, out var rwrKey)
+        _rwrDisplayKey = Enum.TryParse<Key>(options.F16C.RwrKey, out var rwrKey)
             ? rwrKey
             : Key.LineSelectRight1;
 

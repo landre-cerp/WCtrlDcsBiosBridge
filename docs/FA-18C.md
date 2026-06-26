@@ -67,4 +67,4 @@ FCU/EFIS and PAP3 stay idle — the F/A-18C does not publish speed, heading, or 
 
 ## Notes
 
-- Page-switch keys can be remapped via the `NextPageKey` / `PrevPageKey` options.
+- Page-switch keys can be remapped in the Options panel.

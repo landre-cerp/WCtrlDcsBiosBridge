@@ -1,114 +1,106 @@
-﻿using WCtrlDcsBiosBridge.Config;
+using WCtrlDcsBiosBridge.Config;
 
 /// <summary>
-/// User-configurable options for the application and aircraft-specific settings.
-/// These options are persisted to useroptions.json.
+/// User-configurable options, persisted to useroptions.json.
+/// App-wide flags live here directly; per-aircraft settings live in one small
+/// object per aircraft (see below) so a new aircraft adds a single property.
 /// </summary>
 public class UserOptions
 {
-    /// <summary>
-    /// Gets or sets whether the A10C display should be aligned to the bottom of the screen.
-    /// </summary>
-    public bool DisplayBottomAligned { get; set; }
+    // ── App-wide ─────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Gets or sets whether the A10C CMS should be displayed.
-    /// </summary>
-    public bool DisplayCMS { get; set; }
-
-    /// <summary>
-    /// Gets or sets whether the A-10C takeoff performance page is available.
-    /// </summary>
-    public bool EnablePerfPages { get; set; } = true;
-
-    /// <summary>
-    /// Gets or sets the MCDU key that opens the A-10C takeoff performance page.
-    /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "FuelPred").
-    /// </summary>
-    public string PerfPageKey { get; set; } = "FuelPred";
-
-    /// <summary>
-    /// Gets or sets whether the A-10C CDU line-select keys, digits and slash are forwarded to
-    /// the sim over DCS-BIOS while the live CDU page is shown. Enable this after unbinding
-    /// those keys in DCS. Independent of <see cref="EnablePerfPages"/>.
-    /// </summary>
-    public bool ForwardCduKeysToSim { get; set; }
-
-    /// <summary>
-    /// Gets or sets whether lighting management should be disabled (for SimApp Pro users).
-    /// </summary>
+    /// <summary>Disable lighting management (for SimApp Pro users).</summary>
     public bool DisableLightingManagement { get; set; }
 
-    /// <summary>
-    /// Gets or sets whether the bridge should automatically start when conditions are met.
-    /// </summary>
+    /// <summary>Automatically start the bridge once conditions are met.</summary>
     public bool AutoStart { get; set; }
 
-    /// <summary>
-    /// Gets or sets whether the application window should be minimized when the bridge starts.
-    /// When enabled, the main window is automatically minimized after successful bridge startup.
-    /// </summary>
+    /// <summary>Minimize the main window after the bridge starts.</summary>
     public bool MinimizeOnStart { get; set; }
 
-    /// <summary>
-    /// Gets or sets the MCDU key used to switch to the next page.
-    /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "NextPage", "LineSelectRight1").
-    /// </summary>
-    public string NextPageKey { get; set; } = "NextPage";
-
-    /// <summary>
-    /// Gets or sets the MCDU key used to switch to the previous page.
-    /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "PrevPage", "LineSelectLeft1").
-    /// </summary>
-    public string PrevPageKey { get; set; } = "PrevPage";
-
-    /// <summary>
-    /// Gets or sets the MCDU key used to show the F-16C DED display.
-    /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "PrevPage", "LeftArrow").
-    /// </summary>
-    public string F16CPrevDisplayKey { get; set; } = "PrevPage";
-
-    /// <summary>
-    /// Gets or sets the MCDU key used to show the F-16C NAV display.
-    /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "NextPage", "RightArrow").
-    /// </summary>
-    public string F16CNextDisplayKey { get; set; } = "NextPage";
-
-    /// <summary>
-    /// Gets or sets the MCDU key used to show the F-16C RWR display.
-    /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "F1").
-    /// </summary>
-    public string F16CRwrDisplayKey { get; set; } = "LineSelectRight1";
-
-    /// <summary>
-    /// Gets or sets the MCDU key used to show the F-14B RIO CAP display.
-    /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "PrevPage").
-    /// </summary>
-    public string F14RioDisplayKey { get; set; } = "PrevPage";
-
-    /// <summary>
-    /// Gets or sets the MCDU key used to show the F-14B radio display.
-    /// Value must be a valid <see cref="WwDevicesDotNet.Key"/> enum name (e.g., "NextPage").
-    /// </summary>
-    public string F14RadioDisplayKey { get; set; } = "NextPage";
-
-    /// <summary>
-    /// Gets or sets the preferred application theme (System, Light, or Dark).
-    /// </summary>
+    /// <summary>Preferred application theme (System, Light, or Dark).</summary>
     public ThemePreference Theme { get; set; } = ThemePreference.System;
 
     // ── On-close device reset ────────────────────────────────────────────────
     // Only applies when DisableLightingManagement is false.
     // Screen content is always cleared on close.
 
-    /// <summary>
-    /// Set all device backlights to 0 % when the application closes.
-    /// When false, backlight stays at 80 % (blank but visible).
-    /// </summary>
+    /// <summary>Set all device backlights to 0 % on close (else stays at 80 %).</summary>
     public bool CloseResetBacklight { get; set; } = true;
 
-    /// <summary>
-    /// Turn off all button/panel LEDs (markers) when the application closes.
-    /// </summary>
+    /// <summary>Turn off all button/panel LEDs (markers) on close.</summary>
     public bool CloseResetMarkers { get; set; } = true;
+
+    // ── Per-aircraft ─────────────────────────────────────────────────────────
+    // To add an aircraft's options: add one property here and one options class.
+
+    public A10COptions A10C { get; set; } = new();
+    public FA18COptions FA18C { get; set; } = new();
+    public F16COptions F16C { get; set; } = new();
+    public F14Options F14 { get; set; } = new();
+}
+
+// Key properties below must be a valid WwDevicesDotNet.Key enum name
+// (e.g. "NextPage", "LineSelectRight1"); listeners fall back to a default if not.
+
+/// <summary>A-10C CDU options.</summary>
+public class A10COptions
+{
+    /// <summary>Align the CDU display to the bottom of the screen.</summary>
+    public bool DisplayBottomAligned { get; set; }
+
+    /// <summary>Show the CMS lines on the CDU.</summary>
+    public bool DisplayCMS { get; set; }
+
+    /// <summary>Whether the takeoff/landing performance pages are available.</summary>
+    public bool EnablePerfPages { get; set; } = true;
+
+    /// <summary>MCDU key that opens the takeoff performance page.</summary>
+    public string PerfPageKey { get; set; } = "FuelPred";
+
+    /// <summary>MCDU key to switch to the next page.</summary>
+    public string NextPageKey { get; set; } = "NextPage";
+
+    /// <summary>MCDU key to switch to the previous page.</summary>
+    public string PrevPageKey { get; set; } = "PrevPage";
+
+    /// <summary>
+    /// Forward the live CDU line-select keys, digits and slash to the sim over
+    /// DCS-BIOS. Enable after unbinding those keys in DCS. Independent of
+    /// <see cref="EnablePerfPages"/>.
+    /// </summary>
+    public bool ForwardCduKeysToSim { get; set; }
+}
+
+/// <summary>F/A-18C IFEI/UFC page options.</summary>
+public class FA18COptions
+{
+    /// <summary>MCDU key that shows the IFEI page.</summary>
+    public string ShowIfeiKey { get; set; } = "NextPage";
+
+    /// <summary>MCDU key that shows the UFC page.</summary>
+    public string ShowUfcKey { get; set; } = "PrevPage";
+}
+
+/// <summary>F-16C DED/NAV/RWR page options.</summary>
+public class F16COptions
+{
+    /// <summary>MCDU key that shows the DED display.</summary>
+    public string DedKey { get; set; } = "PrevPage";
+
+    /// <summary>MCDU key that shows the NAV display.</summary>
+    public string NavKey { get; set; } = "NextPage";
+
+    /// <summary>MCDU key that shows the RWR display.</summary>
+    public string RwrKey { get; set; } = "LineSelectRight1";
+}
+
+/// <summary>F-14B RIO CAP / radio page options.</summary>
+public class F14Options
+{
+    /// <summary>MCDU key that shows the RIO CAP display.</summary>
+    public string RioKey { get; set; } = "PrevPage";
+
+    /// <summary>MCDU key that shows the radio display.</summary>
+    public string RadioKey { get; set; } = "NextPage";
 }

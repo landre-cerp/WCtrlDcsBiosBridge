@@ -58,11 +58,10 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     // Null while idle or detecting; set to the active descriptor once an aircraft is confirmed.
     private AircraftDescriptor? _detectedAircraft;
 
-    // Each section is editable unless its specific aircraft is currently running.
-    public bool IsA10COptionsEnabled   => _detectedAircraft != AircraftRegistry.A10C;
-    public bool IsFA18COptionsEnabled  => _detectedAircraft != AircraftRegistry.FA18C;
-    public bool IsF14BOptionsEnabled   => _detectedAircraft != AircraftRegistry.F14B;
-    public bool IsF16COptionsEnabled   => _detectedAircraft != AircraftRegistry.F16C;
+    // The running aircraft's display name (null while idle/detecting). Each options
+    // section binds its enabled state to this via AircraftNotActiveConverter, so a
+    // section is editable unless its own aircraft is the one running.
+    public string? DetectedAircraftName => _detectedAircraft?.DisplayName;
     public bool IsLightingManaged      => !userOptions.DisableLightingManagement;
 
     public string AppVersion { get; }
@@ -513,10 +512,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private void SetDetectedAircraft(AircraftDescriptor? descriptor)
     {
         _detectedAircraft = descriptor;
-        OnPropertyChanged(nameof(IsA10COptionsEnabled));
-        OnPropertyChanged(nameof(IsFA18COptionsEnabled));
-        OnPropertyChanged(nameof(IsF14BOptionsEnabled));
-        OnPropertyChanged(nameof(IsF16COptionsEnabled));
+        OnPropertyChanged(nameof(DetectedAircraftName));
     }
 
     private void ResetStartButton()
