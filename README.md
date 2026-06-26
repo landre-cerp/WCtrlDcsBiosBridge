@@ -38,7 +38,7 @@ At least one of these devices.
 Each aircraft has its own page describing the supported devices, CDU display, LEDs,
 brightness, and any front-panel output. Click an aircraft for details.
 
-[A-10C](docs/A-10C.md) | [AH-64D](docs/AH-64D.md) | [F/A-18C](docs/FA-18C.md) | [CH-47F](docs/CH-47F.md) | [OH-58D](docs/OH-58D.md) | [F-14B](docs/F-14B.md) | [F-15E](docs/F-15E.md) | [F-16C](docs/F-16C.md) | [M-2000C](docs/M-2000C.md) | [UH-1H](docs/UH-1H.md)
+[A-10C](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/A-10C) | [AH-64D](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/AH-64D) | [F/A-18C](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/FA-18C) | [CH-47F](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/CH-47F) | [OH-58D](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/OH-58D) | [F-14B](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/F-14B) | [F-15E](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/F-15E) | [F-16C](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/F-16C) | [M-2000C](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/M-2000C) | [UH-1H](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/UH-1H)
 
 Contributions: Smreki F15E , Mustang038 M200C, F16C Poussedebamboo, F18 Iefi pages Martin Javorek
 
@@ -125,8 +125,8 @@ The only manual choice left is the **seat** for the CH-47F when two or more CDUs
 ### Brightness Issues
 
 - **Mismatched brightness:** Use the aircraft's brightness controls first, then adjust MCDU
-- **A10C:** Check the [specific documentation](docs/A-10C.md)
-- **CH-47F:** Check the [specific documentation](docs/CH-47F.md)
+- **A10C:** Check the [specific documentation](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/A-10C)
+- **CH-47F:** Check the [specific documentation](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/CH-47F)
 - In case of flickering with SimAppPro running, check the
 
 <img width="50%" alt="image" src="https://github.com/user-attachments/assets/1cc6f86f-8fc8-457e-a9fb-11191fcd966d" />
@@ -151,7 +151,7 @@ This project is written in C# and targets .NET 8.0. It uses:
 - **NLog** for logging
 
 ## Contributing
-see `docs/CONTRIBUTING.md` for contribution guidelines. [link](docs/CONTRIBUTING.md)
+see the [wiki Contributing page](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/Contributing) for contribution guidelines.
 
 ## License
 
