@@ -73,9 +73,8 @@ See each aircraft's page for specifics.
 if no config.json is found, it will create a default one and show you a dialog box to edit it.
 3. Select the **File locations** at `DCS-BIOS` JSON folder. It should be located inside the `Scripts/DCS-BIOS/doc/json` folder.
    * Example (as default in your Saved Games): `Saved Games/DCS/Scripts/DCS-BIOS/doc/json`
-
-<img width="441" height="368" alt="image" src="https://github.com/user-attachments/assets/dca3d830-970d-4741-aeb5-7358658f82f0" />
-
+  
+<img width="437" height="289" alt="image" src="https://github.com/user-attachments/assets/af96f5c0-2657-4589-9cc4-4537904048ae" />
 
 ## Usage
 
