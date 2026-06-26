@@ -149,8 +149,7 @@ public static readonly IReadOnlyList<AircraftDescriptor> All = new[]
 
 #### 4. (Optional) Add aircraft-specific options
 
-Only if your aircraft needs user settings (page-switch keys, toggles). It touches **two
-files, no others** — the options panel wires itself up from these.
+Only if your aircraft needs user settings (page-switch keys, toggles). To surface options in the app, you only touch **two files** — the options panel wires itself up from these.
 
 **a. An options class** in `Config/UserOptions.cs`: add one property to `UserOptions` plus a
 small class. Key bindings are plain strings (any valid `WwDevicesDotNet.Key` enum name):
