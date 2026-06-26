@@ -67,7 +67,6 @@ internal partial class F14_Listener
 
     private string UhfChannelLabel()
     {
-        // DCS-BIOS bug: PLT_UHF1_FREQ_MODE is reversed — PRESET reports as 0, GUARD as 2
         if (_uhfFreqMode == 0) // PRESET
             return int.TryParse(_pltUhfDisp.Trim(), out int ch) ? $"CH{ch:D2}" : "CH??";
 
@@ -93,9 +92,6 @@ internal partial class F14_Listener
         };
     }
 
-    // DCS-BIOS bug: PLT_UHF1_FUNCTION and PLT_UHF1_FREQ_MODE report values in reverse
-    // order compared to the JSON positions array. Labels below reflect the actual
-    // DCS-BIOS output, not the JSON declaration.
     private static readonly string[] _uhfFunctionLabels   = { "OFF", "MAIN", "BOTH", "ADF" };
     private static readonly string[] _uhfFreqModeLabels   = { "PRESET", "MANUAL", "GUARD" };
     private static readonly string[] _vuhfRadioModeLabels = { "OFF", "T/R", "T/R&G", "DF", "TEST" };
