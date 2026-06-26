@@ -28,9 +28,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - language: actions
-          build-mode: none
-          runner: ubuntu-latest
         - language: csharp
           build-mode: manual
           runner: windows-latest
