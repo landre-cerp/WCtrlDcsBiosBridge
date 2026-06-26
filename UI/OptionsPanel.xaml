@@ -117,7 +117,7 @@
                          IsChecked="{Binding A10C.DisplayCMS, Mode=TwoWay}"
                          Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
                          Margin="0,4"/>
-                <CheckBox Content="Enable Takeoff Performance Page"
+                <CheckBox Content="Enable Performance Pages"
                          IsChecked="{Binding A10C.EnablePerfPages, Mode=TwoWay}"
                          Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
                          Margin="0,4"/>
