@@ -23,6 +23,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="DcsBios\**" />
+    <EmbeddedResource Remove="DcsBios\**" />
+    <None Remove="DcsBios\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include=".github\copilot-instructions.md" />
     <None Include=".github\ISSUE_TEMPLATE\bug_report.md" />
     <None Include=".github\ISSUE_TEMPLATE\config.yaml" />
@@ -37,7 +43,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="libs\DCSFPCommon\src\DCS-BIOS\DCS-BIOS.csproj" />
+    <ProjectReference Include="DcsBios\WCtrlDcsBiosBridge.DcsBios.csproj" />
     <ProjectReference Include="libs\WwDevicesDotnet\WW-Devices-Dotnet.csproj" />
     <ProjectReference Include="libs\A10C-PerfLib\PerformanceLib\a10c-perf-lib.csproj" />
   </ItemGroup>
