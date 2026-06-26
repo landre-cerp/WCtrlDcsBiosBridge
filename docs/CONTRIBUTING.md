@@ -147,6 +147,45 @@ public static readonly IReadOnlyList<AircraftDescriptor> All = new[]
 
 > **Font:** start by reusing an existing resource — `resources/a10c-font-21x31.json` or `resources/ah64d-font-21x31.json`. A font file maps a **fixed** character set to bitmap glyphs; if every character you render already looks correct, there is **no point duplicating** a font just to give it a new name. Create a dedicated font only when you need to **design a special bitmap** for a character code (e.g. a custom symbol drawn when a given char code is sent). You change the glyph's bitmap (the drawing) for an existing char code — you cannot add new characters, the charset in the file is fixed.
 
+#### 4. (Optional) Add aircraft-specific options
+
+Only if your aircraft needs user settings (page-switch keys, toggles). It touches **two
+files, no others** — the options panel wires itself up from these.
+
+**a. An options class** in `Config/UserOptions.cs`: add one property to `UserOptions` plus a
+small class. Key bindings are plain strings (any valid `WwDevicesDotNet.Key` enum name):
+
+```csharp
+// in UserOptions:
+public F15EOptions F15E { get; set; } = new();
+
+public class F15EOptions
+{
+    public string ShowXxxKey { get; set; } = "NextPage";
+}
+```
+
+**b. One UI section** in `UI/OptionsPanel.xaml`: a `HeaderedContentControl` with the shared
+`AircraftSection` style. The `Header` **must equal the descriptor's `DisplayName`** — that alone
+gives you the title *and* the automatic "disabled while this aircraft is running" behaviour. Key
+dropdowns populate themselves via `McduKeyNames`:
+
+```xml
+<HeaderedContentControl Style="{StaticResource AircraftSection}" Header="F-15E">
+    <StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,4">
+            <TextBlock Text="Show Xxx Key:" VerticalAlignment="Center" Width="120"/>
+            <ComboBox ItemsSource="{x:Static ui:OptionsPanel.McduKeyNames}"
+                      SelectedValue="{Binding F15E.ShowXxxKey, Mode=TwoWay}"
+                      SelectionChanged="ComboBox_Changed" Width="150"/>
+        </StackPanel>
+    </StackPanel>
+</HeaderedContentControl>
+```
+
+Read the settings in your listener through the `UserOptions` the factory already passes you,
+e.g. `options.F15E.ShowXxxKey`.
+
 #### Helpers available from `AircraftListener`
 
 | Helper | Use |

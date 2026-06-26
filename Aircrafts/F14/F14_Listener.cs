@@ -19,9 +19,9 @@ internal partial class F14_Listener : AircraftListener
 
     public F14_Listener(UserOptions options) : base(AircraftRegistry.F14B, options)
     {
-        _rioDisplayKey = Enum.TryParse<Key>(options.F14RioDisplayKey, out var rioKey)
+        _rioDisplayKey = Enum.TryParse<Key>(options.F14.RioKey, out var rioKey)
             ? rioKey : Key.PrevPage;
-        _radioDisplayKey = Enum.TryParse<Key>(options.F14RadioDisplayKey, out var radioKey)
+        _radioDisplayKey = Enum.TryParse<Key>(options.F14.RadioKey, out var radioKey)
             ? radioKey : Key.NextPage;
 
         AddNewPage(RADIO_PAGE);

@@ -8,58 +8,17 @@ public partial class OptionsPanel : UserControl
     private bool _isInitializing = true;
     public event EventHandler? SettingsChanged;
 
+    /// <summary>
+    /// All MCDU key names, for binding the key dropdowns straight from XAML
+    /// (<c>ItemsSource="{x:Static ui:OptionsPanel.McduKeyNames}"</c>) — so a new
+    /// dropdown never needs code-behind.
+    /// </summary>
+    public static IReadOnlyList<string> McduKeyNames { get; } = Enum.GetNames(typeof(Key));
+
     public OptionsPanel()
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
-        InitializeKeyComboBoxes();
-    }
-
-    private void InitializeKeyComboBoxes()
-    {
-        // Get all available MCDU keys as strings
-        var keyNames = Enum.GetNames(typeof(Key));
-
-        // Find the combo boxes by name and populate them
-        if (FindName("NextPageKeyComboBox") is ComboBox nextPageCombo)
-        {
-            nextPageCombo.ItemsSource = keyNames;
-        }
-
-        if (FindName("PrevPageKeyComboBox") is ComboBox prevPageCombo)
-        {
-            prevPageCombo.ItemsSource = keyNames;
-        }
-
-        if (FindName("PerfPageKeyComboBox") is ComboBox perfPageCombo)
-        {
-            perfPageCombo.ItemsSource = keyNames;
-        }
-
-        if (FindName("F14RioDisplayKeyComboBox") is ComboBox f14RioCombo)
-        {
-            f14RioCombo.ItemsSource = keyNames;
-        }
-
-        if (FindName("F14RadioDisplayKeyComboBox") is ComboBox f14RadioCombo)
-        {
-            f14RadioCombo.ItemsSource = keyNames;
-        }
-
-        if (FindName("F16CNextDisplayKeyComboBox") is ComboBox f16cNextCombo)
-        {
-            f16cNextCombo.ItemsSource = keyNames;
-        }
-
-        if (FindName("F16CPrevDisplayKeyComboBox") is ComboBox f16cPrevCombo)
-        {
-            f16cPrevCombo.ItemsSource = keyNames;
-        }
-
-        if (FindName("F16CRwrDisplayKeyComboBox") is ComboBox f16cRwrCombo)
-        {
-            f16cRwrCombo.ItemsSource = keyNames;
-        }
     }
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)

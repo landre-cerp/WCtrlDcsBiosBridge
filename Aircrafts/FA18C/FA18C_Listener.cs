@@ -16,10 +16,10 @@ internal partial class FA18C_Listener : AircraftListener
     public FA18C_Listener(UserOptions options)
         : base(AircraftRegistry.FA18C, options)
     {
-        _nextPageKey = Enum.TryParse<Key>(options.NextPageKey, out var nextKey)
+        _nextPageKey = Enum.TryParse<Key>(options.FA18C.ShowIfeiKey, out var nextKey)
             ? nextKey
             : Key.NextPage;
-        _prevPageKey = Enum.TryParse<Key>(options.PrevPageKey, out var prevKey)
+        _prevPageKey = Enum.TryParse<Key>(options.FA18C.ShowUfcKey, out var prevKey)
             ? prevKey
             : Key.PrevPage;
 

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using WCtrlDcsBiosBridge.Common;
 
 namespace WCtrlDcsBiosBridge.Config;
@@ -11,19 +12,8 @@ public static class UserOptionsStorage
         AppDomain.CurrentDomain.BaseDirectory,
         "useroptions.json");
 
-    public static UserOptions GetDefaultOptions()
-    {
-        return new UserOptions
-        {
-            DisplayBottomAligned = false,
-            DisplayCMS = false,
-            DisableLightingManagement = false,
-            AutoStart = false,
-            MinimizeOnStart = false,
-            NextPageKey = "NextPage",
-            PrevPageKey = "PrevPage"
-        };
-    }
+    // Defaults now live on UserOptions and the per-aircraft option classes.
+    public static UserOptions GetDefaultOptions() => new();
 
     public static UserOptions Load()
     {
@@ -52,6 +42,17 @@ public static class UserOptionsStorage
             }
 
             var json = File.ReadAllText(ConfigFilePath);
+
+            // Migrate the old flat layout (per-aircraft settings at the root) to the
+            // grouped layout once, preserving the user's customised keys, then re-save.
+            var root = JsonNode.Parse(json);
+            if (root?["A10C"] is null && root?["PerfPageKey"] is not null)
+            {
+                var migrated = JsonSerializer.Deserialize<LegacyUserOptions>(json)!.ToUserOptions();
+                TrySave(migrated);
+                return Result<UserOptions>.Success(migrated);
+            }
+
             var options = JsonSerializer.Deserialize<UserOptions>(json);
 
             if (options is null)
@@ -97,4 +98,54 @@ public static class UserOptionsStorage
             return Result<Unit>.Failure($"Error saving user options: {ex.Message}");
         }
     }
+}
+
+/// <summary>
+/// The pre-grouping (flat) layout of useroptions.json, used only to migrate older
+/// files into <see cref="UserOptions"/>. Safe to delete once users have upgraded.
+/// </summary>
+internal sealed class LegacyUserOptions
+{
+    public bool DisplayBottomAligned { get; set; }
+    public bool DisplayCMS { get; set; }
+    public bool EnablePerfPages { get; set; } = true;
+    public string PerfPageKey { get; set; } = "FuelPred";
+    public bool ForwardCduKeysToSim { get; set; }
+    public bool DisableLightingManagement { get; set; }
+    public bool AutoStart { get; set; }
+    public bool MinimizeOnStart { get; set; }
+    public string NextPageKey { get; set; } = "NextPage";
+    public string PrevPageKey { get; set; } = "PrevPage";
+    public string F16CPrevDisplayKey { get; set; } = "PrevPage";
+    public string F16CNextDisplayKey { get; set; } = "NextPage";
+    public string F16CRwrDisplayKey { get; set; } = "LineSelectRight1";
+    public string F14RioDisplayKey { get; set; } = "PrevPage";
+    public string F14RadioDisplayKey { get; set; } = "NextPage";
+    public ThemePreference Theme { get; set; } = ThemePreference.System;
+    public bool CloseResetBacklight { get; set; } = true;
+    public bool CloseResetMarkers { get; set; } = true;
+
+    public UserOptions ToUserOptions() => new()
+    {
+        DisableLightingManagement = DisableLightingManagement,
+        AutoStart = AutoStart,
+        MinimizeOnStart = MinimizeOnStart,
+        Theme = Theme,
+        CloseResetBacklight = CloseResetBacklight,
+        CloseResetMarkers = CloseResetMarkers,
+        A10C = new A10COptions
+        {
+            DisplayBottomAligned = DisplayBottomAligned,
+            DisplayCMS = DisplayCMS,
+            EnablePerfPages = EnablePerfPages,
+            PerfPageKey = PerfPageKey,
+            NextPageKey = NextPageKey,
+            PrevPageKey = PrevPageKey,
+            ForwardCduKeysToSim = ForwardCduKeysToSim,
+        },
+        // FA-18C previously shared the A-10C NextPage/PrevPage keys; keep that value.
+        FA18C = new FA18COptions { ShowIfeiKey = NextPageKey, ShowUfcKey = PrevPageKey },
+        F16C = new F16COptions { DedKey = F16CPrevDisplayKey, NavKey = F16CNextDisplayKey, RwrKey = F16CRwrDisplayKey },
+        F14 = new F14Options { RioKey = F14RioDisplayKey, RadioKey = F14RadioDisplayKey },
+    };
 }

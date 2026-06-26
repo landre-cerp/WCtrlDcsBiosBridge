@@ -29,16 +29,16 @@ internal partial class A10C_Listener : AircraftListener
 
     public A10C_Listener(
         UserOptions options) : base(AircraftRegistry.A10C, options) {
-        _nextPageKey = Enum.TryParse<Key>(options.NextPageKey, out var nextKey)
+        _nextPageKey = Enum.TryParse<Key>(options.A10C.NextPageKey, out var nextKey)
             ? nextKey
             : Key.NextPage;
-        _prevPageKey = Enum.TryParse<Key>(options.PrevPageKey, out var prevKey)
+        _prevPageKey = Enum.TryParse<Key>(options.A10C.PrevPageKey, out var prevKey)
             ? prevKey
             : Key.PrevPage;
-        _perfPageKey = Enum.TryParse<Key>(options.PerfPageKey, out var perfKey)
+        _perfPageKey = Enum.TryParse<Key>(options.A10C.PerfPageKey, out var perfKey)
             ? perfKey
             : Key.FuelPred;
-        _perfPagesEnabled = options.EnablePerfPages;
+        _perfPagesEnabled = options.A10C.EnablePerfPages;
 
         if (_perfPagesEnabled)
         {
@@ -75,7 +75,7 @@ internal partial class A10C_Listener : AircraftListener
                 // are independent. Rendering happens on this (input) thread only.
                 if (_perfPagesEnabled && e.Key == _perfPageKey)
                 { _currentPage = TAKEOFF_PAGE; Compute(); RenderTakeoffPage(); }
-                else if (options.ForwardCduKeysToSim)
+                else if (options.A10C.ForwardCduKeysToSim)
                     ForwardCduKeyToSim(e.Key);
                 break;
         }
@@ -121,14 +121,14 @@ internal partial class A10C_Listener : AircraftListener
         RegisterUInt("MASTER_CAUTION",     v => SetCduLeds(fail: v == 1));
 
         // --- CDU display lines ---
-        bool bottomAligned = options.DisplayBottomAligned;
+        bool bottomAligned = options.A10C.DisplayBottomAligned;
         for (int i = 0; i < cduLines.Length; i++)
         {
             int line = bottomAligned ? i + 4 : i;
             RegisterStr(cduLines[i], s => WriteCduLine(line, s));
         }
 
-        if (options.DisplayCMS)
+        if (options.A10C.DisplayCMS)
         {
             int cmsp1Line = bottomAligned ? 0 : 12;
             int cmsp2Line = bottomAligned ? 1 : 13;
@@ -234,9 +234,9 @@ internal partial class A10C_Listener : AircraftListener
         var output = GetCompositor(DEFAULT_PAGE);
         output.Green().Line(lineIndex).WriteLine(ReplaceSpecialChars(raw));
 
-        if (options.DisplayCMS)
+        if (options.A10C.DisplayCMS)
         {
-            output.Line(options.DisplayBottomAligned ? 2 : 11).Amber().WriteLine("------------------------");
+            output.Line(options.A10C.DisplayBottomAligned ? 2 : 11).Amber().WriteLine("------------------------");
         }
     }
 
