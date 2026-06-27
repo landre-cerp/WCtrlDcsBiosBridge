@@ -52,8 +52,16 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     public string? UpdateUrl { get => _updateUrl; private set { _updateUrl = value; OnPropertyChanged(); } }
     public bool IsUpdateVisible { get => _isUpdateVisible; private set { _isUpdateVisible = value; OnPropertyChanged(); } }
 
+    // "Running" = an aircraft is detected and its listeners are live (drives status/display).
     public bool IsBridgeRunning => bridgeManager?.IsStarted == true;
-    public bool CanEdit => !IsBridgeRunning;
+
+    // "Loop active" = the bridge loop exists at all, including the phase where it is up
+    // and waiting for DCS (IsStarted is still false then). Gate any action that could
+    // spin up a *second* loop — Start, auto-start, config editing — on this, not on
+    // IsBridgeRunning, or a hot-plug/UI refresh during the waiting phase re-enables Start.
+    public bool IsBridgeLoopActive => bridgeManager?.IsLoopActive == true;
+
+    public bool CanEdit => !IsBridgeLoopActive;
 
     // Null while idle or detecting; set to the active descriptor once an aircraft is confirmed.
     private AircraftDescriptor? _detectedAircraft;
@@ -142,7 +150,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
     private bool CanStartBridge()
     {
-        return IsConfigValid() && devices.Count > 0 && !IsBridgeRunning;
+        return IsConfigValid() && devices.Count > 0 && !IsBridgeLoopActive;
     }
 
     /// <summary>
@@ -192,7 +200,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             UpdateStartButtonState();
             ShowStatus($"Connected {info.DisplayName}", false);
 
-            if (bridgeManager?.IsLoopActive != true && CanStartBridge() && userOptions.AutoStart)
+            if (CanStartBridge() && userOptions.AutoStart)
             {
                 Logger.Info("Auto-starting bridge after device arrival...");
                 await StartBridge();
@@ -448,6 +456,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             bridgeManager.DetectedAircraftChanged += OnDetectedAircraftChanged;
             bridgeManager.DcsBiosVersionChanged += OnDcsBiosVersionChanged;
             OnPropertyChanged(nameof(IsBridgeRunning));
+            OnPropertyChanged(nameof(IsBridgeLoopActive));
             OnPropertyChanged(nameof(CanEdit));
 
             // StartAsync runs the detection loop and never returns until
@@ -491,6 +500,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
                 StartButton.Content = "Bridge Running";
                 StartButton.IsEnabled = false;
                 OnPropertyChanged(nameof(IsBridgeRunning));
+                OnPropertyChanged(nameof(IsBridgeLoopActive));
                 OnPropertyChanged(nameof(CanEdit));
                 UpdateBridgeStatusCard($"Bridge running · {descriptor.DisplayName}", $"Listening on {config.ReceiveFromIpUdp}:{config.ReceivePortUdp}");
 
@@ -518,11 +528,12 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private void ResetStartButton()
     {
         SetDetectedAircraft(null);
-        StartButton.IsEnabled = !IsBridgeRunning && devices.Count > 0 && IsConfigValid();
+        StartButton.IsEnabled = !IsBridgeLoopActive && devices.Count > 0 && IsConfigValid();
         StartButton.Content = "Start Bridge";
         _dcsBiosVersion = null;
         UpdateTitle();
         OnPropertyChanged(nameof(IsBridgeRunning));
+        OnPropertyChanged(nameof(IsBridgeLoopActive));
         OnPropertyChanged(nameof(CanEdit));
         UpdateBridgeStatusCard("Bridge stopped", "Aircraft is detected automatically when DCS is running");
     }
@@ -572,8 +583,8 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
     private void UpdateStartButtonState()
     {
-        StartButton.IsEnabled = !IsBridgeRunning && IsConfigValid() && devices.Count > 0;
-        if (!IsBridgeRunning && !(StartButton.Content?.ToString()?.Length > 0))
+        StartButton.IsEnabled = !IsBridgeLoopActive && IsConfigValid() && devices.Count > 0;
+        if (!IsBridgeLoopActive && !(StartButton.Content?.ToString()?.Length > 0))
         {
             StartButton.Content = "Start Bridge";
         }

@@ -23,6 +23,7 @@ jobs:
       packages: read
       actions: read
       contents: read
+      pull-requests: read
 
     strategy:
       fail-fast: false
@@ -31,6 +32,9 @@ jobs:
         - language: csharp
           build-mode: manual
           runner: windows-latest
+        - language: actions
+          build-mode: none
+          runner: ubuntu-latest
 
     steps:
     - name: Checkout repository
