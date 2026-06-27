@@ -62,6 +62,11 @@ public class DeviceManager
                     currentIndex++;
                     progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, $"Connected {deviceInfo.DisplayName} ({currentIndex}/{totalDevices})"));
                 }
+                catch (OperationCanceledException)
+                {
+                    // Cancellation is not a per-device failure — let it abort the whole detect.
+                    throw;
+                }
                 catch (Exception ex)
                 {
                     Logger.Error(ex, $"Failed to connect to CDU device {i + 1}");
@@ -86,6 +91,11 @@ public class DeviceManager
                     Logger.Info($"Successfully added frontpanel device: {deviceInfo.DisplayName}");
                     progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, $"Connected {deviceInfo.DisplayName} ({currentIndex}/{totalDevices})"));
                 }
+                catch (OperationCanceledException)
+                {
+                    // Cancellation is not a per-device failure — let it abort the whole detect.
+                    throw;
+                }
                 catch (Exception ex)
                 {
                     Logger.Error(ex, $"Failed to connect to frontpanel device {i + 1}: {ex.Message}");
@@ -98,7 +108,11 @@ public class DeviceManager
         }
         catch (OperationCanceledException)
         {
+            // Propagate cancellation so the caller can abort the post-detection pipeline
+            // (UI rebuild, watcher startup, auto-start) instead of treating a cancelled
+            // run as a completed one with a partial device list.
             progress?.Report(new DeviceDetectionProgress(0, 0, "Device detection cancelled"));
+            throw;
         }
         catch (Exception ex)
         {
