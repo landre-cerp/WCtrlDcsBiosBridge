@@ -9,7 +9,7 @@
 
 This desktop application bridges DCS World with some of the WinCtrl hardware, enabling real-time data exchange between the simulator and the physical device.
 
-**Data Flow:** DCS <-> DCS-BIOS <-> This App <-> WinCtrl CDUs (and FCU)
+**Data Flow:** DCS <-> DCS-BIOS <-> This App <-> WinCtrl Devices
 
 ## Quick Start
 
