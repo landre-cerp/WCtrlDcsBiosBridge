@@ -28,6 +28,17 @@
     <None Remove="DcsBios\**" />
   </ItemGroup>
 
+  <!-- The test project lives under Tests\ in this same folder; keep its sources out of the app build. -->
+  <ItemGroup>
+    <Compile Remove="Tests\**" />
+    <EmbeddedResource Remove="Tests\**" />
+    <None Remove="Tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="WCtrlDcsBiosBridge.Tests" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Include=".github\copilot-instructions.md" />
     <None Include=".github\ISSUE_TEMPLATE\bug_report.md" />

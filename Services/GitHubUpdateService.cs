@@ -81,8 +81,9 @@ public sealed class GitHubUpdateService
         }
     }
 
-    // SemVer parsing and comparison (handles prerelease correctly)
-    private static int CompareSemVer(string a, string b)
+    // SemVer parsing and comparison (handles prerelease correctly).
+    // internal (not private) so it can be unit-tested via InternalsVisibleTo.
+    internal static int CompareSemVer(string a, string b)
     {
         var pa = ParseSemVer(a);
         var pb = ParseSemVer(b);

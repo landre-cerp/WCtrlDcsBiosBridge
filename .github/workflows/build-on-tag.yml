@@ -60,6 +60,10 @@ jobs:
           echo "VER=$VER" >> $GITHUB_ENV
           echo "FILEVER=$FILEVER" >> $GITHUB_ENV
 
+      # Gate the release on the headless logic tests — a failing test blocks publishing.
+      - name: Test
+        run: dotnet test Tests/WCtrlDcsBiosBridge.Tests.csproj --configuration ${{ env.CONFIGURATION }}
+
       - name: Build
         shell: powershell
         run: |
