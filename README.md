@@ -7,7 +7,7 @@
 
 # WctrlDcsBiosBridge
 
-This console application bridges DCS World with some of the WinCtrl hardware, enabling real-time data exchange between the simulator and the physical device.
+This desktop application bridges DCS World with some of the WinCtrl hardware, enabling real-time data exchange between the simulator and the physical device.
 
 **Data Flow:** DCS <-> DCS-BIOS <-> This App <-> WinCtrl CDUs (and FCU)
 
@@ -91,7 +91,7 @@ The only manual choice left is the **seat** for the CH-47F when two or more CDUs
 ### Controls
 
 - **CDU Keys:** Map them in DCS.
-- **Seat selection (CH-47F with 2+ CDUs):** when prompted, press the line-select key next to **PILOT** or **COPILOT**. See the [CH-47F documentation](docs/CH-47F.md).
+- **Seat selection (CH-47F with 2+ CDUs):** when prompted, press the line-select key next to **PILOT** or **COPILOT**. See the [CH-47F documentation](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/CH-47F).
 
 ## Troubleshooting
 
