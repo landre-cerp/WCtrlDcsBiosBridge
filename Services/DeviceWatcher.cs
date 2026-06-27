@@ -80,10 +80,9 @@ private void OnHidDeviceListChanged(object? sender, DeviceListChangedEventArgs e
         {
             if (_disposed) return;
 
-            var current = DeviceManager.FindLocalSupportedDevices();
-            arrived = current.Where(c => !_known.Any(k => k.Equals(c))).ToList();
-            removed = _known.Where(k => !current.Any(c => c.Equals(k))).ToList();
-            _known = current.ToList();
+            var current = DeviceManager.FindLocalSupportedDevices().ToList();
+            (arrived, removed) = Diff(_known, current);
+            _known = current;
         }
 
         // Raise removals before arrivals so a replug (remove → add of the same unit)
@@ -101,6 +100,23 @@ foreach (var id in arrived)
     try { DeviceArrived?.Invoke(id); }
     catch (Exception ex) { Logger.Error(ex, $"DeviceArrived handler failed for {id.Description}"); }
 }
+    }
+
+    /// <summary>
+    /// Pure set-diff between the last-known device set and the set currently present on the
+    /// bus, keyed by <see cref="DeviceIdentifier"/> value-equality. Extracted from
+    /// <see cref="Reconcile"/> so hot-plug reconciliation can be unit-tested without a USB bus.
+    ///
+    /// Known limitation (see the type-level remarks): value-identical devices — same
+    /// VID/PID/user, e.g. two of the same non-seat panel — are indistinguishable, so unplugging
+    /// one of a matched pair produces no removal and replugging produces no arrival.
+    /// </summary>
+    internal static (List<DeviceIdentifier> arrived, List<DeviceIdentifier> removed) Diff(
+        IReadOnlyList<DeviceIdentifier> known, IReadOnlyList<DeviceIdentifier> current)
+    {
+        var arrived = current.Where(c => !known.Any(k => k.Equals(c))).ToList();
+        var removed = known.Where(k => !current.Any(c => c.Equals(k))).ToList();
+        return (arrived, removed);
     }
 
     public void Dispose()
