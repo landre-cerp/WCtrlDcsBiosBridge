@@ -47,6 +47,7 @@
     <None Include=".github\workflows\build-on-push.yml" />
     <None Include=".github\workflows\build-on-tag.yml" />
     <None Include=".github\workflows\codeql.yml" />
+    <None Include=".github\workflows\dependency-submission.yml" />
   </ItemGroup>
 
   <ItemGroup>
