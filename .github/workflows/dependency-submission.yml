@@ -8,13 +8,11 @@ on:
 
 permissions:
   contents: write
-
-env:
-  DOTNET_VERSION: '8.0.x'
+  id-token: write
 
 jobs:
   dependency-submission:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code with submodules
@@ -23,13 +21,5 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Restore dependencies
-        run: dotnet restore WCtrlDcsBiosBridge.csproj
-
       - name: Submit dependency graph
-        uses: github/dependency-submission-toolkit-action@v4
+        uses: advanced-security/component-detection-dependency-submission-action@v0.1.1
