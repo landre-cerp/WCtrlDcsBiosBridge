@@ -1,0 +1,35 @@
+name: Dependency Submission
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  dependency-submission:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code with submodules
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore WCtrlDcsBiosBridge.csproj
+
+      - name: Submit dependency graph
+        uses: github/dependency-submission-toolkit-action@v4
