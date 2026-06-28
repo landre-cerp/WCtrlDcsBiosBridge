@@ -117,10 +117,6 @@ The only manual choice left is the **seat** for the CH-47F when two or more CDUs
 - Unsupported aircraft are shown in red as "Not supported" — the bridge keeps waiting for a supported one
 - You do **not** need to restart when switching aircraft; the bridge detects the change automatically
 
-**Start bridge is greyed**
-- You probably launched the app before plugging your devices.
-- Exit application, plug all the cdus you plan to use and launch the app again 
-
 ### Brightness Issues
 
 - **Mismatched brightness:** Use the aircraft's brightness controls first, then adjust MCDU
