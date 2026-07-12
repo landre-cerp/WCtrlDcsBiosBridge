@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using WCtrlDcsBiosBridge.Services;
+using Windows.Storage.Pickers;
 using WinRT.Interop;
 
 namespace WCtrlDcsBiosBridge.Config;
@@ -15,6 +16,12 @@ namespace WCtrlDcsBiosBridge.Config;
 /// in Microsoft.UI.Xaml.dll) specifically because this was a *secondary* Window. Hosting
 /// the same UI as a UserControl inside MainWindow removes the secondary-window/cross-window
 /// continuation entirely, which was the actual common factor in every crash.
+///
+/// BrowseButton_Click uses the standard Windows.Storage.Pickers.FolderPicker rather than
+/// the raw IFileOpenDialog COM workaround: the crash above is gone now that this is an
+/// overlay, and the tradeoff (the WinRT picker's "Select Folder" button can stay disabled
+/// until a row is re-clicked, even inside the target folder) is accepted as preferable to
+/// the COM interop.
 /// </summary>
 public partial class ConfigPanel : UserControl
 {
@@ -150,15 +157,18 @@ public partial class ConfigPanel : UserControl
         }
     }
 
-    private void BrowseButton_Click(object sender, RoutedEventArgs e)
+    private async void BrowseButton_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            var current = JsonLocationTextBox.Text.Trim();
-            var folder = NativeFolderPicker.PickFolder(OwnerHwnd, "Select DCS-BIOS JSON Files Directory", current);
+            var picker = new FolderPicker();
+            InitializeWithWindow.Initialize(picker, OwnerHwnd);
+            picker.FileTypeFilter.Add("*");
+
+            var folder = await picker.PickSingleFolderAsync();
             if (folder != null)
             {
-                JsonLocationTextBox.Text = folder;
+                JsonLocationTextBox.Text = folder.Path;
             }
         }
         catch (Exception ex)
