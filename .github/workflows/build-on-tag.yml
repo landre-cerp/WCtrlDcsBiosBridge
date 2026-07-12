@@ -31,7 +31,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore dependencies
-        run: dotnet restore WCtrlDcsBiosBridge.csproj
+        run: dotnet restore WPF/WCtrlDcsBiosBridge.csproj
 
       - name: Compute version from tag
         if: startsWith(github.ref, 'refs/tags/v')
@@ -62,12 +62,12 @@ jobs:
 
       # Gate the release on the headless logic tests — a failing test blocks publishing.
       - name: Test
-        run: dotnet test Tests/WCtrlDcsBiosBridge.Tests.csproj --configuration ${{ env.CONFIGURATION }}
+        run: dotnet test WPF/Tests/WCtrlDcsBiosBridge.Tests.csproj --configuration ${{ env.CONFIGURATION }}
 
       - name: Build
         shell: powershell
         run: |
-          dotnet build -c Release `
+          dotnet build WPF/WCtrlDcsBiosBridge.csproj -c Release `
             -p:Version=${{ env.VER }} `
             -p:AssemblyVersion=${{ env.FILEVER }} `
             -p:FileVersion=${{ env.FILEVER }} `
@@ -76,7 +76,7 @@ jobs:
       - name: Publish (Single File)
         shell: powershell
         run: |
-          dotnet publish WCtrlDcsBiosBridge.csproj `
+          dotnet publish WPF/WCtrlDcsBiosBridge.csproj `
             --configuration ${{ env.CONFIGURATION }} `
             --runtime win-x64 `
             --self-contained true `
