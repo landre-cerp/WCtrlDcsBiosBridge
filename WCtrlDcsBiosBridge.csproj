@@ -17,15 +17,13 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <!-- The WPF app now lives in WPF\ (its own csproj/sln, own App/MainWindow/UI/Themes),
-       and libs\/DcsBios\ are separate projects with their own sources — keep all of that
-       out of this project's default globbing. -->
+  <!-- Tests\, libs\, and DcsBios\ are separate projects with their own sources — keep all
+       of that out of this project's default globbing. -->
   <ItemGroup>
-    <Compile Remove="WPF\**" />
-    <Page Remove="WPF\**" />
-    <ApplicationDefinition Remove="WPF\**" />
-    <EmbeddedResource Remove="WPF\**" />
-    <None Remove="WPF\**" />
+    <Compile Remove="Tests\**" />
+    <Page Remove="Tests\**" />
+    <EmbeddedResource Remove="Tests\**" />
+    <None Remove="Tests\**" />
 
     <Compile Remove="libs\**" />
     <Page Remove="libs\**" />
@@ -43,11 +41,6 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250402001" />
     <PackageReference Include="NLog" Version="5.2.8" />
   </ItemGroup>
-
-  <!-- Aircrafts\, Devices\, Common\, Config\*.cs, Services\*.cs, BridgeManager.cs,
-       DeviceManager.cs, IDcsBiosListener.cs are framework-agnostic sources shared with
-       the WPF app — they live directly under this project (default SDK globbing picks
-       them up automatically, same as the WPF app under WPF\ does via explicit links). -->
 
   <ItemGroup>
     <None Update="Resources\oh58d-font-21x31.json">
@@ -67,11 +60,14 @@
     </None>
   </ItemGroup>
 
-  <!-- Same submodules as the WPF project, referenced directly (no duplication). -->
   <ItemGroup>
     <ProjectReference Include="DcsBios\WCtrlDcsBiosBridge.DcsBios.csproj" />
     <ProjectReference Include="libs\WwDevicesDotnet\WW-Devices-Dotnet.csproj" />
     <ProjectReference Include="libs\A10C-PerfLib\PerformanceLib\a10c-perf-lib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="WCtrlDcsBiosBridge.Tests" />
   </ItemGroup>
 
 </Project>

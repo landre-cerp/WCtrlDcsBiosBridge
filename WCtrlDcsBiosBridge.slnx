@@ -8,4 +8,7 @@
   <Project Path="DcsBios\WCtrlDcsBiosBridge.DcsBios.csproj" />
   <Project Path="libs\WwDevicesDotnet\WW-Devices-Dotnet.csproj" />
   <Project Path="libs\A10C-PerfLib\PerformanceLib\a10c-perf-lib.csproj" />
+  <Project Path="Tests\WCtrlDcsBiosBridge.Tests.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
 </Solution>
