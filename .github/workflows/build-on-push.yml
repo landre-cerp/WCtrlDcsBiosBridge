@@ -39,7 +39,7 @@ jobs:
       - name: Restore dependencies
         run: |
           dotnet restore WCtrlDcsBiosBridge.csproj
-          dotnet restore Tests/WCtrlDcsBiosBridge.Tests.csproj
+          dotnet restore Tests/WCtrlDcsBiosBridge.Tests.csproj -r win-x64
 
       - name: Build
         run: |
