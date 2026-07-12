@@ -45,4 +45,4 @@ jobs:
       # Runs the headless logic tests (hot-plug diff, config validation, version compare).
       # dotnet test restores and builds the test project (which references the app) itself.
       - name: Test
-        run: dotnet test Tests/WCtrlDcsBiosBridge.Tests.csproj --configuration ${{ env.CONFIGURATION }}
+        run: dotnet test Tests/WCtrlDcsBiosBridge.Tests.csproj --configuration ${{ env.CONFIGURATION }} -p:Platform=x64 -p:RuntimeIdentifier=win-x64
