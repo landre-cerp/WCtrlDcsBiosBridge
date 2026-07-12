@@ -37,7 +37,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Restore dependencies
-        run: dotnet restore WCtrlDcsBiosBridgeWinUI.csproj
+        run: dotnet restore WCtrlDcsBiosBridge.csproj
 
       - name: Build
-        run: msbuild WCtrlDcsBiosBridgeWinUI.csproj /p:Platform=x64 /p:Configuration=${{ env.CONFIGURATION }} /p:RestorePackages=false
+        run: msbuild WCtrlDcsBiosBridge.csproj /p:Platform=x64 /p:Configuration=${{ env.CONFIGURATION }} /p:RestorePackages=false

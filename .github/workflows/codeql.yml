@@ -61,8 +61,8 @@ jobs:
     - name: Build
       if: matrix.build-mode == 'manual'
       run: |
-        dotnet restore WCtrlDcsBiosBridgeWinUI.csproj
-        msbuild WCtrlDcsBiosBridgeWinUI.csproj /p:Platform=x64 /p:Configuration=Release /p:RestorePackages=false
+        dotnet restore WCtrlDcsBiosBridge.csproj
+        msbuild WCtrlDcsBiosBridge.csproj /p:Platform=x64 /p:Configuration=Release /p:RestorePackages=false
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4

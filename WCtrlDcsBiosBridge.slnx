@@ -2,7 +2,7 @@
   <Configurations>
     <Platform Name="x64" />
   </Configurations>
-  <Project Path="WCtrlDcsBiosBridgeWinUI.csproj">
+  <Project Path="WCtrlDcsBiosBridge.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="DcsBios\WCtrlDcsBiosBridge.DcsBios.csproj" />

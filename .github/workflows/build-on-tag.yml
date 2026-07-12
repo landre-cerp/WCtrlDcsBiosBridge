@@ -36,7 +36,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Restore dependencies
-        run: dotnet restore WCtrlDcsBiosBridgeWinUI.csproj
+        run: dotnet restore WCtrlDcsBiosBridge.csproj
 
       - name: Compute version from tag
         if: startsWith(github.ref, 'refs/tags/v')
@@ -68,7 +68,7 @@ jobs:
       - name: Build (Release, x64, self-contained WindowsAppSDK)
         shell: powershell
         run: |
-          msbuild WCtrlDcsBiosBridgeWinUI.csproj `
+          msbuild WCtrlDcsBiosBridge.csproj `
             /p:Platform=x64 `
             /p:Configuration=${{ env.CONFIGURATION }} `
             /p:RestorePackages=false `
