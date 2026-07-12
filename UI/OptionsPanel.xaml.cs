@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using WCtrlDcsBiosBridge.Common;
 using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.UI;
@@ -88,5 +89,44 @@ public partial class OptionsPanel : UserControl
         {
             SettingsChanged?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    /// <summary>Re-applies every static string from Strings\&lt;lang&gt;\Resources.resw.</summary>
+    public void Retranslate()
+    {
+        GeneralHeader.Text = Strings.Get("GeneralHeader");
+        DisableLightingManagementOption.Content = Strings.Get("DisableLightingManagementOption");
+        AutoStartOption.Content = Strings.Get("AutoStartOption");
+        MinimizeOnStartOption.Content = Strings.Get("MinimizeOnStartOption");
+
+        OnCloseHeader.Text = Strings.Get("OnCloseHeader");
+        LightingManagementDisabledBadge.Text = Strings.Get("LightingManagementDisabledBadge");
+        TurnOffBacklightsOption.Content = Strings.Get("TurnOffBacklightsOption");
+        TurnOffMarkersOption.Content = Strings.Get("TurnOffMarkersOption");
+
+        DisabledWhileInUseA10CBadge.Text = Strings.Get("DisabledWhileInUseA10CBadge");
+        AlignCduBottomOption.Content = Strings.Get("AlignCduBottomOption");
+        DisplayCmsOption.Content = Strings.Get("DisplayCmsOption");
+        A10CEnablePerfPagesCheckBox.Content = Strings.Get("EnablePerfPagesOption");
+        PerfPageKeyLabel.Text = Strings.Get("PerfPageKeyLabel");
+        NextPageKeyLabel.Text = Strings.Get("NextPageKeyLabel");
+        PrevPageKeyLabel.Text = Strings.Get("PrevPageKeyLabel");
+        ForwardCduKeysOption.Content = Strings.Get("ForwardCduKeysOption");
+
+        DisabledWhileInUseFA18CBadge.Text = Strings.Get("DisabledWhileInUseFA18CBadge");
+        IfeiPageNavHeader.Text = Strings.Get("IfeiPageNavHeader");
+        ShowIfeiKeyLabel.Text = Strings.Get("ShowIfeiKeyLabel");
+        ShowUfcKeyLabel.Text = Strings.Get("ShowUfcKeyLabel");
+
+        DisabledWhileInUseF14Badge.Text = Strings.Get("DisabledWhileInUseF14Badge");
+        RioCapRadioHeader.Text = Strings.Get("RioCapRadioHeader");
+        ShowRioKeyLabel.Text = Strings.Get("ShowRioKeyLabel");
+        ShowRadioKeyLabel.Text = Strings.Get("ShowRadioKeyLabel");
+
+        DisabledWhileInUseF16CBadge.Text = Strings.Get("DisabledWhileInUseF16CBadge");
+        DedNavRwrHeader.Text = Strings.Get("DedNavRwrHeader");
+        ShowDedKeyLabel.Text = Strings.Get("ShowDedKeyLabel");
+        ShowNavKeyLabel.Text = Strings.Get("ShowNavKeyLabel");
+        ShowRwrKeyLabel.Text = Strings.Get("ShowRwrKeyLabel");
     }
 }

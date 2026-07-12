@@ -10,12 +10,15 @@
         </Grid.ColumnDefinitions>
 
         <TextBlock Grid.Column="0"
+                   x:Name="StatusLabel"
+                   x:Uid="StatusLabel"
                    Text="Status:"
                    FontWeight="Bold"
                    VerticalAlignment="Center"
                    Margin="0,0,10,0"/>
 
         <TextBlock x:Name="MessageText"
+                   x:Uid="Status_Ready"
                    Grid.Column="1"
                    Text="Ready."
                    Foreground="Green"

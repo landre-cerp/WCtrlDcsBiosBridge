@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using NLog;
+using WCtrlDcsBiosBridge.Common;
 using WCtrlDcsBiosBridge.Config;
 using WCtrlDcsBiosBridge.Services;
 
@@ -36,9 +37,12 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        // Apply saved theme before the main window renders.
+        // Apply saved theme before the main window renders. Language is handled by
+        // Strings.CurrentLanguage + each control's Retranslate() (see Common/Strings.cs) —
+        // ApplicationLanguages.PrimaryLanguageOverride doesn't work for this unpackaged app.
         var options = UserOptionsStorage.Load();
         ThemeManager.Apply(options.Theme);
+        Strings.CurrentLanguage = options.Language;
         _window = new MainWindow();
 
         Logger.Info("Application started.");

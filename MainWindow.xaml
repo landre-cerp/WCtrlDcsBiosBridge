@@ -16,10 +16,11 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Header: title left, theme toggle right -->
+        <!-- Header: title left, language + theme toggles right -->
         <Grid Grid.Row="0" Margin="0,0,0,14" VerticalAlignment="Center">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0"
@@ -27,8 +28,23 @@
                        FontSize="16"
                        FontWeight="SemiBold"
                        VerticalAlignment="Center"/>
-            <Button x:Name="ThemeToggleButton"
+            <Button x:Name="LanguageToggleButton"
                     Grid.Column="1"
+                    Width="32" Height="32"
+                    Padding="0"
+                    Margin="0,0,4,0"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Click="LanguageToggle_Click">
+                <TextBlock x:Name="LanguageIcon"
+                           Text="🌐"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Button>
+            <Button x:Name="ThemeToggleButton"
+                    Grid.Column="2"
                     Width="32" Height="32"
                     Padding="0"
                     Background="Transparent"
@@ -46,7 +62,7 @@
         <Pivot x:Name="MainPivot" Grid.Row="1">
 
             <!-- ══ Dashboard ══ -->
-            <PivotItem Header="Dashboard">
+            <PivotItem x:Name="DashboardPivotItem" x:Uid="DashboardPivotItem" Header="Dashboard">
                 <Grid Margin="14,12,14,14">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -77,10 +93,12 @@
                                          Margin="0,0,10,0"/>
                                 <StackPanel>
                                     <TextBlock x:Name="BridgeStatusLabel"
+                                               x:Uid="Status_BridgeStopped"
                                                Text="Bridge stopped"
                                                FontWeight="SemiBold"
                                                FontSize="13"/>
                                     <TextBlock x:Name="BridgeStatusSub"
+                                               x:Uid="Status_AircraftAutoDetected"
                                                Text="Aircraft is detected automatically when DCS is running"
                                                Foreground="{StaticResource SubtleTextForeground}"
                                                FontSize="11"
@@ -88,6 +106,7 @@
                                 </StackPanel>
                             </StackPanel>
                             <Button x:Name="StartButton"
+                                    x:Uid="StartButton_Start"
                                     Grid.Column="1"
                                     Content="Start Bridge"
                                     MinWidth="110"
@@ -98,6 +117,8 @@
 
                     <!-- Description -->
                     <TextBlock Grid.Row="1"
+                               x:Name="DashboardDescriptionText"
+                               x:Uid="DashboardDescriptionText"
                                Text="Start the bridge, then load into a supported aircraft in DCS World. The CDU or FCU/EFIS display will sync automatically."
                                TextWrapping="Wrap"
                                Foreground="{StaticResource SubtleTextForeground}"
@@ -106,7 +127,7 @@
 
                     <!-- Connected devices -->
                     <StackPanel Grid.Row="2" Margin="0,0,0,4">
-                        <TextBlock Text="CONNECTED DEVICES"
+                        <TextBlock x:Name="ConnectedDevicesHeader" x:Uid="ConnectedDevicesHeader" Text="CONNECTED DEVICES"
                                    FontSize="10"
                                    FontWeight="SemiBold"
                                    Foreground="{StaticResource SubtleTextForeground}"
@@ -143,12 +164,12 @@
                                        VerticalAlignment="Center"
                                        Margin="0,0,10,0"
                                        Foreground="{StaticResource UpdateBannerForeground}"/>
-                            <Button Grid.Column="1" Content="Open release"
+                            <Button Grid.Column="1" x:Name="OpenReleaseButtonControl" x:Uid="OpenReleaseButtonControl" Content="Open release"
                                     Click="OpenUpdateLink_Click"
                                     Margin="6,0,0,0"
                                     Padding="10,3"
                                     MinWidth="100"/>
-                            <Button Grid.Column="2" Content="Dismiss"
+                            <Button Grid.Column="2" x:Name="DismissButtonControl" x:Uid="DismissButtonControl" Content="Dismiss"
                                     Click="DismissUpdate_Click"
                                     Margin="6,0,0,0"
                                     Padding="10,3"
@@ -159,7 +180,7 @@
             </PivotItem>
 
             <!-- ══ Configuration ══ -->
-            <PivotItem Header="Configuration">
+            <PivotItem x:Name="ConfigurationPivotItem" x:Uid="ConfigurationPivotItem" Header="Configuration">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
@@ -176,6 +197,7 @@
                             BorderThickness="0,1,0,0"
                             Padding="14,10">
                         <Button x:Name="ConfigButton"
+                                x:Uid="ConfigButtonControl"
                                 Content="Edit DCS-BIOS Configuration"
                                 MinWidth="210"
                                 HorizontalAlignment="Left"
@@ -186,11 +208,11 @@
             </PivotItem>
 
             <!-- ══ Help ══ -->
-            <PivotItem Header="Help">
+            <PivotItem x:Name="HelpPivotItem" x:Uid="HelpPivotItem" Header="Help">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="14,12">
 
-                        <TextBlock Text="Quick start" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <TextBlock x:Name="QuickStartHeader" x:Uid="QuickStartHeader" Text="Quick start" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
 
                         <Grid Margin="0,3">
                             <Grid.ColumnDefinitions>
@@ -203,7 +225,7 @@
                                 <TextBlock Text="1" FontSize="10" HorizontalAlignment="Center"
                                            VerticalAlignment="Center" Foreground="{StaticResource StepForeground}"/>
                             </Border>
-                            <TextBlock Grid.Column="1" Text="Connect your Winwing device(s) via USB"
+                            <TextBlock Grid.Column="1" x:Name="HelpStep1Text" x:Uid="HelpStep1Text" Text="Connect your Winwing device(s) via USB"
                                        TextWrapping="Wrap" FontSize="12"
                                        Foreground="{StaticResource HelpTextForeground}" VerticalAlignment="Center"/>
                         </Grid>
@@ -219,7 +241,7 @@
                                 <TextBlock Text="2" FontSize="10" HorizontalAlignment="Center"
                                            VerticalAlignment="Center" Foreground="{StaticResource StepForeground}"/>
                             </Border>
-                            <TextBlock Grid.Column="1" Text="Click Start Bridge on the Dashboard tab. Connected devices will be listed."
+                            <TextBlock Grid.Column="1" x:Name="HelpStep2Text" x:Uid="HelpStep2Text" Text="Click Start Bridge on the Dashboard tab. Connected devices will be listed."
                                        TextWrapping="Wrap" FontSize="12"
                                        Foreground="{StaticResource HelpTextForeground}" VerticalAlignment="Center"/>
                         </Grid>
@@ -235,7 +257,7 @@
                                 <TextBlock Text="3" FontSize="10" HorizontalAlignment="Center"
                                            VerticalAlignment="Center" Foreground="{StaticResource StepForeground}"/>
                             </Border>
-                            <TextBlock Grid.Column="1" Text="Load into a mission in DCS World. The aircraft module is detected automatically — no manual selection needed."
+                            <TextBlock Grid.Column="1" x:Name="HelpStep3Text" x:Uid="HelpStep3Text" Text="Load into a mission in DCS World. The aircraft module is detected automatically — no manual selection needed."
                                        TextWrapping="Wrap" FontSize="12"
                                        Foreground="{StaticResource HelpTextForeground}" VerticalAlignment="Center"/>
                         </Grid>
@@ -251,7 +273,7 @@
                                 <TextBlock Text="4" FontSize="10" HorizontalAlignment="Center"
                                            VerticalAlignment="Center" Foreground="{StaticResource StepForeground}"/>
                             </Border>
-                            <TextBlock Grid.Column="1" Text="Your CDU or FCU/EFIS will sync with the in-game cockpit. The Dashboard tab shows live status."
+                            <TextBlock Grid.Column="1" x:Name="HelpStep4Text" x:Uid="HelpStep4Text" Text="Your CDU or FCU/EFIS will sync with the in-game cockpit. The Dashboard tab shows live status."
                                        TextWrapping="Wrap" FontSize="12"
                                        Foreground="{StaticResource HelpTextForeground}" VerticalAlignment="Center"/>
                         </Grid>
@@ -259,12 +281,12 @@
                         <Border Height="1" Background="{StaticResource CardBorderBrush}" Margin="0,12"/>
 
                         <TextBlock FontSize="12" TextWrapping="Wrap">
-                            <Hyperlink x:Name="DocsLink" Click="DocsLink_Click">Supported aircraft</Hyperlink>
+                            <Hyperlink x:Name="DocsLink" Click="DocsLink_Click"><Run x:Name="SupportedAircraftLink" x:Uid="SupportedAircraftLink">Supported aircraft</Run></Hyperlink>
                         </TextBlock>
 
                         <Border Height="1" Background="{StaticResource CardBorderBrush}" Margin="0,12"/>
 
-                        <TextBlock Text="Troubleshooting" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <TextBlock x:Name="TroubleshootingHeader" x:Uid="TroubleshootingHeader" Text="Troubleshooting" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
 
                         <Grid Margin="0,3">
                             <Grid.ColumnDefinitions>
@@ -274,7 +296,7 @@
                             <TextBlock Grid.Column="0" Text="?" FontSize="11"
                                        Foreground="{StaticResource StepForeground}" VerticalAlignment="Top"/>
                             <TextBlock Grid.Column="1" FontSize="12" Foreground="{StaticResource HelpTextForeground}" TextWrapping="Wrap">
-                                <Run FontWeight="SemiBold">Device not shown in Dashboard:</Run> unplug and replug the USB cable, then restart the app.
+                                <Run x:Name="Trouble1Strong" x:Uid="Trouble1Strong" FontWeight="SemiBold">Device not shown in Dashboard:</Run><Run x:Name="Trouble1Rest" x:Uid="Trouble1Rest"> unplug and replug the USB cable, then restart the app.</Run>
                             </TextBlock>
                         </Grid>
 
@@ -286,7 +308,7 @@
                             <TextBlock Grid.Column="0" Text="?" FontSize="11"
                                        Foreground="{StaticResource StepForeground}" VerticalAlignment="Top"/>
                             <TextBlock Grid.Column="1" FontSize="12" Foreground="{StaticResource HelpTextForeground}" TextWrapping="Wrap">
-                                <Run FontWeight="SemiBold">CDU screen blank in-game:</Run> confirm the DCS-BIOS export script is installed and DCS World is running.
+                                <Run x:Name="Trouble2Strong" x:Uid="Trouble2Strong" FontWeight="SemiBold">CDU screen blank in-game:</Run><Run x:Name="Trouble2Rest" x:Uid="Trouble2Rest"> confirm the DCS-BIOS export script is installed and DCS World is running.</Run>
                             </TextBlock>
                         </Grid>
 
@@ -298,7 +320,7 @@
                             <TextBlock Grid.Column="0" Text="?" FontSize="11"
                                        Foreground="{StaticResource StepForeground}" VerticalAlignment="Top"/>
                             <TextBlock Grid.Column="1" FontSize="12" Foreground="{StaticResource HelpTextForeground}" TextWrapping="Wrap">
-                                <Run FontWeight="SemiBold">Wrong aircraft data:</Run> ensure DCS-BIOS is up to date and the correct module is loaded in DCS.
+                                <Run x:Name="Trouble3Strong" x:Uid="Trouble3Strong" FontWeight="SemiBold">Wrong aircraft data:</Run><Run x:Name="Trouble3Rest" x:Uid="Trouble3Rest"> ensure DCS-BIOS is up to date and the correct module is loaded in DCS.</Run>
                             </TextBlock>
                         </Grid>
 
@@ -310,7 +332,7 @@
                             <TextBlock Grid.Column="0" Text="?" FontSize="11"
                                        Foreground="{StaticResource StepForeground}" VerticalAlignment="Top"/>
                             <TextBlock Grid.Column="1" FontSize="12" Foreground="{StaticResource HelpTextForeground}" TextWrapping="Wrap">
-                                <Run FontWeight="SemiBold">SimApp Pro lighting conflict:</Run> enable <Run FontStyle="Italic">Disable Lighting Management</Run> in the Configuration tab.
+                                <Run x:Name="Trouble4Strong" x:Uid="Trouble4Strong" FontWeight="SemiBold">SimApp Pro lighting conflict:</Run><Run x:Name="Trouble4Mid" x:Uid="Trouble4Mid"> enable </Run><Run x:Name="Trouble4Italic" x:Uid="Trouble4Italic" FontStyle="Italic">Disable Lighting Management</Run><Run x:Name="Trouble4End" x:Uid="Trouble4End"> in the Configuration tab.</Run>
                             </TextBlock>
                         </Grid>
 

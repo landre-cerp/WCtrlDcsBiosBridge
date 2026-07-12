@@ -3,6 +3,7 @@ using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using WCtrlDcsBiosBridge.Common;
 using WCtrlDcsBiosBridge.Services;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
@@ -38,6 +39,31 @@ public partial class ConfigPanel : UserControl
     public ConfigPanel()
     {
         InitializeComponent();
+        Retranslate();
+    }
+
+    /// <summary>Re-applies every static string and tooltip from Strings\&lt;lang&gt;\Resources.resw.</summary>
+    public void Retranslate()
+    {
+        ConfigPanelTitle.Text = Strings.Get("ConfigPanelTitle");
+        NetworkSettingsHeader.Text = Strings.Get("NetworkSettingsHeader");
+        ReceiveIpPortLabel.Text = Strings.Get("ReceiveIpPortLabel");
+        MulticastLabel.Text = Strings.Get("MulticastLabel");
+        SendIpPortLabel.Text = Strings.Get("SendIpPortLabel");
+        UsuallyLocalhostLabel.Text = Strings.Get("UsuallyLocalhostLabel");
+        ResetToDefaultsButton.Content = Strings.Get("ResetToDefaultsButtonControl");
+        FileLocationsHeader.Text = Strings.Get("FileLocationsHeader");
+        JsonLocationLabel.Text = Strings.Get("JsonLocationLabel");
+        BrowseButton.Content = Strings.Get("BrowseButtonControl");
+        JsonLocationHint.Text = Strings.Get("JsonLocationHint");
+        SaveButton.Content = Strings.Get("SaveButtonControl");
+        CancelButton.Content = Strings.Get("CancelButtonControl");
+
+        ToolTipService.SetToolTip(ReceiveIpTextBox, Strings.Get("Tooltip_ReceiveIp"));
+        ToolTipService.SetToolTip(ReceivePortTextBox, Strings.Get("Tooltip_ReceivePort"));
+        ToolTipService.SetToolTip(SendIpTextBox, Strings.Get("Tooltip_SendIp"));
+        ToolTipService.SetToolTip(SendPortTextBox, Strings.Get("Tooltip_SendPort"));
+        ToolTipService.SetToolTip(JsonLocationTextBox, Strings.Get("Tooltip_JsonLocation"));
     }
 
     /// <summary>Loads the given config into the form and waits until Save or Cancel is pressed.</summary>
@@ -79,7 +105,7 @@ public partial class ConfigPanel : UserControl
     {
         if (!int.TryParse(portText, out port) || port is < MinPortNumber or > MaxPortNumber)
         {
-            SetStatus($"{portName} must be between {MinPortNumber} and {MaxPortNumber}.", true);
+            SetStatus(Strings.Format("Status_PortRangeFormat", portName, MinPortNumber, MaxPortNumber), true);
             textBox.Focus(FocusState.Programmatic);
             return false;
         }
@@ -92,35 +118,35 @@ public partial class ConfigPanel : UserControl
         {
             if (!IPAddress.TryParse(ReceiveIpTextBox.Text.Trim(), out var receiveIp))
             {
-                SetStatus("Receive IP address is not valid.", true);
+                SetStatus(Strings.Get("Status_ReceiveIpInvalid"), true);
                 ReceiveIpTextBox.Focus(FocusState.Programmatic);
                 return false;
             }
 
             if (!IPAddress.TryParse(SendIpTextBox.Text.Trim(), out var sendIp))
             {
-                SetStatus("Send IP address is not valid.", true);
+                SetStatus(Strings.Get("Status_SendIpInvalid"), true);
                 SendIpTextBox.Focus(FocusState.Programmatic);
                 return false;
             }
 
-            if (!ValidatePort(ReceivePortTextBox.Text.Trim(), "Receive port", ReceivePortTextBox, out int receivePort))
+            if (!ValidatePort(ReceivePortTextBox.Text.Trim(), Strings.Get("PortName_Receive"), ReceivePortTextBox, out int receivePort))
                 return false;
 
-            if (!ValidatePort(SendPortTextBox.Text.Trim(), "Send port", SendPortTextBox, out int sendPort))
+            if (!ValidatePort(SendPortTextBox.Text.Trim(), Strings.Get("PortName_Send"), SendPortTextBox, out int sendPort))
                 return false;
 
             string jsonLocation = JsonLocationTextBox.Text.Trim();
             if (string.IsNullOrWhiteSpace(jsonLocation))
             {
-                SetStatus("DCS-BIOS JSON location cannot be empty.", true);
+                SetStatus(Strings.Get("Status_JsonLocationEmpty"), true);
                 JsonLocationTextBox.Focus(FocusState.Programmatic);
                 return false;
             }
 
             if (!Directory.Exists(jsonLocation))
             {
-                SetStatus($"The specified directory does not exist: {jsonLocation}", true);
+                SetStatus(Strings.Format("Status_DirectoryNotExistFormat", jsonLocation), true);
                 JsonLocationTextBox.Focus(FocusState.Programmatic);
                 return false;
             }
@@ -145,14 +171,14 @@ public partial class ConfigPanel : UserControl
             if (missing.Count > 0)
             {
                 var files = string.Join(", ", missing);
-                SetStatus($"Some expected DCS-BIOS JSON files are missing (continuing anyway): {files}", true);
+                SetStatus(Strings.Format("Status_MissingJsonFilesFormat", files), true);
             }
 
             return true;
         }
         catch (Exception ex)
         {
-            SetStatus($"Validation error: {ex.Message}", true);
+            SetStatus(Strings.Format("Status_ValidationErrorFormat", ex.Message), true);
             return false;
         }
     }
@@ -174,7 +200,7 @@ public partial class ConfigPanel : UserControl
         catch (Exception ex)
         {
             App.Logger.Error(ex, "Folder picker failed");
-            SetStatus($"Could not open the folder picker: {ex.Message}", true);
+            SetStatus(Strings.Format("Status_FolderPickerFailedFormat", ex.Message), true);
         }
     }
 
@@ -189,7 +215,7 @@ public partial class ConfigPanel : UserControl
         }
         catch (Exception ex)
         {
-            SetStatus($"Failed to save configuration: {ex.Message}", true);
+            SetStatus(Strings.Format("Status_SaveConfigFailedFormat", ex.Message), true);
         }
     }
 
@@ -202,6 +228,6 @@ public partial class ConfigPanel : UserControl
     {
         Config = new DcsBiosConfig();
         LoadConfigToUI();
-        SetStatus("Settings reset to defaults.", false);
+        SetStatus(Strings.Get("Status_SettingsResetToDefaults"), false);
     }
 }

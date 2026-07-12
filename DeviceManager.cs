@@ -3,6 +3,7 @@ using NLog;
 using System.IO;
 using System.Linq;
 using WwDevicesDotNet;
+using WCtrlDcsBiosBridge.Common;
 using WCtrlDcsBiosBridge.Config;
 using WCtrlDcsBiosBridge.Devices;
 
@@ -44,7 +45,9 @@ public class DeviceManager
             var frontpanelDeviceIdentifiers = await Task.Run(() => FrontpanelFactory.FindLocalDevices().ToList(), cancellationToken).ConfigureAwait(false);
 
             var totalDevices = cduDeviceIdentifiers.Count + frontpanelDeviceIdentifiers.Count;
-            progress?.Report(new DeviceDetectionProgress(0, totalDevices, totalDevices == 0 ? "No devices found" : $"Found {totalDevices} device(s). Connecting..."));
+            progress?.Report(new DeviceDetectionProgress(0, totalDevices, totalDevices == 0
+                ? Strings.Get("Device_NoDevicesFound")
+                : Strings.Format("Device_FoundDevicesConnectingFormat", totalDevices)));
 
             int currentIndex = 0;
 
@@ -53,14 +56,14 @@ public class DeviceManager
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var deviceId = cduDeviceIdentifiers[i];
-                progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, $"Connecting CDU device {i + 1}/{cduDeviceIdentifiers.Count}..."));
+                progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, Strings.Format("Device_ConnectingCduFormat", i + 1, cduDeviceIdentifiers.Count)));
                 try
                 {
                     var deviceInfo = await ConnectDeviceAsync(deviceId, resetDevices, cancellationToken).ConfigureAwait(false)
                         ?? throw new InvalidOperationException("Failed to connect to CDU device: ConnectLocal returned null");
                     detectedDevices.Add(deviceInfo);
                     currentIndex++;
-                    progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, $"Connected {deviceInfo.DisplayName} ({currentIndex}/{totalDevices})"));
+                    progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, Strings.Format("Device_ConnectedFormat", deviceInfo.DisplayName, currentIndex, totalDevices)));
                 }
                 catch (OperationCanceledException)
                 {
@@ -70,7 +73,7 @@ public class DeviceManager
                 catch (Exception ex)
                 {
                     Logger.Error(ex, $"Failed to connect to CDU device {i + 1}");
-                    progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, $"Failed to connect CDU device {i + 1}: {ex.Message}"));
+                    progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, Strings.Format("Device_FailedConnectCduFormat", i + 1, ex.Message)));
                     currentIndex++;
                 }
             }
@@ -80,7 +83,7 @@ public class DeviceManager
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var deviceId = frontpanelDeviceIdentifiers[i];
-                progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, $"Connecting frontpanel device {i + 1}/{frontpanelDeviceIdentifiers.Count}..."));
+                progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, Strings.Format("Device_ConnectingFrontpanelFormat", i + 1, frontpanelDeviceIdentifiers.Count)));
                 try
                 {
                     Logger.Info($"About to connect frontpanel device: {deviceId.Description}");
@@ -89,7 +92,7 @@ public class DeviceManager
                     detectedDevices.Add(deviceInfo);
                     currentIndex++;
                     Logger.Info($"Successfully added frontpanel device: {deviceInfo.DisplayName}");
-                    progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, $"Connected {deviceInfo.DisplayName} ({currentIndex}/{totalDevices})"));
+                    progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, Strings.Format("Device_ConnectedFormat", deviceInfo.DisplayName, currentIndex, totalDevices)));
                 }
                 catch (OperationCanceledException)
                 {
@@ -99,25 +102,25 @@ public class DeviceManager
                 catch (Exception ex)
                 {
                     Logger.Error(ex, $"Failed to connect to frontpanel device {i + 1}: {ex.Message}");
-                    progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, $"Failed to connect frontpanel device {i + 1}: {ex.Message}"));
+                    progress?.Report(new DeviceDetectionProgress(currentIndex, totalDevices, Strings.Format("Device_FailedConnectFrontpanelFormat", i + 1, ex.Message)));
                     currentIndex++;
                 }
             }
 
-            progress?.Report(new DeviceDetectionProgress(totalDevices, totalDevices, $"Detection complete. {detectedDevices.Count} connected."));
+            progress?.Report(new DeviceDetectionProgress(totalDevices, totalDevices, Strings.Format("Device_DetectionCompleteFormat", detectedDevices.Count)));
         }
         catch (OperationCanceledException)
         {
             // Propagate cancellation so the caller can abort the post-detection pipeline
             // (UI rebuild, watcher startup, auto-start) instead of treating a cancelled
             // run as a completed one with a partial device list.
-            progress?.Report(new DeviceDetectionProgress(0, 0, "Device detection cancelled"));
+            progress?.Report(new DeviceDetectionProgress(0, 0, Strings.Get("Status_DetectionCancelled")));
             throw;
         }
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to detect devices");
-            progress?.Report(new DeviceDetectionProgress(0, 0, $"Detection error: {ex.Message}"));
+            progress?.Report(new DeviceDetectionProgress(0, 0, Strings.Format("Device_DetectionErrorFormat", ex.Message)));
         }
         return detectedDevices;
     }

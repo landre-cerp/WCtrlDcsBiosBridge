@@ -13,6 +13,7 @@
 
         <!-- Header -->
         <TextBlock Grid.Row="0"
+                   x:Name="ConfigPanelTitle" x:Uid="ConfigPanelTitle"
                    Text="DCS-BIOS Configuration"
                    FontSize="16"
                    FontWeight="Bold"
@@ -24,7 +25,7 @@
             <StackPanel>
 
                 <!-- Network Settings -->
-                <TextBlock Text="Network Settings" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock x:Name="NetworkSettingsHeader" x:Uid="NetworkSettingsHeader" Text="Network Settings" FontWeight="SemiBold" Margin="0,0,0,8"/>
                 <Border BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,15">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -40,36 +41,36 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Row="0" Grid.Column="0"
+                                   x:Name="ReceiveIpPortLabel" x:Uid="ReceiveIpPortLabel"
                                    Text="Receive IP:PORT"
                                    VerticalAlignment="Center"
                                    Margin="0,3"/>
                         <TextBox x:Name="ReceiveIpTextBox"
                                  Grid.Row="0" Grid.Column="1"
-                                 Margin="10,3"
-                                 ToolTipService.ToolTip="IP address to receive UDP data from DCS-BIOS (multicast address)"/>
+                                 Margin="10,3"/>
                         <TextBox x:Name="ReceivePortTextBox"
                                  Grid.Row="0" Grid.Column="2"
-                                 Margin="10,3"
-                                 ToolTipService.ToolTip="Port number to receive UDP data from DCS-BIOS"/>
+                                 Margin="10,3"/>
                         <TextBlock Grid.Row="0" Grid.Column="3"
+                                   x:Name="MulticastLabel" x:Uid="MulticastLabel"
                                    Text="(Multicast)"
                                    VerticalAlignment="Center"
                                    Foreground="{StaticResource SubtleTextForeground}"
                                    FontStyle="Italic"/>
 
                         <TextBlock Grid.Row="1" Grid.Column="0"
+                                   x:Name="SendIpPortLabel" x:Uid="SendIpPortLabel"
                                    Text="Send IP:PORT"
                                    VerticalAlignment="Center"
                                    Margin="0,3"/>
                         <TextBox x:Name="SendIpTextBox"
                                  Grid.Row="1" Grid.Column="1"
-                                 Margin="10,3"
-                                 ToolTipService.ToolTip="IP address to send UDP data to DCS-BIOS"/>
+                                 Margin="10,3"/>
                         <TextBox x:Name="SendPortTextBox"
                                  Grid.Row="1" Grid.Column="2"
-                                 Margin="10,3"
-                                 ToolTipService.ToolTip="Port number to send UDP data to DCS-BIOS"/>
+                                 Margin="10,3"/>
                         <TextBlock Grid.Row="1" Grid.Column="3"
+                                   x:Name="UsuallyLocalhostLabel" x:Uid="UsuallyLocalhostLabel"
                                    Text="(Usually localhost)"
                                    VerticalAlignment="Center"
                                    Foreground="{StaticResource SubtleTextForeground}"
@@ -77,6 +78,7 @@
 
                         <Button Grid.Row="2" Grid.Column="1"
                                 x:Name="ResetToDefaultsButton"
+                                x:Uid="ResetToDefaultsButtonControl"
                                 Content="Reset to Defaults"
                                 MinWidth="140"
                                 Margin="10,8,0,0"
@@ -86,7 +88,7 @@
                 </Border>
 
                 <!-- File Locations -->
-                <TextBlock Text="File Locations" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock x:Name="FileLocationsHeader" x:Uid="FileLocationsHeader" Text="File Locations" FontWeight="SemiBold" Margin="0,0,0,8"/>
                 <Border BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,15">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -100,14 +102,15 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Row="0" Grid.Column="0"
+                                   x:Name="JsonLocationLabel" x:Uid="JsonLocationLabel"
                                    Text="DCS-BIOS JSON:"
                                    VerticalAlignment="Center"
                                    Margin="0,3"/>
                         <TextBox x:Name="JsonLocationTextBox"
                                  Grid.Row="0" Grid.Column="1"
-                                 Margin="10,3"
-                                 ToolTipService.ToolTip="Path to the directory containing DCS-BIOS JSON files"/>
+                                 Margin="10,3"/>
                         <Button x:Name="BrowseButton"
+                                x:Uid="BrowseButtonControl"
                                 Grid.Row="0" Grid.Column="2"
                                 Content="Browse..."
                                 MinWidth="90"
@@ -115,6 +118,7 @@
                                 Click="BrowseButton_Click"/>
 
                         <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                                   x:Name="JsonLocationHint" x:Uid="JsonLocationHint"
                                    Text="This should point to the directory containing aircraft-specific JSON files from DCS-BIOS"
                                    Foreground="{StaticResource SubtleTextForeground}"
                                    FontStyle="Italic"
@@ -139,11 +143,13 @@
                     HorizontalAlignment="Right"
                     Margin="0,15,0,0">
             <Button x:Name="SaveButton"
+                    x:Uid="SaveButtonControl"
                     Content="Save"
                     MinWidth="100"
                     Margin="0,0,10,0"
                     Click="SaveButton_Click"/>
             <Button x:Name="CancelButton"
+                    x:Uid="CancelButtonControl"
                     Content="Cancel"
                     MinWidth="100"
                     Click="CancelButton_Click"/>
