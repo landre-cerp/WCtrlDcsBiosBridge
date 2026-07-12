@@ -41,3 +41,8 @@ jobs:
 
       - name: Build
         run: msbuild WCtrlDcsBiosBridge.csproj /p:Platform=x64 /p:Configuration=${{ env.CONFIGURATION }} /p:RestorePackages=false
+
+      # Runs the headless logic tests (hot-plug diff, config validation, version compare).
+      # dotnet test restores and builds the test project (which references the app) itself.
+      - name: Test
+        run: dotnet test Tests/WCtrlDcsBiosBridge.Tests.csproj --configuration ${{ env.CONFIGURATION }}
