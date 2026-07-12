@@ -31,24 +31,13 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore dependencies (WPF)
-        run: dotnet restore WPF/WCtrlDcsBiosBridge.csproj
-
-      - name: Build (WPF)
-        run: dotnet build WPF/WCtrlDcsBiosBridge.csproj --configuration ${{ env.CONFIGURATION }} --no-restore
-
-      # Runs the headless logic tests (hot-plug diff, config validation, version compare).
-      # dotnet test restores and builds the test project (which references the app) itself.
-      - name: Test
-        run: dotnet test WPF/Tests/WCtrlDcsBiosBridge.Tests.csproj --configuration ${{ env.CONFIGURATION }}
-
       # WinUI 3 app needs the VS-bundled MSBuild (MrtCore PRI generation isn't available
-      # to the standalone dotnet SDK), so it's built separately from the WPF app above.
+      # to the standalone dotnet SDK).
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Restore dependencies (WinUI 3)
+      - name: Restore dependencies
         run: dotnet restore WCtrlDcsBiosBridgeWinUI.csproj
 
-      - name: Build (WinUI 3)
+      - name: Build
         run: msbuild WCtrlDcsBiosBridgeWinUI.csproj /p:Platform=x64 /p:Configuration=${{ env.CONFIGURATION }} /p:RestorePackages=false
