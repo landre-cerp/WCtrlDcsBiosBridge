@@ -1,18 +1,21 @@
-using NLog;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Shapes;
-using WwDevicesDotNet;
-using WCtrlDcsBiosBridge.Config;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using Microsoft.UI;
+using Microsoft.UI.Windowing;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Shapes;
+using NLog;
+using WCtrlDcsBiosBridge.Aircrafts;
+using WCtrlDcsBiosBridge.Common;
+using WCtrlDcsBiosBridge.Config;
 using WCtrlDcsBiosBridge.Devices;
 using WCtrlDcsBiosBridge.Services;
-using WCtrlDcsBiosBridge.Aircrafts;
-using Microsoft.Win32;
-using System.Windows.Navigation;
+using Windows.UI.ViewManagement;
+using WinRT.Interop;
+using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge;
 
@@ -24,8 +27,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private UserOptions userOptions = new();
     private readonly List<DeviceInfo> devices = new();
 
-    // Hot-plug: watches for devices arriving/being removed, and the device cards
-    // currently shown (keyed so a single card can be added/removed without a full rebuild).
     private DeviceWatcher? _deviceWatcher;
     private readonly Dictionary<DeviceIdentifier, Border> _deviceCards = new();
 
@@ -36,46 +37,40 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private CancellationTokenSource? _detectCts;
     private readonly CancellationTokenSource _shutdownCts = new();
     private ThemePreference _currentTheme = ThemePreference.System;
+    private LanguagePreference _currentLanguage = LanguagePreference.System;
 
     private const string GitHubOwner = "landre-cerp";
     private const string GitHubRepo = "WCtrlDcsBiosBridge";
 
-    // Dedicated update notification state
     private string? _updateMessage;
     private string? _updateUrl;
     private bool _isUpdateVisible;
 
-    // Update service
     private readonly GitHubUpdateService _updateService = new(GitHubOwner, GitHubRepo);
+
+    private readonly AppWindow _appWindow;
+    private readonly UISettings _uiSettings = new();
 
     public string? UpdateMessage { get => _updateMessage; private set { _updateMessage = value; OnPropertyChanged(); } }
     public string? UpdateUrl { get => _updateUrl; private set { _updateUrl = value; OnPropertyChanged(); } }
     public bool IsUpdateVisible { get => _isUpdateVisible; private set { _isUpdateVisible = value; OnPropertyChanged(); } }
 
-    // "Running" = an aircraft is detected and its listeners are live (drives status/display).
     public bool IsBridgeRunning => bridgeManager?.IsStarted == true;
 
-    // "Loop active" = the bridge loop exists at all, including the phase where it is up
-    // and waiting for DCS (IsStarted is still false then). Gate any action that could
-    // spin up a *second* loop — Start, auto-start, config editing — on this, not on
-    // IsBridgeRunning, or a hot-plug/UI refresh during the waiting phase re-enables Start.
     public bool IsBridgeLoopActive => bridgeManager?.IsLoopActive == true;
 
     public bool CanEdit => !IsBridgeLoopActive;
 
-    // Null while idle or detecting; set to the active descriptor once an aircraft is confirmed.
     private AircraftDescriptor? _detectedAircraft;
 
-    // The running aircraft's display name (null while idle/detecting). Each options
-    // section binds its enabled state to this via AircraftNotActiveConverter, so a
-    // section is editable unless its own aircraft is the one running.
     public string? DetectedAircraftName => _detectedAircraft?.DisplayName;
-    public bool IsLightingManaged      => !userOptions.DisableLightingManagement;
+    public bool IsLightingManaged => !userOptions.DisableLightingManagement;
 
     public string AppVersion { get; }
 
-    // Live DCS-BIOS exporter version reported by DCS; null until received.
     private string? _dcsBiosVersion;
+    private string? _lastDcsBiosName;
+    private string? _latestReleaseTag;
 
     public event PropertyChangedEventHandler? PropertyChanged;
     private void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
@@ -84,6 +79,13 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     {
         SetupLogging();
         InitializeComponent();
+        RootGrid.DataContext = this;
+
+        var hwnd = WindowNative.GetWindowHandle(this);
+        var windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
+        _appWindow = AppWindow.GetFromWindowId(windowId);
+        ConfigureWindow();
+        ConfigPanelControl.OwnerHwnd = hwnd;
 
         AppVersion = AppVersionProvider.GetAppVersion();
         UpdateTitle();
@@ -92,18 +94,41 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         {
             SaveUserSettings();
             OnPropertyChanged(nameof(IsLightingManaged));
+            OptionsPanel.SetLightingManaged(IsLightingManaged);
         };
 
         LoadConfig();
         LoadUserSettings();
         _currentTheme = userOptions.Theme;
+        WindowRoot.RequestedTheme = ThemeManager.CurrentElementTheme;
         UpdateThemeToggleIcon();
+        _currentLanguage = userOptions.Language;
+        UpdateLanguageToggleIcon();
+        Retranslate();
+        RetranslateBridgeStatus();
+        OptionsPanel.Retranslate();
+        StatusControl.Retranslate();
+        ConfigPanelControl.Retranslate();
+        OptionsPanel.SetLightingManaged(IsLightingManaged);
 
-        SystemEvents.UserPreferenceChanged += OnSystemPreferenceChanged;
+        _uiSettings.ColorValuesChanged += OnSystemPreferenceChanged;
 
         _ = DetectDevicesAsync();
         UpdateState();
-        Loaded += MainWindow_Loaded;
+        RootGrid.Loaded += MainWindow_Loaded;
+        Closed += MainWindow_Closed;
+    }
+
+    private void ConfigureWindow()
+    {
+        var hwnd = WindowNative.GetWindowHandle(this);
+        WindowSizing.Resize(_appWindow, hwnd, 700, 680);
+        if (_appWindow.Presenter is OverlappedPresenter presenter)
+        {
+            presenter.IsResizable = true;
+        }
+
+        WindowSizing.CenterOnDisplay(_appWindow);
     }
 
     private bool IsConfigValid() => !string.IsNullOrWhiteSpace(config.DcsBiosJsonLocation);
@@ -113,7 +138,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         _detectCts?.Cancel();
         _detectCts = new CancellationTokenSource();
         devices.Clear();
-        ShowStatus("Detecting devices...", false);
+        ShowStatus(Strings.Get("Status_DetectingDevices"), false);
 
         try
         {
@@ -127,8 +152,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             BuildDeviceUI();
             UpdateStartButtonState();
 
-            // Begin watching for hot-plug changes once, using the just-detected set as
-            // the baseline so already-connected devices are not reported as new.
             StartDeviceWatcher();
 
             if (CanStartBridge() && userOptions.AutoStart)
@@ -139,12 +162,12 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         }
         catch (OperationCanceledException)
         {
-            ShowStatus("Device detection cancelled", true);
+            ShowStatus(Strings.Get("Status_DetectionCancelled"), true);
         }
         catch (Exception ex)
         {
             Logger.Error(ex, "Async device detection failed");
-            ShowStatus($"Device detection failed: {ex.Message}", true);
+            ShowStatus(Strings.Format("Status_DetectionFailedFormat", ex.Message), true);
         }
     }
 
@@ -153,52 +176,40 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         return IsConfigValid() && devices.Count > 0 && !IsBridgeLoopActive;
     }
 
-    /// <summary>
-    /// Starts the hot-plug watcher once. Its events arrive on a background thread and are
-    /// marshalled onto the UI thread here.
-    /// </summary>
     private void StartDeviceWatcher()
     {
         if (_deviceWatcher != null) return;
 
         _deviceWatcher = new DeviceWatcher();
-        _deviceWatcher.DeviceArrived += id => Dispatcher.Invoke(() => _ = OnDeviceArrivedAsync(id));
-        _deviceWatcher.DeviceRemoved += id => Dispatcher.Invoke(() => OnDeviceRemoved(id));
+        _deviceWatcher.DeviceArrived += id => DispatcherQueue.TryEnqueue(() => _ = OnDeviceArrivedAsync(id));
+        _deviceWatcher.DeviceRemoved += id => DispatcherQueue.TryEnqueue(() => OnDeviceRemoved(id));
         _deviceWatcher.Start();
     }
 
-    /// <summary>
-    /// A supported device was plugged in: connect it, show its card, and — if the bridge is
-    /// already running — hand it to the bridge so it joins the live aircraft. If the bridge
-    /// is stopped and auto-start is enabled, start it now (cases A/B/C).
-    /// </summary>
     private async Task OnDeviceArrivedAsync(DeviceIdentifier deviceId)
     {
         if (devices.Any(d => d.DeviceId.Equals(deviceId)))
-            return; // already connected (e.g. a duplicate watcher event)
+            return;
 
-        ShowStatus($"Connecting {DeviceManager.GetDeviceName(deviceId)}...", false);
+        ShowStatus(Strings.Format("Status_ConnectingFormat", DeviceManager.GetDeviceName(deviceId)), false);
         try
         {
             var info = await DeviceManager.ConnectDeviceAsync(deviceId,
                 resetDevices: !userOptions.DisableLightingManagement);
             if (info == null)
             {
-                ShowStatus($"Failed to connect {deviceId.Description}", true);
+                ShowStatus(Strings.Format("Status_FailedToConnectFormat", deviceId.Description), true);
                 return;
             }
 
             devices.Add(info);
             AddDeviceCard(info);
 
-            // The bridge loop accepts hot-plug joins during the waiting phase too, so
-            // gate on IsLoopActive — not IsStarted (which is only true once an aircraft
-            // is running).
             if (bridgeManager?.IsLoopActive == true)
                 bridgeManager.AddDevice(info);
 
             UpdateStartButtonState();
-            ShowStatus($"Connected {info.DisplayName}", false);
+            ShowStatus(Strings.Format("Status_ConnectedFormat", info.DisplayName), false);
 
             if (CanStartBridge() && userOptions.AutoStart)
             {
@@ -209,14 +220,10 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         catch (Exception ex)
         {
             Logger.Error(ex, $"Failed to hot-connect device {deviceId.Description}");
-            ShowStatus($"Failed to connect {deviceId.Description}: {ex.Message}", true);
+            ShowStatus(Strings.Format("Status_FailedToConnectWithErrorFormat", deviceId.Description, ex.Message), true);
         }
     }
 
-    /// <summary>
-    /// A device was unplugged: detach it from a running bridge, drop its card, and close our
-    /// USB handle (cases D/E/F). No close-reset lighting is applied — the device is gone.
-    /// </summary>
     private void OnDeviceRemoved(DeviceIdentifier deviceId)
     {
         var info = devices.FirstOrDefault(d => d.DeviceId.Equals(deviceId));
@@ -232,14 +239,14 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         catch (Exception ex) { Logger.Warn(ex, "Error disposing removed device"); }
 
         UpdateStartButtonState();
-        ShowStatus($"Disconnected {info.DisplayName}", false);
+        ShowStatus(Strings.Format("Status_DisconnectedFormat", info.DisplayName), false);
     }
 
     private void BuildDeviceUI()
     {
         if (devices.Count == 0)
         {
-            ShowStatus("No devices detected. Please ensure your device is connected.", true);
+            ShowStatus(Strings.Get("Status_NoDevicesDetected"), true);
             return;
         }
         try
@@ -253,11 +260,10 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to build device UI");
-            ShowStatus($"Failed to build device UI: {ex.Message}", true);
+            ShowStatus(Strings.Format("Status_FailedToBuildDeviceUiFormat", ex.Message), true);
         }
     }
 
-    /// <summary>Adds a card for a device and tracks it so it can be removed individually.</summary>
     private void AddDeviceCard(DeviceInfo deviceInfo)
     {
         var card = CreateDeviceCard(deviceInfo);
@@ -265,7 +271,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         _deviceCards[deviceInfo.DeviceId] = card;
     }
 
-    /// <summary>Removes the card for a removed (unplugged) device, if present.</summary>
     private void RemoveDeviceCard(DeviceIdentifier deviceId)
     {
         if (_deviceCards.TryGetValue(deviceId, out var card))
@@ -275,9 +280,9 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         }
     }
 
-    private static readonly SolidColorBrush CardDisconnectedBg     = new(Color.FromArgb(0x18, 0xC6, 0x28, 0x28));
-    private static readonly SolidColorBrush CardDisconnectedDot    = new(Color.FromRgb(0xE5, 0x39, 0x35));
-    private static readonly SolidColorBrush CardDisconnectedBorder = new(Color.FromRgb(0xB7, 0x1C, 0x1C));
+    private static readonly SolidColorBrush CardDisconnectedBg = new(Windows.UI.Color.FromArgb(0x18, 0xC6, 0x28, 0x28));
+    private static readonly SolidColorBrush CardDisconnectedDot = new(Windows.UI.Color.FromArgb(0xFF, 0xE5, 0x39, 0x35));
+    private static readonly SolidColorBrush CardDisconnectedBorder = new(Windows.UI.Color.FromArgb(0xFF, 0xB7, 0x1C, 0x1C));
 
     private Border CreateDeviceCard(DeviceInfo deviceInfo)
     {
@@ -286,9 +291,9 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             Width = 7,
             Height = 7,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 7, 0)
+            Margin = new Thickness(0, 0, 7, 0),
+            Fill = (Brush)Application.Current.Resources["CardConnectedDotBrush"]
         };
-        dot.SetResourceReference(Shape.FillProperty, "CardConnectedDotBrush");
 
         var label = new TextBlock
         {
@@ -307,16 +312,13 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             BorderThickness = new Thickness(1),
             Padding = new Thickness(10, 5, 10, 5),
             Margin = new Thickness(0, 0, 8, 6),
-            Child = inner
+            Child = inner,
+            BorderBrush = (Brush)Application.Current.Resources["CardConnectedBorderBrush"],
+            Background = (Brush)Application.Current.Resources["CardConnectedBgBrush"]
         };
-        card.SetResourceReference(Border.BorderBrushProperty, "CardConnectedBorderBrush");
-        card.SetResourceReference(Border.BackgroundProperty,  "CardConnectedBgBrush");
 
-        // Instant red-dot feedback the moment the USB device drops (the debounced
-        // DeviceWatcher then removes the card a fraction of a second later). Both
-        // CDUs and frontpanels expose Disconnected.
         void OnDisconnected(object? s, EventArgs e) =>
-            Application.Current.Dispatcher.Invoke(() =>
+            DispatcherQueue.TryEnqueue(() =>
             {
                 dot.Fill = CardDisconnectedDot;
                 card.Background = CardDisconnectedBg;
@@ -340,10 +342,9 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     {
         if (NeedsConfigEdit)
         {
-            OpenConfigEditor();
+            await OpenConfigEditor();
         }
 
-        // Bind the OptionsPanel to the userOptions object
         OptionsPanel.DataContext = userOptions;
 
         try
@@ -366,7 +367,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             {
                 config = cfg;
                 Logger.Info("Configuration loaded successfully.");
-                return 0; // Unit equivalent
+                return 0;
             },
             onFailure: error =>
             {
@@ -377,47 +378,48 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         );
     }
 
-    private void ConfigButton_Click(object sender, RoutedEventArgs e)
+    private async void ConfigButton_Click(object sender, RoutedEventArgs e)
     {
         if (IsBridgeRunning)
         {
-            ShowStatus("Cannot edit DCS-BIOS configuration while bridge is running.", true);
+            ShowStatus(Strings.Get("Status_CannotEditWhileRunning"), true);
             return;
         }
-        OpenConfigEditor();
+        await OpenConfigEditor();
     }
 
-    private void OpenConfigEditor()
+    private async Task OpenConfigEditor()
     {
         try
         {
-            var configWindow = new ConfigWindow(config);
-            configWindow.Owner = this;
+            ConfigOverlay.Visibility = Visibility.Visible;
+            var result = await ConfigPanelControl.EditAsync(config);
+            ConfigOverlay.Visibility = Visibility.Collapsed;
 
-            if (configWindow.ShowDialog() == true)
+            if (result == true)
             {
-                config = configWindow.Config;
+                config = ConfigPanelControl.Config;
                 UpdateState();
 
                 if (IsConfigValid())
                 {
-                    ShowStatus("Configuration loaded. Ready to start bridge.", false);
+                    ShowStatus(Strings.Get("Status_ConfigLoadedReady"), false);
                 }
                 else
                 {
-                    ShowStatus("Please edit DCS-BIOS config", true);
+                    ShowStatus(Strings.Get("Status_PleaseEditConfig"), true);
                 }
 
                 if (IsBridgeRunning)
                 {
-                    ShowStatus("Configuration updated. Please restart the bridge for changes to take effect.", false);
+                    ShowStatus(Strings.Get("Status_ConfigUpdatedRestart"), false);
                 }
             }
         }
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to open configuration editor");
-            ShowStatus($"Failed to open configuration editor: {ex.Message}", true);
+            ShowStatus(Strings.Format("Status_FailedToOpenConfigEditorFormat", ex.Message), true);
         }
     }
 
@@ -430,13 +432,13 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     {
         if (!IsConfigValid())
         {
-            ShowStatus("Configuration not loaded. Please check the configuration settings.", true);
+            ShowStatus(Strings.Get("Status_ConfigNotLoaded"), true);
             return;
         }
 
         if (devices.Count == 0)
         {
-            ShowStatus("No devices found. Please ensure your device is connected and refresh.", true);
+            ShowStatus(Strings.Get("Status_NoDevicesFoundRefresh"), true);
             await DetectDevicesAsync();
             UpdateState();
             if (devices.Count == 0) return;
@@ -444,11 +446,10 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
         SaveUserSettings();
 
-        // Clear any previous error messages when starting
-        ShowStatus("Starting bridge...", false);
+        ShowStatus(Strings.Get("Status_StartingBridge"), false);
 
         StartButton.IsEnabled = false;
-        StartButton.Content = "Starting...";
+        StartButton.Content = Strings.Get("StartButton_Starting");
 
         try
         {
@@ -459,8 +460,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             OnPropertyChanged(nameof(IsBridgeLoopActive));
             OnPropertyChanged(nameof(CanEdit));
 
-            // StartAsync runs the detection loop and never returns until
-            // cancelled or an error occurs.
             await bridgeManager.StartAsync(devices, userOptions, config, _shutdownCts.Token);
         }
         catch (OperationCanceledException)
@@ -470,51 +469,82 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to start bridge");
-            ShowStatus($"Failed to start bridge: {ex.Message}", true);
+            ShowStatus(Strings.Format("Status_FailedToStartBridgeFormat", ex.Message), true);
             ResetStartButton();
         }
     }
 
     private void OnDetectedAircraftChanged(string? dcsBiosName)
     {
-        Dispatcher.Invoke(() =>
+        _lastDcsBiosName = dcsBiosName;
+        DispatcherQueue.TryEnqueue(() =>
         {
-            if (dcsBiosName == null)
-            {
-                SetDetectedAircraft(null);
-                ShowStatus("Waiting for DCS aircraft...", false);
-                StartButton.Content = "Detecting...";
-                UpdateBridgeStatusCard("Waiting for DCS aircraft...", "Load a supported module in DCS World");
-            }
-            else if (AircraftRegistry.FindByDcsBiosName(dcsBiosName) is not { } descriptor)
-            {
-                SetDetectedAircraft(null);
-                ShowStatus($"Unsupported aircraft: {dcsBiosName} — waiting...", false);
-                StartButton.Content = "Detecting...";
-                UpdateBridgeStatusCard($"Unsupported aircraft: {dcsBiosName}", "Waiting for a supported module...");
-            }
-            else
-            {
-                SetDetectedAircraft(descriptor);
-                ShowStatus($"Detected: {descriptor.DisplayName}", false);
-                StartButton.Content = "Bridge Running";
-                StartButton.IsEnabled = false;
-                OnPropertyChanged(nameof(IsBridgeRunning));
-                OnPropertyChanged(nameof(IsBridgeLoopActive));
-                OnPropertyChanged(nameof(CanEdit));
-                UpdateBridgeStatusCard($"Bridge running · {descriptor.DisplayName}", $"Listening on {config.ReceiveFromIpUdp}:{config.ReceivePortUdp}");
+            ApplyDetectedAircraftState(dcsBiosName);
 
-                if (userOptions.MinimizeOnStart)
-                {
-                    WindowState = WindowState.Minimized;
-                }
+            if (_detectedAircraft != null && userOptions.MinimizeOnStart && _appWindow.Presenter is OverlappedPresenter p)
+            {
+                p.Minimize();
             }
         });
     }
 
+    /// <summary>Applies the dashboard status/button text for a given DCS-BIOS aircraft name.
+    /// Shared by the live event handler and RetranslateBridgeStatus (language toggle while
+    /// the bridge is already running) so both stay in sync.</summary>
+    private void ApplyDetectedAircraftState(string? dcsBiosName)
+    {
+        if (dcsBiosName == null)
+        {
+            SetDetectedAircraft(null);
+            ShowStatus(Strings.Get("Status_WaitingForAircraft"), false);
+            StartButton.Content = Strings.Get("StartButton_Detecting");
+            UpdateBridgeStatusCard(Strings.Get("Status_WaitingForAircraft"), Strings.Get("Status_LoadSupportedModule"));
+        }
+        else if (AircraftRegistry.FindByDcsBiosName(dcsBiosName) is not { } descriptor)
+        {
+            SetDetectedAircraft(null);
+            ShowStatus(Strings.Format("Status_UnsupportedAircraftFormat", dcsBiosName), false);
+            StartButton.Content = Strings.Get("StartButton_Detecting");
+            UpdateBridgeStatusCard(Strings.Format("Status_UnsupportedAircraftSubFormat", dcsBiosName), Strings.Get("Status_WaitingForSupportedModule"));
+        }
+        else
+        {
+            SetDetectedAircraft(descriptor);
+            ShowStatus(Strings.Format("Status_DetectedFormat", descriptor.DisplayName), false);
+            StartButton.Content = Strings.Get("StartButton_Running");
+            StartButton.IsEnabled = false;
+            OnPropertyChanged(nameof(IsBridgeRunning));
+            OnPropertyChanged(nameof(IsBridgeLoopActive));
+            OnPropertyChanged(nameof(CanEdit));
+            UpdateBridgeStatusCard(Strings.Format("Status_BridgeRunningFormat", descriptor.DisplayName), Strings.Format("Status_ListeningOnFormat", config.ReceiveFromIpUdp, config.ReceivePortUdp));
+        }
+    }
+
+    /// <summary>Re-applies the dashboard status card + Start button text in the current
+    /// language, replaying whatever state (stopped / waiting / running) is actually active.</summary>
+    private void RetranslateBridgeStatus()
+    {
+        if (IsBridgeLoopActive)
+        {
+            ApplyDetectedAircraftState(_lastDcsBiosName);
+        }
+        else
+        {
+            UpdateBridgeStatusCard(Strings.Get("Status_BridgeStopped"), Strings.Get("Status_AircraftAutoDetected"));
+            StartButton.Content = Strings.Get("StartButton_Start");
+        }
+
+        if (IsUpdateVisible && _latestReleaseTag != null)
+        {
+            UpdateMessage = Strings.Format("Status_NewVersionAvailableFormat", _latestReleaseTag);
+        }
+    }
+
     private void UpdateBridgeStatusCard(string label, string sub)
     {
-        BridgeStatusDot.Fill = IsBridgeRunning ? Brushes.Green : new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88));
+        BridgeStatusDot.Fill = IsBridgeRunning
+            ? new SolidColorBrush(Colors.Green)
+            : new SolidColorBrush(Windows.UI.Color.FromArgb(0xFF, 0x88, 0x88, 0x88));
         BridgeStatusLabel.Text = label;
         BridgeStatusSub.Text = sub;
     }
@@ -523,24 +553,25 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     {
         _detectedAircraft = descriptor;
         OnPropertyChanged(nameof(DetectedAircraftName));
+        OptionsPanel.SetDetectedAircraft(DetectedAircraftName);
     }
 
     private void ResetStartButton()
     {
         SetDetectedAircraft(null);
         StartButton.IsEnabled = !IsBridgeLoopActive && devices.Count > 0 && IsConfigValid();
-        StartButton.Content = "Start Bridge";
+        StartButton.Content = Strings.Get("StartButton_Start");
         _dcsBiosVersion = null;
         UpdateTitle();
         OnPropertyChanged(nameof(IsBridgeRunning));
         OnPropertyChanged(nameof(IsBridgeLoopActive));
         OnPropertyChanged(nameof(CanEdit));
-        UpdateBridgeStatusCard("Bridge stopped", "Aircraft is detected automatically when DCS is running");
+        UpdateBridgeStatusCard(Strings.Get("Status_BridgeStopped"), Strings.Get("Status_AircraftAutoDetected"));
     }
 
     private void OnDcsBiosVersionChanged(string? dcsBiosVersion)
     {
-        Dispatcher.Invoke(() =>
+        DispatcherQueue.TryEnqueue(() =>
         {
             _dcsBiosVersion = dcsBiosVersion;
             UpdateTitle();
@@ -553,12 +584,13 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         Title = $"WctrlDcsBiosBridge v{AppVersion} | DCS-BIOS {dcsBios}";
     }
 
-    private void OnSystemPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
+    private void OnSystemPreferenceChanged(UISettings sender, object args)
     {
-        if (e.Category == UserPreferenceCategory.General)
+        DispatcherQueue.TryEnqueue(() =>
         {
-            Dispatcher.Invoke(() => ThemeManager.Apply(_currentTheme));
-        }
+            ThemeManager.Apply(_currentTheme);
+            WindowRoot.RequestedTheme = ThemeManager.CurrentElementTheme;
+        });
     }
 
     private void LoadUserSettings()
@@ -584,9 +616,9 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private void UpdateStartButtonState()
     {
         StartButton.IsEnabled = !IsBridgeLoopActive && IsConfigValid() && devices.Count > 0;
-        if (!IsBridgeLoopActive && !(StartButton.Content?.ToString()?.Length > 0))
+        if (!IsBridgeLoopActive && !(StartButton.Content is string s && s.Length > 0))
         {
-            StartButton.Content = "Start Bridge";
+            StartButton.Content = Strings.Get("StartButton_Start");
         }
     }
 
@@ -595,11 +627,11 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         _currentTheme = _currentTheme switch
         {
             ThemePreference.System => ThemePreference.Light,
-            ThemePreference.Light  => ThemePreference.Dark,
-            ThemePreference.Dark   => ThemePreference.DCS,
-            _                      => ThemePreference.System
+            ThemePreference.Light => ThemePreference.Dark,
+            _ => ThemePreference.System
         };
         ThemeManager.Apply(_currentTheme);
+        WindowRoot.RequestedTheme = ThemeManager.CurrentElementTheme;
         userOptions.Theme = _currentTheme;
         SaveUserSettings();
         UpdateThemeToggleIcon();
@@ -607,23 +639,103 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
     private void UpdateThemeToggleIcon()
     {
+        // ThemePreference.DCS is treated the same as Dark (folded into the default
+        // dark palette) — it can still show up here from an old persisted config.json.
         ThemeIcon.Text = _currentTheme switch
         {
             ThemePreference.Light => "☀",
-            ThemePreference.Dark  => "☾",
-            ThemePreference.DCS   => "✈",
-            _                     => "◑"
+            ThemePreference.Dark or ThemePreference.DCS => "☾",
+            _ => "◑"
         };
-        ThemeToggleButton.ToolTip = _currentTheme switch
+        ToolTipService.SetToolTip(ThemeToggleButton, _currentTheme switch
         {
-            ThemePreference.Light => "Theme: Light — click for Dark",
-            ThemePreference.Dark  => "Theme: Dark — click for DCS",
-            ThemePreference.DCS   => "Theme: DCS — click for System",
-            _                     => "Theme: System — click for Light"
-        };
+            ThemePreference.Light => Strings.Get("ThemeTooltip_Light"),
+            ThemePreference.Dark or ThemePreference.DCS => Strings.Get("ThemeTooltip_Dark"),
+            _ => Strings.Get("ThemeTooltip_System")
+        });
     }
 
-    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    private void LanguageToggle_Click(object sender, RoutedEventArgs e)
+    {
+        // System first, then the user's own detected language, then the rest — so clicking
+        // the globe once lands on the user's language rather than a hardcoded one.
+        var detected = LanguageDetector.DetectPreferredLanguage();
+        var cycle = new List<LanguagePreference> { LanguagePreference.System, detected };
+        cycle.AddRange(LanguageDetector.SupportedLanguages.Where(l => l != detected));
+
+        var currentIndex = cycle.IndexOf(_currentLanguage);
+        _currentLanguage = cycle[(currentIndex + 1) % cycle.Count];
+
+        userOptions.Language = _currentLanguage;
+        SaveUserSettings();
+        Strings.CurrentLanguage = _currentLanguage;
+
+        UpdateLanguageToggleIcon();
+        Retranslate();
+        RetranslateBridgeStatus();
+        OptionsPanel.Retranslate();
+        StatusControl.Retranslate();
+        ConfigPanelControl.Retranslate();
+    }
+
+    private void UpdateLanguageToggleIcon()
+    {
+        LanguageIcon.Text = _currentLanguage switch
+        {
+            LanguagePreference.French => "FR",
+            LanguagePreference.English => "EN",
+            LanguagePreference.German => "DE",
+            LanguagePreference.Spanish => "ES",
+            _ => "🌐"
+        };
+        ToolTipService.SetToolTip(LanguageToggleButton, _currentLanguage switch
+        {
+            LanguagePreference.French => Strings.Get("LanguageTooltip_French"),
+            LanguagePreference.English => Strings.Get("LanguageTooltip_English"),
+            LanguagePreference.German => Strings.Get("LanguageTooltip_German"),
+            LanguagePreference.Spanish => Strings.Get("LanguageTooltip_Spanish"),
+            _ => Strings.Get("LanguageTooltip_System")
+        });
+    }
+
+    /// <summary>
+    /// Re-applies every static string from Strings\&lt;lang&gt;\Resources.resw. Deliberately
+    /// excludes BridgeStatusLabel/Sub and StartButton.Content — those carry live bridge/device
+    /// state, not a fixed default, and get corrected by the next status-changing event instead.
+    /// </summary>
+    private void Retranslate()
+    {
+        DashboardPivotItem.Header = Strings.Get("DashboardPivotItem");
+        ConfigurationPivotItem.Header = Strings.Get("ConfigurationPivotItem");
+        HelpPivotItem.Header = Strings.Get("HelpPivotItem");
+
+        DashboardDescriptionText.Text = Strings.Get("DashboardDescriptionText");
+        ConnectedDevicesHeader.Text = Strings.Get("ConnectedDevicesHeader");
+        OpenReleaseButtonControl.Content = Strings.Get("OpenReleaseButtonControl");
+        DismissButtonControl.Content = Strings.Get("DismissButtonControl");
+        ConfigButton.Content = Strings.Get("ConfigButtonControl");
+
+        QuickStartHeader.Text = Strings.Get("QuickStartHeader");
+        HelpStep1Text.Text = Strings.Get("HelpStep1Text");
+        HelpStep2Text.Text = Strings.Get("HelpStep2Text");
+        HelpStep3Text.Text = Strings.Get("HelpStep3Text");
+        HelpStep4Text.Text = Strings.Get("HelpStep4Text");
+        SupportedAircraftLink.Text = Strings.Get("SupportedAircraftLink");
+        TroubleshootingHeader.Text = Strings.Get("TroubleshootingHeader");
+
+        Trouble1Strong.Text = Strings.Get("Trouble1Strong");
+        Trouble1Rest.Text = Strings.Get("Trouble1Rest");
+        Trouble2Strong.Text = Strings.Get("Trouble2Strong");
+        Trouble2Rest.Text = Strings.Get("Trouble2Rest");
+        Trouble3Strong.Text = Strings.Get("Trouble3Strong");
+        Trouble3Rest.Text = Strings.Get("Trouble3Rest");
+        Trouble4Strong.Text = Strings.Get("Trouble4Strong");
+        Trouble4Mid.Text = Strings.Get("Trouble4Mid");
+        Trouble4Italic.Text = Strings.Get("Trouble4Italic");
+        Trouble4End.Text = Strings.Get("Trouble4End");
+    }
+
+    private void MainWindow_Closed(object sender, WindowEventArgs e)
     {
         _shutdownCts.Cancel();
 
@@ -634,11 +746,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         {
             try
             {
-                // Stop whenever the loop is alive (waiting phase included). The bridge's
-                // StartAsync runs as UI-thread continuations, so the async cancellation
-                // path may not be pumped once the window closes — stopping here
-                // synchronously guarantees dcsBios.Shutdown() joins its foreground
-                // threads so the process actually exits.
                 if (bridgeManager.IsLoopActive) bridgeManager.Stop();
                 bridgeManager.DcsBiosVersionChanged -= OnDcsBiosVersionChanged;
                 bridgeManager.Dispose();
@@ -650,16 +757,10 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             }
         }
 
-        base.OnClosing(e);
-    }
-
-    protected override void OnClosed(EventArgs e)
-    {
         if (!_disposed)
         {
             Dispose();
         }
-        base.OnClosed(e);
     }
 
     public void Dispose()
@@ -675,7 +776,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
         if (disposing)
         {
-            SystemEvents.UserPreferenceChanged -= OnSystemPreferenceChanged;
+            _uiSettings.ColorValuesChanged -= OnSystemPreferenceChanged;
             _shutdownCts.Cancel();
             _detectCts?.Cancel();
             _deviceWatcher?.Dispose();
@@ -697,7 +798,8 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             var result = await _updateService.CheckForUpdatesAsync(AppVersion, channel);
             if (result is { HasUpdate: true })
             {
-                SetUpdateNotification($"New version available: {result.LatestTag}", result.HtmlUrl);
+                _latestReleaseTag = result.LatestTag;
+                SetUpdateNotification(Strings.Format("Status_NewVersionAvailableFormat", result.LatestTag), result.HtmlUrl);
                 Logger.Info($"New release available: {result.LatestTag} - {result.HtmlUrl}");
             }
         }
@@ -732,16 +834,16 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         }
     }
 
-    private void DocsLink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+    private void DocsLink_Click(Microsoft.UI.Xaml.Documents.Hyperlink sender, Microsoft.UI.Xaml.Documents.HyperlinkClickEventArgs args)
     {
+        const string url = "https://github.com/landre-cerp/WCtrlDcsBiosBridge/tree/main/docs";
         try
         {
-            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
         catch (Exception ex)
         {
             Logger.Warn(ex, "Failed to open docs URL");
         }
-        e.Handled = true;
     }
 }

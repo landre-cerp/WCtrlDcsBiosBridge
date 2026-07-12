@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- Must match the app's TFM since it references the app assembly. -->
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <!-- Must match the app's TFM and platform since it references the app assembly. -->
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <Platforms>x64</Platforms>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>

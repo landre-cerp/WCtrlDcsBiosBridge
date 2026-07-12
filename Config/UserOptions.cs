@@ -21,6 +21,9 @@ public class UserOptions
     /// <summary>Preferred application theme (System, Light, or Dark).</summary>
     public ThemePreference Theme { get; set; } = ThemePreference.System;
 
+    /// <summary>Preferred application language (System follows the Windows preferred-language list).</summary>
+    public LanguagePreference Language { get; set; } = LanguagePreference.System;
+
     // ── On-close device reset ────────────────────────────────────────────────
     // Only applies when DisableLightingManagement is false.
     // Screen content is always cleared on close.

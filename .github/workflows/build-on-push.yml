@@ -31,13 +31,23 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      # WinUI 3 app needs the VS-bundled MSBuild (MrtCore PRI generation isn't available
+      # to the standalone dotnet SDK).
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
       - name: Restore dependencies
-        run: dotnet restore WCtrlDcsBiosBridge.csproj
+        run: |
+          dotnet restore WCtrlDcsBiosBridge.csproj
+          dotnet restore Tests/WCtrlDcsBiosBridge.Tests.csproj -r win-x64
 
       - name: Build
-        run: dotnet build WCtrlDcsBiosBridge.csproj --configuration ${{ env.CONFIGURATION }} --no-restore
+        run: |
+          msbuild WCtrlDcsBiosBridge.csproj /p:Platform=x64 /p:Configuration=${{ env.CONFIGURATION }} /p:RestorePackages=false
+          msbuild Tests/WCtrlDcsBiosBridge.Tests.csproj /p:Platform=x64 /p:Configuration=${{ env.CONFIGURATION }} /p:RuntimeIdentifier=win-x64 /p:RestorePackages=false
 
       # Runs the headless logic tests (hot-plug diff, config validation, version compare).
-      # dotnet test restores and builds the test project (which references the app) itself.
+      # Built with VS MSBuild above (dotnet SDK MSBuild lacks MrtCore PRI tasks), then
+      # executed with --no-build to avoid re-invoking the dotnet SDK toolchain.
       - name: Test
-        run: dotnet test Tests/WCtrlDcsBiosBridge.Tests.csproj --configuration ${{ env.CONFIGURATION }}
+        run: dotnet test Tests/WCtrlDcsBiosBridge.Tests.csproj --no-build --configuration ${{ env.CONFIGURATION }} -p:Platform=x64 -p:RuntimeIdentifier=win-x64

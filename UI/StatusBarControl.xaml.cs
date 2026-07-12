@@ -1,56 +1,36 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows.Controls;
+using Microsoft.UI;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using WCtrlDcsBiosBridge.Common;
 
 namespace WCtrlDcsBiosBridge.UI;
 
-public partial class StatusBarControl : UserControl, INotifyPropertyChanged
+public partial class StatusBarControl : UserControl
 {
-    private string _message = "Ready.";
-    private bool _isError;
+    private static readonly SolidColorBrush ErrorBrush = new(Colors.Red);
+    private static readonly SolidColorBrush OkBrush = new(Colors.Green);
 
-    public string Message
-    {
-        get => _message;
-        set
-        {
-            if (_message != value)
-            {
-                _message = value;
-                OnPropertyChanged();
-            }
-        }
-    }
-
-    public bool IsError
-    {
-        get => _isError;
-        set
-        {
-            if (_isError != value)
-            {
-                _isError = value;
-                OnPropertyChanged();
-            }
-        }
-    }
+    public string Message { get; private set; } = Strings.Get("Status_Ready");
+    public bool IsError { get; private set; }
 
     public StatusBarControl()
     {
         InitializeComponent();
-        DataContext = this;
+        MessageText.Text = Message;
     }
 
     public void ShowStatus(string message, bool isError)
     {
         Message = message;
         IsError = isError;
+        MessageText.Text = message;
+        MessageText.Foreground = isError ? ErrorBrush : OkBrush;
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    /// <summary>Re-applies the static "Status:" label. The current message is left as-is —
+    /// it reflects live state, not a fixed default (see MainWindow.Retranslate).</summary>
+    public void Retranslate()
     {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        StatusLabel.Text = Strings.Get("StatusLabel");
     }
 }

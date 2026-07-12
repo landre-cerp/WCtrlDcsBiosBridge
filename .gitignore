@@ -1,5 +1,5 @@
 bin
 obj
 .vs
-/Properties/PublishProfiles
+Properties/PublishProfiles
 *.csproj.user

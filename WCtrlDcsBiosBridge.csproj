@@ -1,70 +1,49 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <UseWPF>true</UseWPF>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>WCtrlDcsBiosBridge</RootNamespace>
+    <AssemblyName>WCtrlDcsBiosBridge</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <EnableMsixTooling>false</EnableMsixTooling>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <!-- Default; will be overridden by CI on tagged builds -->
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <InformationalVersion>v1.0.0</InformationalVersion>
-  </PropertyGroup>
-
+  <!-- Tests\, libs\, and DcsBios\ are separate projects with their own sources — keep all
+       of that out of this project's default globbing. -->
   <ItemGroup>
+    <Compile Remove="Tests\**" />
+    <Page Remove="Tests\**" />
+    <EmbeddedResource Remove="Tests\**" />
+    <None Remove="Tests\**" />
+
     <Compile Remove="libs\**" />
+    <Page Remove="libs\**" />
     <EmbeddedResource Remove="libs\**" />
     <None Remove="libs\**" />
-  </ItemGroup>
 
-  <ItemGroup>
     <Compile Remove="DcsBios\**" />
+    <Page Remove="DcsBios\**" />
     <EmbeddedResource Remove="DcsBios\**" />
     <None Remove="DcsBios\**" />
   </ItemGroup>
 
-  <!-- The test project lives under Tests\ in this same folder; keep its sources out of the app build. -->
   <ItemGroup>
-    <Compile Remove="Tests\**" />
-    <EmbeddedResource Remove="Tests\**" />
-    <None Remove="Tests\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <InternalsVisibleTo Include="WCtrlDcsBiosBridge.Tests" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include=".github\copilot-instructions.md" />
-    <None Include=".github\ISSUE_TEMPLATE\bug_report.md" />
-    <None Include=".github\ISSUE_TEMPLATE\config.yaml" />
-    <None Include=".github\ISSUE_TEMPLATE\enhancement.md" />
-    <None Include=".github\workflows\build-on-push.yml" />
-    <None Include=".github\workflows\build-on-tag.yml" />
-    <None Include=".github\workflows\codeql.yml" />
-    <None Include=".github\workflows\dependency-submission.yml" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.1839" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250402001" />
     <PackageReference Include="NLog" Version="5.2.8" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="DcsBios\WCtrlDcsBiosBridge.DcsBios.csproj" />
-    <ProjectReference Include="libs\WwDevicesDotnet\WW-Devices-Dotnet.csproj" />
-    <ProjectReference Include="libs\A10C-PerfLib\PerformanceLib\a10c-perf-lib.csproj" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <None Update="NLog.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="Resources\oh58d-font-21x31.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -77,11 +56,19 @@
     <None Update="Resources\a10c-font-21x31.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="NLog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="DcsBios\WCtrlDcsBiosBridge.DcsBios.csproj" />
+    <ProjectReference Include="libs\WwDevicesDotnet\WW-Devices-Dotnet.csproj" />
+    <ProjectReference Include="libs\A10C-PerfLib\PerformanceLib\a10c-perf-lib.csproj" />
+  </ItemGroup>
 
   <ItemGroup>
-    <Folder Include=".github\ISSUE_TEMPLATE\" />
+    <InternalsVisibleTo Include="WCtrlDcsBiosBridge.Tests" />
   </ItemGroup>
 
 </Project>

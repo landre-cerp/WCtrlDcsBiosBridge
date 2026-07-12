@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- MainWindow -->
+  <data name="DashboardPivotItem" xml:space="preserve"><value>Tableau de bord</value></data>
+  <data name="ConfigurationPivotItem" xml:space="preserve"><value>Configuration</value></data>
+  <data name="HelpPivotItem" xml:space="preserve"><value>Aide</value></data>
+  <data name="Status_BridgeStopped" xml:space="preserve"><value>Pont arrêté</value></data>
+  <data name="Status_AircraftAutoDetected" xml:space="preserve"><value>L'appareil est détecté automatiquement lorsque DCS est en cours d'exécution</value></data>
+  <data name="StartButton_Start" xml:space="preserve"><value>Démarrer le pont</value></data>
+  <data name="DashboardDescriptionText" xml:space="preserve"><value>Démarrez le pont, puis chargez un appareil pris en charge dans DCS World. L'écran CDU ou FCU/EFIS se synchronisera automatiquement.</value></data>
+  <data name="ConnectedDevicesHeader" xml:space="preserve"><value>APPAREILS CONNECTÉS</value></data>
+  <data name="OpenReleaseButtonControl" xml:space="preserve"><value>Ouvrir la version</value></data>
+  <data name="DismissButtonControl" xml:space="preserve"><value>Ignorer</value></data>
+  <data name="ConfigButtonControl" xml:space="preserve"><value>Modifier la configuration DCS-BIOS</value></data>
+  <data name="QuickStartHeader" xml:space="preserve"><value>Démarrage rapide</value></data>
+  <data name="HelpStep1Text" xml:space="preserve"><value>Connectez votre/vos appareil(s) Winwing via USB</value></data>
+  <data name="HelpStep2Text" xml:space="preserve"><value>Cliquez sur Démarrer le pont dans l'onglet Tableau de bord. Les appareils connectés seront listés.</value></data>
+  <data name="HelpStep3Text" xml:space="preserve"><value>Chargez une mission dans DCS World. Le module d'appareil est détecté automatiquement — aucune sélection manuelle n'est nécessaire.</value></data>
+  <data name="HelpStep4Text" xml:space="preserve"><value>Votre CDU ou FCU/EFIS se synchronisera avec le cockpit en jeu. L'onglet Tableau de bord affiche l'état en direct.</value></data>
+  <data name="SupportedAircraftLink" xml:space="preserve"><value>Appareils pris en charge</value></data>
+  <data name="TroubleshootingHeader" xml:space="preserve"><value>Dépannage</value></data>
+  <data name="Trouble1Strong" xml:space="preserve"><value>Appareil non affiché dans le tableau de bord :</value></data>
+  <data name="Trouble1Rest" xml:space="preserve"><value> débranchez et rebranchez le câble USB, puis redémarrez l'application.</value></data>
+  <data name="Trouble2Strong" xml:space="preserve"><value>Écran CDU vide en jeu :</value></data>
+  <data name="Trouble2Rest" xml:space="preserve"><value> vérifiez que le script d'export DCS-BIOS est installé et que DCS World est en cours d'exécution.</value></data>
+  <data name="Trouble3Strong" xml:space="preserve"><value>Données d'appareil incorrectes :</value></data>
+  <data name="Trouble3Rest" xml:space="preserve"><value> assurez-vous que DCS-BIOS est à jour et que le bon module est chargé dans DCS.</value></data>
+  <data name="Trouble4Strong" xml:space="preserve"><value>Conflit d'éclairage avec SimApp Pro :</value></data>
+  <data name="Trouble4Mid" xml:space="preserve"><value> activez </value></data>
+  <data name="Trouble4Italic" xml:space="preserve"><value>Désactiver la gestion de l'éclairage</value></data>
+  <data name="Trouble4End" xml:space="preserve"><value> dans l'onglet Configuration.</value></data>
+
+  <!-- Theme toggle tooltips -->
+  <data name="ThemeTooltip_Light" xml:space="preserve"><value>Thème : Clair — cliquez pour Sombre</value></data>
+  <data name="ThemeTooltip_Dark" xml:space="preserve"><value>Thème : Sombre — cliquez pour Système</value></data>
+  <data name="ThemeTooltip_System" xml:space="preserve"><value>Thème : Système — cliquez pour Clair</value></data>
+
+  <!-- Language toggle tooltips -->
+  <data name="LanguageTooltip_System" xml:space="preserve"><value>Langue : Automatique (Windows) — cliquez pour changer</value></data>
+  <data name="LanguageTooltip_English" xml:space="preserve"><value>Langue : English — cliquez pour changer</value></data>
+  <data name="LanguageTooltip_French" xml:space="preserve"><value>Langue : Français — cliquez pour changer</value></data>
+  <data name="LanguageTooltip_German" xml:space="preserve"><value>Langue : Deutsch — cliquez pour changer</value></data>
+  <data name="LanguageTooltip_Spanish" xml:space="preserve"><value>Langue : Español — cliquez pour changer</value></data>
+
+  <!-- Status bar messages (MainWindow) -->
+  <data name="Status_DetectingDevices" xml:space="preserve"><value>Détection des appareils...</value></data>
+  <data name="Status_DetectionCancelled" xml:space="preserve"><value>Détection des appareils annulée</value></data>
+  <data name="Status_DetectionFailedFormat" xml:space="preserve"><value>Échec de la détection des appareils : {0}</value></data>
+  <data name="Status_ConnectingFormat" xml:space="preserve"><value>Connexion à {0}...</value></data>
+  <data name="Status_FailedToConnectFormat" xml:space="preserve"><value>Échec de la connexion à {0}</value></data>
+  <data name="Status_ConnectedFormat" xml:space="preserve"><value>{0} connecté</value></data>
+  <data name="Status_FailedToConnectWithErrorFormat" xml:space="preserve"><value>Échec de la connexion à {0} : {1}</value></data>
+  <data name="Status_DisconnectedFormat" xml:space="preserve"><value>{0} déconnecté</value></data>
+  <data name="Status_NoDevicesDetected" xml:space="preserve"><value>Aucun appareil détecté. Vérifiez que votre appareil est bien connecté.</value></data>
+  <data name="Status_FailedToBuildDeviceUiFormat" xml:space="preserve"><value>Échec de la construction de l'interface des appareils : {0}</value></data>
+  <data name="Status_CannotEditWhileRunning" xml:space="preserve"><value>Impossible de modifier la configuration DCS-BIOS pendant que le pont est actif.</value></data>
+  <data name="Status_ConfigLoadedReady" xml:space="preserve"><value>Configuration chargée. Prêt à démarrer le pont.</value></data>
+  <data name="Status_PleaseEditConfig" xml:space="preserve"><value>Veuillez modifier la configuration DCS-BIOS</value></data>
+  <data name="Status_ConfigUpdatedRestart" xml:space="preserve"><value>Configuration mise à jour. Redémarrez le pont pour appliquer les changements.</value></data>
+  <data name="Status_FailedToOpenConfigEditorFormat" xml:space="preserve"><value>Échec de l'ouverture de l'éditeur de configuration : {0}</value></data>
+  <data name="Status_ConfigNotLoaded" xml:space="preserve"><value>Configuration non chargée. Vérifiez les paramètres de configuration.</value></data>
+  <data name="Status_NoDevicesFoundRefresh" xml:space="preserve"><value>Aucun appareil trouvé. Vérifiez que votre appareil est connecté et actualisez.</value></data>
+  <data name="Status_StartingBridge" xml:space="preserve"><value>Démarrage du pont...</value></data>
+  <data name="StartButton_Starting" xml:space="preserve"><value>Démarrage...</value></data>
+  <data name="StartButton_Detecting" xml:space="preserve"><value>Détection...</value></data>
+  <data name="StartButton_Running" xml:space="preserve"><value>Pont actif</value></data>
+  <data name="Status_FailedToStartBridgeFormat" xml:space="preserve"><value>Échec du démarrage du pont : {0}</value></data>
+  <data name="Status_WaitingForAircraft" xml:space="preserve"><value>En attente d'un appareil DCS...</value></data>
+  <data name="Status_LoadSupportedModule" xml:space="preserve"><value>Chargez un module pris en charge dans DCS World</value></data>
+  <data name="Status_UnsupportedAircraftFormat" xml:space="preserve"><value>Appareil non pris en charge : {0} — en attente...</value></data>
+  <data name="Status_UnsupportedAircraftSubFormat" xml:space="preserve"><value>Appareil non pris en charge : {0}</value></data>
+  <data name="Status_WaitingForSupportedModule" xml:space="preserve"><value>En attente d'un module pris en charge...</value></data>
+  <data name="Status_DetectedFormat" xml:space="preserve"><value>Détecté : {0}</value></data>
+  <data name="Status_BridgeRunningFormat" xml:space="preserve"><value>Pont actif · {0}</value></data>
+  <data name="Status_ListeningOnFormat" xml:space="preserve"><value>En écoute sur {0}:{1}</value></data>
+  <data name="Status_NewVersionAvailableFormat" xml:space="preserve"><value>Nouvelle version disponible : {0}</value></data>
+
+  <!-- Device detection progress (DeviceManager) -->
+  <data name="Device_NoDevicesFound" xml:space="preserve"><value>Aucun appareil trouvé</value></data>
+  <data name="Device_FoundDevicesConnectingFormat" xml:space="preserve"><value>{0} appareil(s) trouvé(s). Connexion...</value></data>
+  <data name="Device_ConnectingCduFormat" xml:space="preserve"><value>Connexion à l'appareil CDU {0}/{1}...</value></data>
+  <data name="Device_ConnectedFormat" xml:space="preserve"><value>{0} connecté ({1}/{2})</value></data>
+  <data name="Device_FailedConnectCduFormat" xml:space="preserve"><value>Échec de connexion à l'appareil CDU {0} : {1}</value></data>
+  <data name="Device_ConnectingFrontpanelFormat" xml:space="preserve"><value>Connexion à l'appareil frontpanel {0}/{1}...</value></data>
+  <data name="Device_FailedConnectFrontpanelFormat" xml:space="preserve"><value>Échec de connexion à l'appareil frontpanel {0} : {1}</value></data>
+  <data name="Device_DetectionCompleteFormat" xml:space="preserve"><value>Détection terminée. {0} connecté(s).</value></data>
+  <data name="Device_DetectionErrorFormat" xml:space="preserve"><value>Erreur de détection : {0}</value></data>
+
+  <!-- ConfigPanel -->
+  <data name="ConfigPanelTitle" xml:space="preserve"><value>Configuration DCS-BIOS</value></data>
+  <data name="NetworkSettingsHeader" xml:space="preserve"><value>Paramètres réseau</value></data>
+  <data name="ReceiveIpPortLabel" xml:space="preserve"><value>IP:PORT de réception</value></data>
+  <data name="MulticastLabel" xml:space="preserve"><value>(Multidiffusion)</value></data>
+  <data name="SendIpPortLabel" xml:space="preserve"><value>IP:PORT d'envoi</value></data>
+  <data name="UsuallyLocalhostLabel" xml:space="preserve"><value>(Généralement localhost)</value></data>
+  <data name="ResetToDefaultsButtonControl" xml:space="preserve"><value>Réinitialiser</value></data>
+  <data name="FileLocationsHeader" xml:space="preserve"><value>Emplacements des fichiers</value></data>
+  <data name="JsonLocationLabel" xml:space="preserve"><value>JSON DCS-BIOS :</value></data>
+  <data name="BrowseButtonControl" xml:space="preserve"><value>Parcourir...</value></data>
+  <data name="JsonLocationHint" xml:space="preserve"><value>Ceci doit pointer vers le répertoire contenant les fichiers JSON spécifiques aux appareils depuis DCS-BIOS</value></data>
+  <data name="SaveButtonControl" xml:space="preserve"><value>Enregistrer</value></data>
+  <data name="CancelButtonControl" xml:space="preserve"><value>Annuler</value></data>
+
+  <!-- ConfigPanel tooltips (set from code-behind) -->
+  <data name="Tooltip_ReceiveIp" xml:space="preserve"><value>Adresse IP pour recevoir les données UDP de DCS-BIOS (adresse multidiffusion)</value></data>
+  <data name="Tooltip_ReceivePort" xml:space="preserve"><value>Numéro de port pour recevoir les données UDP de DCS-BIOS</value></data>
+  <data name="Tooltip_SendIp" xml:space="preserve"><value>Adresse IP pour envoyer les données UDP à DCS-BIOS</value></data>
+  <data name="Tooltip_SendPort" xml:space="preserve"><value>Numéro de port pour envoyer les données UDP à DCS-BIOS</value></data>
+  <data name="Tooltip_JsonLocation" xml:space="preserve"><value>Chemin du répertoire contenant les fichiers JSON DCS-BIOS</value></data>
+
+  <!-- ConfigPanel status messages -->
+  <data name="PortName_Receive" xml:space="preserve"><value>Port de réception</value></data>
+  <data name="PortName_Send" xml:space="preserve"><value>Port d'envoi</value></data>
+  <data name="Status_PortRangeFormat" xml:space="preserve"><value>{0} doit être compris entre {1} et {2}.</value></data>
+  <data name="Status_ReceiveIpInvalid" xml:space="preserve"><value>L'adresse IP de réception n'est pas valide.</value></data>
+  <data name="Status_SendIpInvalid" xml:space="preserve"><value>L'adresse IP d'envoi n'est pas valide.</value></data>
+  <data name="Status_JsonLocationEmpty" xml:space="preserve"><value>L'emplacement JSON DCS-BIOS ne peut pas être vide.</value></data>
+  <data name="Status_DirectoryNotExistFormat" xml:space="preserve"><value>Le répertoire spécifié n'existe pas : {0}</value></data>
+  <data name="Status_MissingJsonFilesFormat" xml:space="preserve"><value>Certains fichiers JSON DCS-BIOS attendus sont manquants (poursuite quand même) : {0}</value></data>
+  <data name="Status_ValidationErrorFormat" xml:space="preserve"><value>Erreur de validation : {0}</value></data>
+  <data name="Status_FolderPickerFailedFormat" xml:space="preserve"><value>Impossible d'ouvrir le sélecteur de dossier : {0}</value></data>
+  <data name="Status_SaveConfigFailedFormat" xml:space="preserve"><value>Échec de l'enregistrement de la configuration : {0}</value></data>
+  <data name="Status_SettingsResetToDefaults" xml:space="preserve"><value>Paramètres réinitialisés.</value></data>
+
+  <!-- StatusBarControl -->
+  <data name="StatusLabel" xml:space="preserve"><value>État :</value></data>
+  <data name="Status_Ready" xml:space="preserve"><value>Prêt.</value></data>
+
+  <!-- OptionsPanel -->
+  <data name="GeneralHeader" xml:space="preserve"><value>GÉNÉRAL</value></data>
+  <data name="DisableLightingManagementOption" xml:space="preserve"><value>Désactiver la gestion de l'éclairage (pour les utilisateurs de SimApp Pro)</value></data>
+  <data name="AutoStartOption" xml:space="preserve"><value>Démarrer automatiquement le pont une fois prêt</value></data>
+  <data name="MinimizeOnStartOption" xml:space="preserve"><value>Réduire la fenêtre au démarrage</value></data>
+  <data name="OnCloseHeader" xml:space="preserve"><value>À LA FERMETURE</value></data>
+  <data name="LightingManagementDisabledBadge" xml:space="preserve"><value>Gestion de l'éclairage désactivée</value></data>
+  <data name="TurnOffBacklightsOption" xml:space="preserve"><value>Éteindre les rétroéclairages (luminosité → 0 %)</value></data>
+  <data name="TurnOffMarkersOption" xml:space="preserve"><value>Éteindre les marqueurs (LED)</value></data>
+  <data name="DisabledWhileInUseA10CBadge" xml:space="preserve"><value>Désactivé pendant l'utilisation</value></data>
+  <data name="DisabledWhileInUseFA18CBadge" xml:space="preserve"><value>Désactivé pendant l'utilisation</value></data>
+  <data name="DisabledWhileInUseF14Badge" xml:space="preserve"><value>Désactivé pendant l'utilisation</value></data>
+  <data name="DisabledWhileInUseF16CBadge" xml:space="preserve"><value>Désactivé pendant l'utilisation</value></data>
+  <data name="PerfPageKeyLabel" xml:space="preserve"><value>Touche page Perf :</value></data>
+  <data name="NextPageKeyLabel" xml:space="preserve"><value>Touche page suivante :</value></data>
+  <data name="PrevPageKeyLabel" xml:space="preserve"><value>Touche page précédente :</value></data>
+  <data name="ForwardCduKeysOption" xml:space="preserve"><value>Transmettre les touches CDU au simulateur (dissocier LSK/chiffres/"/" dans DCS)</value></data>
+  <data name="EnablePerfPagesOption" xml:space="preserve"><value>Activer les pages de performance</value></data>
+  <data name="AlignCduBottomOption" xml:space="preserve"><value>Aligner l'affichage CDU en bas</value></data>
+  <data name="DisplayCmsOption" xml:space="preserve"><value>Afficher le CMS sur le CDU</value></data>
+  <data name="IfeiPageNavHeader" xml:space="preserve"><value>Touches de navigation des pages IFEI</value></data>
+  <data name="ShowIfeiKeyLabel" xml:space="preserve"><value>Touche Afficher IFEI :</value></data>
+  <data name="ShowUfcKeyLabel" xml:space="preserve"><value>Touche Afficher UFC :</value></data>
+  <data name="RioCapRadioHeader" xml:space="preserve"><value>Touches pages RIO CAP / Radio</value></data>
+  <data name="ShowRioKeyLabel" xml:space="preserve"><value>Touche Afficher RIO :</value></data>
+  <data name="ShowRadioKeyLabel" xml:space="preserve"><value>Touche Afficher Radio :</value></data>
+  <data name="DedNavRwrHeader" xml:space="preserve"><value>Touches pages DED / NAV / RWR</value></data>
+  <data name="ShowDedKeyLabel" xml:space="preserve"><value>Touche Afficher DED :</value></data>
+  <data name="ShowNavKeyLabel" xml:space="preserve"><value>Touche Afficher NAV :</value></data>
+  <data name="ShowRwrKeyLabel" xml:space="preserve"><value>Touche Afficher RWR :</value></data>
+</root>

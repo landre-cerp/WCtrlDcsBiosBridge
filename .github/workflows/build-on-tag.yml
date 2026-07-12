@@ -30,6 +30,11 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      # WinUI 3 app needs the VS-bundled MSBuild (MrtCore PRI generation isn't available
+      # to the standalone dotnet SDK).
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
       - name: Restore dependencies
         run: dotnet restore WCtrlDcsBiosBridge.csproj
 
@@ -60,46 +65,36 @@ jobs:
           echo "VER=$VER" >> $GITHUB_ENV
           echo "FILEVER=$FILEVER" >> $GITHUB_ENV
 
-      # Gate the release on the headless logic tests — a failing test blocks publishing.
+      - name: Build (Release, x64, self-contained WindowsAppSDK)
+        shell: powershell
+        run: |
+          msbuild WCtrlDcsBiosBridge.csproj `
+            /p:Platform=x64 `
+            /p:Configuration=${{ env.CONFIGURATION }} `
+            /p:RestorePackages=false `
+            /p:Version=${{ env.VER }} `
+            /p:AssemblyVersion=${{ env.FILEVER }} `
+            /p:FileVersion=${{ env.FILEVER }} `
+            /p:InformationalVersion=v${{ env.VER }}
+
+      # Runs the headless logic tests (hot-plug diff, config validation, version compare).
+      # dotnet test restores and builds the test project (which references the app) itself.
       - name: Test
         run: dotnet test Tests/WCtrlDcsBiosBridge.Tests.csproj --configuration ${{ env.CONFIGURATION }}
 
-      - name: Build
-        shell: powershell
-        run: |
-          dotnet build -c Release `
-            -p:Version=${{ env.VER }} `
-            -p:AssemblyVersion=${{ env.FILEVER }} `
-            -p:FileVersion=${{ env.FILEVER }} `
-            -p:InformationalVersion=v${{ env.VER }}
-
-      - name: Publish (Single File)
-        shell: powershell
-        run: |
-          dotnet publish WCtrlDcsBiosBridge.csproj `
-            --configuration ${{ env.CONFIGURATION }} `
-            --runtime win-x64 `
-            --self-contained true `
-            --output ./publish `
-            -p:PublishSingleFile=true `
-            -p:IncludeNativeLibrariesForSelfExtract=true `
-            -p:PublishTrimmed=false `
-            -p:Version=${{ env.VER }} `
-            -p:AssemblyVersion=${{ env.FILEVER }} `
-            -p:FileVersion=${{ env.FILEVER }} `
-            -p:InformationalVersion=v${{ env.VER }}
-
       - name: Create release artifacts
+        shell: powershell
         run: |
-          # Copy important files to publish directory for artifact
+          $publishDir = "bin\x64\${{ env.CONFIGURATION }}\net8.0-windows10.0.19041.0"
+          New-Item -ItemType Directory -Force -Path ./publish | Out-Null
+          Copy-Item "$publishDir\*" -Destination "./publish/" -Recurse
+
           Copy-Item "README.md" -Destination "./publish/" -ErrorAction SilentlyContinue
           Copy-Item "LICENSE.txt" -Destination "./publish/" -ErrorAction SilentlyContinue
           Copy-Item "thirdparty-licences.txt" -Destination "./publish/" -ErrorAction SilentlyContinue
           Copy-Item "docs/" -Destination "./publish/docs/" -Recurse -ErrorAction SilentlyContinue
 
-          # Create a zip file with the published application and all copied files
           Compress-Archive -Path ./publish/* -DestinationPath wctrl-dcsbios-bridge-${{ github.ref_name }}.zip
-        shell: powershell
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
@@ -118,7 +113,7 @@ jobs:
   create-release:
     needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') 
+    if: startsWith(github.ref, 'refs/tags/v')
 
     permissions:
       contents: write

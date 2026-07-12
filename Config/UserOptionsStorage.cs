@@ -12,8 +12,11 @@ public static class UserOptionsStorage
         AppDomain.CurrentDomain.BaseDirectory,
         "useroptions.json");
 
-    // Defaults now live on UserOptions and the per-aircraft option classes.
-    public static UserOptions GetDefaultOptions() => new();
+    // Defaults now live on UserOptions and the per-aircraft option classes. Language is the
+    // exception: on first run we detect the user's own language (see LanguageDetector) rather
+    // than defaulting to System, since Windows' display language can differ from what the
+    // user actually prefers (e.g. an English-language Windows install for a French user).
+    public static UserOptions GetDefaultOptions() => new() { Language = LanguageDetector.DetectPreferredLanguage() };
 
     public static UserOptions Load()
     {
