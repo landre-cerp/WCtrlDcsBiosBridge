@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>WCtrlDcsBiosBridge</RootNamespace>
+    <AssemblyName>WCtrlDcsBiosBridgeWinUI</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <EnableMsixTooling>false</EnableMsixTooling>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.1839" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250402001" />
+    <PackageReference Include="NLog" Version="5.2.8" />
+  </ItemGroup>
+
+  <!-- Framework-agnostic sources shared with the WPF app (WCtrlDcsBiosBridge) —
+       linked, not copied, so both projects stay in sync from one source of truth. -->
+  <ItemGroup>
+    <Compile Include="..\Aircrafts\**\*.cs" Link="Aircrafts\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\Devices\**\*.cs" Link="Devices\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\Common\**\*.cs" Link="Common\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\BridgeManager.cs" Link="BridgeManager.cs" />
+    <Compile Include="..\DeviceManager.cs" Link="DeviceManager.cs" />
+    <Compile Include="..\IDcsBiosListener.cs" Link="IDcsBiosListener.cs" />
+
+    <Compile Include="..\Config\CloseResetOptions.cs" Link="Config\CloseResetOptions.cs" />
+    <Compile Include="..\Config\ConfigManager.cs" Link="Config\ConfigManager.cs" />
+    <Compile Include="..\Config\DcsBiosConfig.cs" Link="Config\DcsBiosConfig.cs" />
+    <Compile Include="..\Config\ThemePreference.cs" Link="Config\ThemePreference.cs" />
+    <Compile Include="..\Config\UserOptions.cs" Link="Config\UserOptions.cs" />
+    <Compile Include="..\Config\UserOptionsStorage.cs" Link="Config\UserOptionsStorage.cs" />
+
+    <Compile Include="..\Services\AppVersionProvider.cs" Link="Services\AppVersionProvider.cs" />
+    <Compile Include="..\Services\DcsBiosAircraftDetector.cs" Link="Services\DcsBiosAircraftDetector.cs" />
+    <Compile Include="..\Services\DcsBiosVersionProvider.cs" Link="Services\DcsBiosVersionProvider.cs" />
+    <Compile Include="..\Services\DeviceWatcher.cs" Link="Services\DeviceWatcher.cs" />
+    <Compile Include="..\Services\GitHubUpdateService.cs" Link="Services\GitHubUpdateService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\Resources\oh58d-font-21x31.json" Link="Resources\oh58d-font-21x31.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Resources\ch47f-font-21x31.json" Link="Resources\ch47f-font-21x31.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Resources\ah64d-font-21x31.json" Link="Resources\ah64d-font-21x31.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Resources\a10c-font-21x31.json" Link="Resources\a10c-font-21x31.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\NLog.config" Link="NLog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Same submodules as the WPF project, referenced directly (no duplication). -->
+  <ItemGroup>
+    <ProjectReference Include="..\DcsBios\WCtrlDcsBiosBridge.DcsBios.csproj" />
+    <ProjectReference Include="..\libs\WwDevicesDotnet\WW-Devices-Dotnet.csproj" />
+    <ProjectReference Include="..\libs\A10C-PerfLib\PerformanceLib\a10c-perf-lib.csproj" />
+  </ItemGroup>
+
+</Project>

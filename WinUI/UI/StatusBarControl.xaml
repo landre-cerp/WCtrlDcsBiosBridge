@@ -1,0 +1,24 @@
+<UserControl
+    x:Class="WCtrlDcsBiosBridge.UI.StatusBarControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Column="0"
+                   Text="Status:"
+                   FontWeight="Bold"
+                   VerticalAlignment="Center"
+                   Margin="0,0,10,0"/>
+
+        <TextBlock x:Name="MessageText"
+                   Grid.Column="1"
+                   Text="Ready."
+                   Foreground="Green"
+                   TextWrapping="Wrap"/>
+    </Grid>
+</UserControl>
