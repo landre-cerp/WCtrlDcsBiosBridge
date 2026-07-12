@@ -1,33 +1,38 @@
-<Window x:Class="WCtrlDcsBiosBridge.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:ui="clr-namespace:WCtrlDcsBiosBridge.UI"
-        Title="WctrlDcsBiosBridge"
-        Height="620"
-        MinHeight="560"
-        Width="640"
-        MinWidth="580"
-        ResizeMode="CanResize"
-        WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource WindowBackground}"
-        DataContext="{Binding RelativeSource={RelativeSource Self}}">
+<Window
+    x:Class="WCtrlDcsBiosBridge.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="using:WCtrlDcsBiosBridge.UI"
+    xmlns:conv="using:WCtrlDcsBiosBridge.UI.Converters"
+    xmlns:config="using:WCtrlDcsBiosBridge.Config">
 
-    <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
-    </Window.Resources>
-
-    <Grid Margin="20">
+    <Grid x:Name="WindowRoot" Background="{StaticResource WindowBackground}">
+    <Grid x:Name="RootGrid" Margin="20">
+        <Grid.Resources>
+            <conv:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <!-- Header: title left, theme toggle right -->
-        <DockPanel Grid.Row="0" Margin="0,0,0,14" VerticalAlignment="Center">
+        <Grid Grid.Row="0" Margin="0,0,0,14" VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Text="Winctrl DCS-BIOS Bridge"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center"/>
             <Button x:Name="ThemeToggleButton"
-                    DockPanel.Dock="Right"
+                    Grid.Column="1"
                     Width="32" Height="32"
-                    Style="{StaticResource IconButton}"
+                    Padding="0"
+                    Background="Transparent"
+                    BorderThickness="0"
                     Click="ThemeToggle_Click">
                 <TextBlock x:Name="ThemeIcon"
                            Text="◑"
@@ -35,17 +40,13 @@
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"/>
             </Button>
-            <TextBlock Text="Winctrl DCS-BIOS Bridge"
-                       FontSize="16"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center"/>
-        </DockPanel>
+        </Grid>
 
         <!-- Tab Control -->
-        <TabControl x:Name="MainTabControl" Grid.Row="1">
+        <Pivot x:Name="MainPivot" Grid.Row="1">
 
             <!-- ══ Dashboard ══ -->
-            <TabItem Header="Dashboard">
+            <PivotItem Header="Dashboard">
                 <Grid Margin="14,12,14,14">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -58,19 +59,17 @@
 
                     <!-- Bridge status card + Start Bridge button -->
                     <Border Grid.Row="0"
-                            BorderBrush="{DynamicResource CardBorderBrush}"
+                            BorderBrush="{StaticResource CardBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="6"
                             Padding="14,10"
                             Margin="0,0,0,10">
-                        <DockPanel>
-                            <Button x:Name="StartButton"
-                                    DockPanel.Dock="Right"
-                                    Content="Start Bridge"
-                                    Width="110" Height="28"
-                                    VerticalAlignment="Center"
-                                    Click="StartButton_Click"/>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                                 <Ellipse x:Name="BridgeStatusDot"
                                          Width="10" Height="10"
                                          Fill="#888888"
@@ -83,19 +82,25 @@
                                                FontSize="13"/>
                                     <TextBlock x:Name="BridgeStatusSub"
                                                Text="Aircraft is detected automatically when DCS is running"
-                                               Foreground="{DynamicResource SubtleTextForeground}"
+                                               Foreground="{StaticResource SubtleTextForeground}"
                                                FontSize="11"
                                                Margin="0,2,0,0"/>
                                 </StackPanel>
                             </StackPanel>
-                        </DockPanel>
+                            <Button x:Name="StartButton"
+                                    Grid.Column="1"
+                                    Content="Start Bridge"
+                                    MinWidth="110"
+                                    VerticalAlignment="Center"
+                                    Click="StartButton_Click"/>
+                        </Grid>
                     </Border>
 
                     <!-- Description -->
                     <TextBlock Grid.Row="1"
                                Text="Start the bridge, then load into a supported aircraft in DCS World. The CDU or FCU/EFIS display will sync automatically."
                                TextWrapping="Wrap"
-                               Foreground="{DynamicResource SubtleTextForeground}"
+                               Foreground="{StaticResource SubtleTextForeground}"
                                FontSize="12"
                                Margin="0,0,0,12"/>
 
@@ -104,9 +109,11 @@
                         <TextBlock Text="CONNECTED DEVICES"
                                    FontSize="10"
                                    FontWeight="SemiBold"
-                                   Foreground="{DynamicResource SubtleTextForeground}"
+                                   Foreground="{StaticResource SubtleTextForeground}"
                                    Margin="0,0,0,6"/>
-                        <WrapPanel x:Name="DeviceListPanel"/>
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                            <StackPanel x:Name="DeviceListPanel" Orientation="Horizontal"/>
+                        </ScrollViewer>
                     </StackPanel>
 
                     <!-- Status bar -->
@@ -116,37 +123,43 @@
                                          HorizontalAlignment="Left"/>
 
                     <!-- Update Notification Banner -->
-                    <Border Grid.Row="5"
-                            Background="{DynamicResource UpdateBannerBackground}"
-                            BorderBrush="{DynamicResource UpdateBannerBorderBrush}"
+                    <Border x:Name="UpdateBanner"
+                            Grid.Row="5"
+                            Background="{StaticResource UpdateBannerBackground}"
+                            BorderBrush="{StaticResource UpdateBannerBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="5"
                             Padding="10,7"
                             Margin="0,8,0,0"
                             Visibility="{Binding IsUpdateVisible, Converter={StaticResource BoolToVisibility}}">
-                        <DockPanel LastChildFill="False">
-                            <TextBlock Text="{Binding UpdateMessage}"
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="{Binding UpdateMessage}"
                                        VerticalAlignment="Center"
                                        Margin="0,0,10,0"
-                                       Foreground="{DynamicResource UpdateBannerForeground}"/>
-                            <Button Content="Open release"
+                                       Foreground="{StaticResource UpdateBannerForeground}"/>
+                            <Button Grid.Column="1" Content="Open release"
                                     Click="OpenUpdateLink_Click"
-                                    DockPanel.Dock="Right"
                                     Margin="6,0,0,0"
                                     Padding="10,3"
                                     MinWidth="100"/>
-                            <Button Content="Dismiss"
+                            <Button Grid.Column="2" Content="Dismiss"
                                     Click="DismissUpdate_Click"
-                                    DockPanel.Dock="Right"
+                                    Margin="6,0,0,0"
                                     Padding="10,3"
                                     MinWidth="80"/>
-                        </DockPanel>
+                        </Grid>
                     </Border>
                 </Grid>
-            </TabItem>
+            </PivotItem>
 
             <!-- ══ Configuration ══ -->
-            <TabItem Header="Configuration" x:Name="ConfigurationTab">
+            <PivotItem Header="Configuration">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
@@ -159,124 +172,167 @@
                     </ScrollViewer>
 
                     <Border Grid.Row="1"
-                            BorderBrush="{DynamicResource CardBorderBrush}"
+                            BorderBrush="{StaticResource CardBorderBrush}"
                             BorderThickness="0,1,0,0"
                             Padding="14,10">
                         <Button x:Name="ConfigButton"
                                 Content="Edit DCS-BIOS Configuration"
-                                Width="210" Height="28"
+                                MinWidth="210"
                                 HorizontalAlignment="Left"
                                 Click="ConfigButton_Click"
-                                IsEnabled="{Binding CanEdit, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                IsEnabled="{Binding CanEdit}"/>
                     </Border>
                 </Grid>
-            </TabItem>
+            </PivotItem>
 
-
-<!-- ══ Help ══ -->
-            <TabItem Header="Help">
+            <!-- ══ Help ══ -->
+            <PivotItem Header="Help">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="14,12">
 
                         <TextBlock Text="Quick start" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
 
-                        <DockPanel Margin="0,3">
-                            <Border DockPanel.Dock="Left" Width="22" Height="22" CornerRadius="11"
-                                    BorderThickness="1" BorderBrush="{DynamicResource StepBorderBrush}"
+                        <Grid Margin="0,3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="22" Height="22" CornerRadius="11"
+                                    BorderThickness="1" BorderBrush="{StaticResource StepBorderBrush}"
                                     Margin="0,0,8,0" VerticalAlignment="Top">
                                 <TextBlock Text="1" FontSize="10" HorizontalAlignment="Center"
-                                           VerticalAlignment="Center" Foreground="{DynamicResource StepForeground}"/>
+                                           VerticalAlignment="Center" Foreground="{StaticResource StepForeground}"/>
                             </Border>
-                            <TextBlock Text="Connect your Winwing device(s) via USB"
+                            <TextBlock Grid.Column="1" Text="Connect your Winwing device(s) via USB"
                                        TextWrapping="Wrap" FontSize="12"
-                                       Foreground="{DynamicResource HelpTextForeground}" VerticalAlignment="Center"/>
-                        </DockPanel>
+                                       Foreground="{StaticResource HelpTextForeground}" VerticalAlignment="Center"/>
+                        </Grid>
 
-                        <DockPanel Margin="0,3">
-                            <Border DockPanel.Dock="Left" Width="22" Height="22" CornerRadius="11"
-                                    BorderThickness="1" BorderBrush="{DynamicResource StepBorderBrush}"
+                        <Grid Margin="0,3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="22" Height="22" CornerRadius="11"
+                                    BorderThickness="1" BorderBrush="{StaticResource StepBorderBrush}"
                                     Margin="0,0,8,0" VerticalAlignment="Top">
                                 <TextBlock Text="2" FontSize="10" HorizontalAlignment="Center"
-                                           VerticalAlignment="Center" Foreground="{DynamicResource StepForeground}"/>
+                                           VerticalAlignment="Center" Foreground="{StaticResource StepForeground}"/>
                             </Border>
-                            <TextBlock Text="Click Start Bridge on the Dashboard tab. Connected devices will be listed."
+                            <TextBlock Grid.Column="1" Text="Click Start Bridge on the Dashboard tab. Connected devices will be listed."
                                        TextWrapping="Wrap" FontSize="12"
-                                       Foreground="{DynamicResource HelpTextForeground}" VerticalAlignment="Center"/>
-                        </DockPanel>
+                                       Foreground="{StaticResource HelpTextForeground}" VerticalAlignment="Center"/>
+                        </Grid>
 
-                        <DockPanel Margin="0,3">
-                            <Border DockPanel.Dock="Left" Width="22" Height="22" CornerRadius="11"
-                                    BorderThickness="1" BorderBrush="{DynamicResource StepBorderBrush}"
+                        <Grid Margin="0,3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="22" Height="22" CornerRadius="11"
+                                    BorderThickness="1" BorderBrush="{StaticResource StepBorderBrush}"
                                     Margin="0,0,8,0" VerticalAlignment="Top">
                                 <TextBlock Text="3" FontSize="10" HorizontalAlignment="Center"
-                                           VerticalAlignment="Center" Foreground="{DynamicResource StepForeground}"/>
+                                           VerticalAlignment="Center" Foreground="{StaticResource StepForeground}"/>
                             </Border>
-                            <TextBlock Text="Load into a mission in DCS World. The aircraft module is detected automatically — no manual selection needed."
+                            <TextBlock Grid.Column="1" Text="Load into a mission in DCS World. The aircraft module is detected automatically — no manual selection needed."
                                        TextWrapping="Wrap" FontSize="12"
-                                       Foreground="{DynamicResource HelpTextForeground}" VerticalAlignment="Center"/>
-                        </DockPanel>
+                                       Foreground="{StaticResource HelpTextForeground}" VerticalAlignment="Center"/>
+                        </Grid>
 
-                        <DockPanel Margin="0,3">
-                            <Border DockPanel.Dock="Left" Width="22" Height="22" CornerRadius="11"
-                                    BorderThickness="1" BorderBrush="{DynamicResource StepBorderBrush}"
+                        <Grid Margin="0,3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="22" Height="22" CornerRadius="11"
+                                    BorderThickness="1" BorderBrush="{StaticResource StepBorderBrush}"
                                     Margin="0,0,8,0" VerticalAlignment="Top">
                                 <TextBlock Text="4" FontSize="10" HorizontalAlignment="Center"
-                                           VerticalAlignment="Center" Foreground="{DynamicResource StepForeground}"/>
+                                           VerticalAlignment="Center" Foreground="{StaticResource StepForeground}"/>
                             </Border>
-                            <TextBlock Text="Your CDU or FCU/EFIS will sync with the in-game cockpit. The Dashboard tab shows live status."
+                            <TextBlock Grid.Column="1" Text="Your CDU or FCU/EFIS will sync with the in-game cockpit. The Dashboard tab shows live status."
                                        TextWrapping="Wrap" FontSize="12"
-                                       Foreground="{DynamicResource HelpTextForeground}" VerticalAlignment="Center"/>
-                        </DockPanel>
+                                       Foreground="{StaticResource HelpTextForeground}" VerticalAlignment="Center"/>
+                        </Grid>
 
-                        <Separator Margin="0,12"/>
+                        <Border Height="1" Background="{StaticResource CardBorderBrush}" Margin="0,12"/>
 
                         <TextBlock FontSize="12" TextWrapping="Wrap">
-                            <Hyperlink NavigateUri="https://github.com/landre-cerp/WCtrlDcsBiosBridge/tree/main/docs"
-                                       RequestNavigate="DocsLink_RequestNavigate">
-                                Supported aircraft"
-                            </Hyperlink>
+                            <Hyperlink x:Name="DocsLink" Click="DocsLink_Click">Supported aircraft</Hyperlink>
                         </TextBlock>
 
-                        <Separator Margin="0,12"/>
+                        <Border Height="1" Background="{StaticResource CardBorderBrush}" Margin="0,12"/>
 
                         <TextBlock Text="Troubleshooting" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
 
-                        <DockPanel Margin="0,3">
-                            <TextBlock DockPanel.Dock="Left" Text="?" FontSize="11"
-                                       Foreground="{DynamicResource StepForeground}" Width="22" VerticalAlignment="Top"/>
-                            <TextBlock FontSize="12" Foreground="{DynamicResource HelpTextForeground}" TextWrapping="Wrap">
+                        <Grid Margin="0,3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="22"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="?" FontSize="11"
+                                       Foreground="{StaticResource StepForeground}" VerticalAlignment="Top"/>
+                            <TextBlock Grid.Column="1" FontSize="12" Foreground="{StaticResource HelpTextForeground}" TextWrapping="Wrap">
                                 <Run FontWeight="SemiBold">Device not shown in Dashboard:</Run> unplug and replug the USB cable, then restart the app.
                             </TextBlock>
-                        </DockPanel>
+                        </Grid>
 
-                        <DockPanel Margin="0,3">
-                            <TextBlock DockPanel.Dock="Left" Text="?" FontSize="11"
-                                       Foreground="{DynamicResource StepForeground}" Width="22" VerticalAlignment="Top"/>
-                            <TextBlock FontSize="12" Foreground="{DynamicResource HelpTextForeground}" TextWrapping="Wrap">
+                        <Grid Margin="0,3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="22"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="?" FontSize="11"
+                                       Foreground="{StaticResource StepForeground}" VerticalAlignment="Top"/>
+                            <TextBlock Grid.Column="1" FontSize="12" Foreground="{StaticResource HelpTextForeground}" TextWrapping="Wrap">
                                 <Run FontWeight="SemiBold">CDU screen blank in-game:</Run> confirm the DCS-BIOS export script is installed and DCS World is running.
                             </TextBlock>
-                        </DockPanel>
+                        </Grid>
 
-                        <DockPanel Margin="0,3">
-                            <TextBlock DockPanel.Dock="Left" Text="?" FontSize="11"
-                                       Foreground="{DynamicResource StepForeground}" Width="22" VerticalAlignment="Top"/>
-                            <TextBlock FontSize="12" Foreground="{DynamicResource HelpTextForeground}" TextWrapping="Wrap">
+                        <Grid Margin="0,3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="22"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="?" FontSize="11"
+                                       Foreground="{StaticResource StepForeground}" VerticalAlignment="Top"/>
+                            <TextBlock Grid.Column="1" FontSize="12" Foreground="{StaticResource HelpTextForeground}" TextWrapping="Wrap">
                                 <Run FontWeight="SemiBold">Wrong aircraft data:</Run> ensure DCS-BIOS is up to date and the correct module is loaded in DCS.
                             </TextBlock>
-                        </DockPanel>
+                        </Grid>
 
-                        <DockPanel Margin="0,3">
-                            <TextBlock DockPanel.Dock="Left" Text="?" FontSize="11"
-                                       Foreground="{DynamicResource StepForeground}" Width="22" VerticalAlignment="Top"/>
-                            <TextBlock FontSize="12" Foreground="{DynamicResource HelpTextForeground}" TextWrapping="Wrap">
+                        <Grid Margin="0,3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="22"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="?" FontSize="11"
+                                       Foreground="{StaticResource StepForeground}" VerticalAlignment="Top"/>
+                            <TextBlock Grid.Column="1" FontSize="12" Foreground="{StaticResource HelpTextForeground}" TextWrapping="Wrap">
                                 <Run FontWeight="SemiBold">SimApp Pro lighting conflict:</Run> enable <Run FontStyle="Italic">Disable Lighting Management</Run> in the Configuration tab.
                             </TextBlock>
-                        </DockPanel>
+                        </Grid>
 
                     </StackPanel>
                 </ScrollViewer>
-            </TabItem>
+            </PivotItem>
 
-        </TabControl>
+        </Pivot>
+    </Grid>
+
+    <!-- Config overlay: an in-window panel (not a secondary Window) — see ConfigPanel.xaml.cs
+         for why secondary windows are avoided here. -->
+    <Grid x:Name="ConfigOverlay" Visibility="Collapsed" Background="#AA000000">
+        <Border MaxWidth="560" MaxHeight="540"
+                Background="{StaticResource WindowBackground}"
+                BorderBrush="{StaticResource CardBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+            <config:ConfigPanel x:Name="ConfigPanelControl"/>
+        </Border>
+    </Grid>
     </Grid>
 </Window>

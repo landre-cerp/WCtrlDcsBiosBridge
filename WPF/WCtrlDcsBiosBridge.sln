@@ -5,11 +5,11 @@ VisualStudioVersion = 18.1.11312.151
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WCtrlDcsBiosBridge", "WCtrlDcsBiosBridge.csproj", "{82525050-BC49-48EB-9B09-C87D1163579E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WCtrlDcsBiosBridge.DcsBios", "DcsBios\WCtrlDcsBiosBridge.DcsBios.csproj", "{447D740C-90AB-4083-9656-27EC50F0D572}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WCtrlDcsBiosBridge.DcsBios", "..\DcsBios\WCtrlDcsBiosBridge.DcsBios.csproj", "{447D740C-90AB-4083-9656-27EC50F0D572}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WW-Devices-Dotnet", "libs\WwDevicesDotnet\WW-Devices-Dotnet.csproj", "{57496D8F-8F12-7296-1D78-E6181559D88A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WW-Devices-Dotnet", "..\libs\WwDevicesDotnet\WW-Devices-Dotnet.csproj", "{57496D8F-8F12-7296-1D78-E6181559D88A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "a10c-perf-lib", "libs\A10C-PerfLib\PerformanceLib\a10c-perf-lib.csproj", "{72CD8B54-B409-78A3-C72F-64809EE79E5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "a10c-perf-lib", "..\libs\A10C-PerfLib\PerformanceLib\a10c-perf-lib.csproj", "{72CD8B54-B409-78A3-C72F-64809EE79E5E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject

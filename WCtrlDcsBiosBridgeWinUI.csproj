@@ -1,0 +1,77 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>WCtrlDcsBiosBridge</RootNamespace>
+    <AssemblyName>WCtrlDcsBiosBridgeWinUI</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <EnableMsixTooling>false</EnableMsixTooling>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- The WPF app now lives in WPF\ (its own csproj/sln, own App/MainWindow/UI/Themes),
+       and libs\/DcsBios\ are separate projects with their own sources — keep all of that
+       out of this project's default globbing. -->
+  <ItemGroup>
+    <Compile Remove="WPF\**" />
+    <Page Remove="WPF\**" />
+    <ApplicationDefinition Remove="WPF\**" />
+    <EmbeddedResource Remove="WPF\**" />
+    <None Remove="WPF\**" />
+
+    <Compile Remove="libs\**" />
+    <Page Remove="libs\**" />
+    <EmbeddedResource Remove="libs\**" />
+    <None Remove="libs\**" />
+
+    <Compile Remove="DcsBios\**" />
+    <Page Remove="DcsBios\**" />
+    <EmbeddedResource Remove="DcsBios\**" />
+    <None Remove="DcsBios\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.1839" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250402001" />
+    <PackageReference Include="NLog" Version="5.2.8" />
+  </ItemGroup>
+
+  <!-- Aircrafts\, Devices\, Common\, Config\*.cs, Services\*.cs, BridgeManager.cs,
+       DeviceManager.cs, IDcsBiosListener.cs are framework-agnostic sources shared with
+       the WPF app — they live directly under this project (default SDK globbing picks
+       them up automatically, same as the WPF app under WPF\ does via explicit links). -->
+
+  <ItemGroup>
+    <None Update="Resources\oh58d-font-21x31.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\ch47f-font-21x31.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\ah64d-font-21x31.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\a10c-font-21x31.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="NLog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Same submodules as the WPF project, referenced directly (no duplication). -->
+  <ItemGroup>
+    <ProjectReference Include="DcsBios\WCtrlDcsBiosBridge.DcsBios.csproj" />
+    <ProjectReference Include="libs\WwDevicesDotnet\WW-Devices-Dotnet.csproj" />
+    <ProjectReference Include="libs\A10C-PerfLib\PerformanceLib\a10c-perf-lib.csproj" />
+  </ItemGroup>
+
+</Project>
