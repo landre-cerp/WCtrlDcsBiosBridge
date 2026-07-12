@@ -77,6 +77,11 @@ jobs:
             /p:FileVersion=${{ env.FILEVER }} `
             /p:InformationalVersion=v${{ env.VER }}
 
+      # Runs the headless logic tests (hot-plug diff, config validation, version compare).
+      # dotnet test restores and builds the test project (which references the app) itself.
+      - name: Test
+        run: dotnet test Tests/WCtrlDcsBiosBridge.Tests.csproj --configuration ${{ env.CONFIGURATION }}
+
       - name: Create release artifacts
         shell: powershell
         run: |
