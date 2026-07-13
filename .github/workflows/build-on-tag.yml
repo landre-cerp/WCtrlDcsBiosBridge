@@ -80,11 +80,18 @@ jobs:
             /p:FileVersion=${{ env.FILEVER }} `
             /p:InformationalVersion=v${{ env.VER }}
 
+          # Tests references WCtrlDcsBiosBridge.csproj via ProjectReference. A different global
+          # property set makes MSBuild rebuild that dependency here too, so it must get the same
+          # version props as above or it silently re-stamps the shipped exe back to 1.0.0.
           msbuild Tests\WCtrlDcsBiosBridge.Tests.csproj `
             /p:Platform=x64 `
             /p:RuntimeIdentifier=win-x64 `
             /p:Configuration=${{ env.CONFIGURATION }} `
-            /p:RestorePackages=false
+            /p:RestorePackages=false `
+            /p:Version=${{ env.VER }} `
+            /p:AssemblyVersion=${{ env.FILEVER }} `
+            /p:FileVersion=${{ env.FILEVER }} `
+            /p:InformationalVersion=v${{ env.VER }}
 
       # Runs the headless logic tests (hot-plug diff, config validation, version compare).
       # Built with VS MSBuild above (dotnet SDK MSBuild lacks MrtCore PRI tasks), then
