@@ -42,11 +42,21 @@ public static class ConfigManager
         {
             if (!File.Exists(ConfigFile))
             {
-                var defaultConfig = new DcsBiosConfig();
+                var detectedLocation = DcsBiosJsonLocationDetector.TryDetect();
+                var defaultConfig = new DcsBiosConfig
+                {
+                    DcsBiosJsonLocation = detectedLocation ?? string.Empty
+                };
                 var saveResult = TrySave(defaultConfig);
                 if (!saveResult.IsSuccess)
                     return Result<DcsBiosConfig>.Failure($"Could not create default config: {saveResult.Error}");
-                
+
+                // A detected location has already been confirmed to exist and contain
+                // DCS-BIOS JSON files, so the config is usable as-is — no need to force
+                // the first-run review prompt.
+                if (detectedLocation is not null && TryValidate(defaultConfig).IsSuccess)
+                    return Result<DcsBiosConfig>.Success(defaultConfig);
+
                 return Result<DcsBiosConfig>.Failure($"Configuration file not found. A default config has been created at {ConfigFile}. Please review and update it as necessary.");
             }
 
