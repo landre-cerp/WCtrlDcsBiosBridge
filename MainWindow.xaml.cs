@@ -128,6 +128,8 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             presenter.IsResizable = true;
         }
 
+        _appWindow.SetIcon(System.IO.Path.Combine(AppContext.BaseDirectory, "Resources", "Icon", "AppIcon.ico"));
+
         WindowSizing.CenterOnDisplay(_appWindow);
     }
 
