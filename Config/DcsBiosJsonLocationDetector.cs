@@ -38,9 +38,16 @@ public static class DcsBiosJsonLocationDetector
 
         foreach (var variant in DcsVariants)
         {
-            var candidate = Path.Combine(savedGames, variant, "Scripts", "DCS-BIOS", "doc", "json");
-            if (Directory.Exists(candidate) && Directory.EnumerateFiles(candidate, "*.json").Any())
-                return candidate;
+            try
+            {
+                var candidate = Path.Combine(savedGames, variant, "Scripts", "DCS-BIOS", "doc", "json");
+                if (Directory.Exists(candidate) && Directory.EnumerateFiles(candidate, "*.json").Any())
+                    return candidate;
+            }
+            catch
+            {
+                // Ignore and continue checking other variants.
+            }
         }
 
         return null;
