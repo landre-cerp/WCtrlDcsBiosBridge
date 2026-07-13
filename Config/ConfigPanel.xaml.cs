@@ -226,7 +226,10 @@ public partial class ConfigPanel : UserControl
 
     private void ResetToDefaultsButton_Click(object sender, RoutedEventArgs e)
     {
-        Config = new DcsBiosConfig();
+        Config = new DcsBiosConfig
+        {
+            DcsBiosJsonLocation = DcsBiosJsonLocationDetector.TryDetect() ?? string.Empty
+        };
         LoadConfigToUI();
         SetStatus(Strings.Get("Status_SettingsResetToDefaults"), false);
     }

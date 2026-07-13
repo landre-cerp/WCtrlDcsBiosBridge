@@ -16,7 +16,7 @@ This desktop application bridges DCS World with some of the WinCtrl hardware, en
 1. **Install DCS-BIOS** (see detailed instructions below)
 2. **Download using the [release](https://github.com/landre-cerp/WCtrlDcsBiosBridge/releases) assets / zip file. and extract** this application to your preferred folder
 3. **Connect** your WinCtrl CDU ( before starting bridge )
-4. Configure the Dcsbios json folder
+4. Configure the DCS-BIOS json folder (auto-detected in most cases)
 5. **Run** the application
 6. **Launch DCS** and load your aircraft — the bridge detects it automatically and starts
 
@@ -58,6 +58,7 @@ See each aircraft's page for specifics.
    ```
    %USERPROFILE%\Saved Games\DCS\Scripts\DCS-BIOS\
    ```
+   > If you've relocated your Saved Games folder (right-click it > Properties > Location), extract there instead — the app finds it automatically either way.
 
 3. **Configure Export.lua** in your Scripts folder:
    ```lua
@@ -70,9 +71,9 @@ See each aircraft's page for specifics.
 
 1. **Extract** the application files to your chosen directory
 2. **Run** `WctrlDcsBiosBridge.exe`
-if no config.json is found, it will create a default one and show you a dialog box to edit it.
-3. Select the **File locations** at `DCS-BIOS` JSON folder. It should be located inside the `Scripts/DCS-BIOS/doc/json` folder.
-   * Example (as default in your Saved Games): `Saved Games/DCS/Scripts/DCS-BIOS/doc/json`
+On first launch, the app looks for DCS-BIOS under your real Saved Games folder (even if you've relocated it) and fills in the JSON path automatically — no dialog box if it finds it.
+3. If it can't find it automatically, a config dialog box opens so you can select the **DCS-BIOS JSON folder** manually. It should be located inside the `Scripts/DCS-BIOS/doc/json` folder.
+   * Example: `Saved Games/DCS/Scripts/DCS-BIOS/doc/json`
   
 <img width="437" height="289" alt="image" src="https://github.com/user-attachments/assets/af96f5c0-2657-4589-9cc4-4537904048ae" />
 
