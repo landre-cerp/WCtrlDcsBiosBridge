@@ -222,6 +222,34 @@ Populate these in `RegisterFrontpanelControls()`. Renderers read whatever proper
 | `ConsoleBrightness` | `byte?` | Cockpit console backlight, 0–255. |
 | `SegmentBrightnessPercent` | `int` | 7-segment display brightness, 0–100 (default 100). |
 
+### Add or Fix a Translation
+
+The app's UI strings live in WinUI `.resw` resource files, one folder per language, under `Strings/`:
+
+```
+Strings/en-us/Resources.resw   (English — source of truth for keys)
+Strings/fr-fr/Resources.resw   (French)
+Strings/de-de/Resources.resw   (German)
+Strings/es-es/Resources.resw   (Spanish)
+```
+
+Every `<data name="KeyName">` entry has the same `name` across all languages; only the `<value>` text differs. Strings are looked up at runtime through `Common/Strings.cs` (`Strings.Get("KeyName")`), not standard XAML `x:Uid` — this is intentional, see the comment at the top of that file.
+
+#### Fix an existing translation
+1. Open the `Resources.resw` for the language you want to fix (e.g. `Strings/fr-fr/Resources.resw`).
+2. Find the `<data name="...">` entry and edit its `<value>` text. Leave the `name` attribute untouched — it's the lookup key shared across all languages.
+3. Run the app and use the language toggle button (top-right, cycles System → your Windows language → the other supported languages) to switch to the language you edited, then check the affected screen.
+
+#### Add a new language
+Adding a language touches a handful of small, well-isolated spots:
+1. **New resource file:** copy `Strings/en-us/Resources.resw` to `Strings/<locale>/Resources.resw` (e.g. `Strings/it-it/`) and translate every `<value>`, keeping all `name` keys identical to the English file.
+2. **Enum:** add a member to `LanguagePreference` in `Config/LanguagePreference.cs`.
+3. **Detection:** add it to `LanguageDetector.SupportedLanguages` and to the two-letter mapping in `LanguageDetector.MatchLanguage` in `Common/LanguageDetector.cs`.
+4. **Resource context:** add the enum → locale-tag mapping (e.g. `"it-IT"`) in the `switch` inside `Strings.BuildContext()` in `Common/Strings.cs`.
+5. **Toggle UI:** add the short code (e.g. `"IT"`) and tooltip case in `MainWindow.xaml.cs` (`UpdateLanguageToggleIcon`, near the existing `LanguagePreference.French => "FR"` cases). The tooltip needs a matching `LanguageTooltip_<Language>` key added to **every** `Resources.resw`, including the new one.
+
+No csproj changes are needed — `.resw` files under `Strings/` are picked up automatically by the build.
+
 ### 4. Test Your Changes
 - There's no automated test suite (as most of the tests are using the physical device), please ensure to:
 - Review your code for any errors or typos.
