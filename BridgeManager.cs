@@ -20,9 +20,11 @@ public class BridgeManager : IDisposable
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     /// <summary>
-    /// True once an aircraft is detected and listeners are running. Drives the "running"
-    /// UI state. It is <c>false</c> during the waiting phase even though the bridge loop
-    /// is alive — use <see cref="IsLoopActive"/> for "is the bridge loop running at all".
+    /// True while the bridge loop is active and DCS-BIOS is connected, including the
+    /// phase where the bridge is waiting for a supported aircraft to be loaded.
+    /// Becomes <c>false</c> only after <see cref="Stop"/> is called.
+    /// Use <see cref="IsLoopActive"/> to distinguish "loop started at all" from
+    /// "aircraft listeners are currently running" (see <see cref="Contexts"/>).
     /// </summary>
     public bool IsStarted { get; private set; }
 
