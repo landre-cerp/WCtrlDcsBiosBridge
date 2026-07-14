@@ -200,6 +200,7 @@ internal class CduDeviceContext : IDisposable
 
     public void Dispose()
     {
+        DetachSeatKeyHandler();
         listener?.Dispose();
     }
 }
