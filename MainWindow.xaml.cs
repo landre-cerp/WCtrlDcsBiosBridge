@@ -138,6 +138,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     private async Task DetectDevicesAsync()
     {
         _detectCts?.Cancel();
+        _detectCts?.Dispose();
         _detectCts = new CancellationTokenSource();
         devices.Clear();
         ShowStatus(Strings.Get("Status_DetectingDevices"), false);
@@ -781,6 +782,8 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             _uiSettings.ColorValuesChanged -= OnSystemPreferenceChanged;
             _shutdownCts.Cancel();
             _detectCts?.Cancel();
+            _detectCts?.Dispose();
+            _detectCts = null;
             _deviceWatcher?.Dispose();
             _deviceWatcher = null;
             bridgeManager?.Dispose();
