@@ -167,13 +167,10 @@ public partial class ConfigPanel : UserControl
                 return false;
             }
 
-            var missing = ConfigManager.GetMissingExpectedJsonFiles(Config.DcsBiosJsonLocation);
-            if (missing.Count > 0)
-            {
-                var files = string.Join(", ", missing);
-                SetStatus(Strings.Format("Status_MissingJsonFilesFormat", files), true);
-            }
-
+            // Missing aircraft JSONs are advisory, not a validation failure: the bridge still
+            // works for every aircraft whose JSON *is* present, so this must not block Save.
+            // The warning is raised by the caller once this panel has closed — shown from here
+            // it would be written into a status line that is hidden in the same frame.
             return true;
         }
         catch (Exception ex)

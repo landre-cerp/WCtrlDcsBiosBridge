@@ -406,7 +406,15 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
                 if (IsConfigValid())
                 {
-                    ShowStatus(Strings.Get("Status_ConfigLoadedReady"), false);
+                    var missing = ConfigManager.GetMissingExpectedJsonFiles(config.DcsBiosJsonLocation);
+                    if (missing.Count > 0)
+                    {
+                        ShowStatus(Strings.Format("Status_MissingJsonFilesFormat", string.Join(", ", missing)), true);
+                    }
+                    else
+                    {
+                        ShowStatus(Strings.Get("Status_ConfigLoadedReady"), false);
+                    }
                 }
                 else
                 {
