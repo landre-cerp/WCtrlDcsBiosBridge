@@ -441,6 +441,12 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
     private async Task StartBridge()
     {
+        // This re-enters: StartBridge calls DetectDevicesAsync when nothing is connected, and
+        // DetectDevicesAsync calls back here on auto-start. The inner call's StartAsync only
+        // returns at shutdown, so without this guard the outer one would resume afterwards and
+        // build a second BridgeManager over the field. One bridge per window.
+        if (IsBridgeLoopActive) return;
+
         if (!IsConfigValid())
         {
             ShowStatus(Strings.Get("Status_ConfigNotLoaded"), true);
@@ -481,8 +487,29 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         {
             Logger.Error(ex, "Failed to start bridge");
             ShowStatus(Strings.Format("Status_FailedToStartBridgeFormat", ex.Message), true);
+            // Drop the failed manager before ResetStartButton, which reads IsBridgeLoopActive
+            // to decide whether Start becomes clickable again. Left in place it would be
+            // orphaned by the next StartBridge and keep firing its handlers into this window.
+            DisposeBridgeManager();
             ResetStartButton();
         }
+    }
+
+    /// <summary>
+    /// Detaches both event handlers from the current bridge manager, disposes it and clears
+    /// the field. Safe to call when none is present.
+    /// </summary>
+    private void DisposeBridgeManager()
+    {
+        if (bridgeManager == null) return;
+
+        bridgeManager.DetectedAircraftChanged -= OnDetectedAircraftChanged;
+        bridgeManager.DcsBiosVersionChanged -= OnDcsBiosVersionChanged;
+
+        try { bridgeManager.Dispose(); }
+        catch (Exception ex) { Logger.Error(ex, "Error disposing bridge manager"); }
+
+        bridgeManager = null;
     }
 
     private void OnDetectedAircraftChanged(string? dcsBiosName)
@@ -755,17 +782,18 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
         if (bridgeManager != null)
         {
+            // Stop() rethrows on failure, so keep disposal outside the try — otherwise a
+            // failing Stop would skip both the unsubscribe and the Dispose.
             try
             {
                 if (bridgeManager.IsLoopActive) bridgeManager.Stop();
-                bridgeManager.DcsBiosVersionChanged -= OnDcsBiosVersionChanged;
-                bridgeManager.Dispose();
-                bridgeManager = null;
             }
             catch (Exception ex)
             {
                 Logger.Error(ex, "Error stopping bridge during close");
             }
+
+            DisposeBridgeManager();
         }
 
         if (!_disposed)

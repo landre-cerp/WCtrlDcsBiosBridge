@@ -85,7 +85,11 @@ public class BridgeManager : IDisposable
     /// </summary>
     public async Task StartAsync(List<DeviceInfo> devices, UserOptions userOptions, DcsBiosConfig config, CancellationToken cancellationToken = default)
     {
-        if (IsStarted)
+        // IsLoopActive, not IsStarted: IsStarted only turns true once an aircraft has been
+        // detected, so guarding on it would leave the whole waiting phase open to a second
+        // StartAsync — which would overwrite Contexts, orphan the existing CDU contexts and
+        // open a second DCS-BIOS socket while the first loop kept running.
+        if (IsLoopActive)
             throw new InvalidOperationException("Bridge is already started");
 
         if (devices == null || !devices.Any())
