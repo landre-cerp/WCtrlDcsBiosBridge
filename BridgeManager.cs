@@ -85,7 +85,7 @@ public class BridgeManager : IDisposable
     /// </summary>
     public async Task StartAsync(List<DeviceInfo> devices, UserOptions userOptions, DcsBiosConfig config, CancellationToken cancellationToken = default)
     {
-        if (IsStarted)
+        if (IsLoopActive)
             throw new InvalidOperationException("Bridge is already started");
 
         if (devices == null || !devices.Any())

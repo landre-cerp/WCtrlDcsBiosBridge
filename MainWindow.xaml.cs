@@ -441,6 +441,8 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
     private async Task StartBridge()
     {
+        if (IsBridgeLoopActive) return;
+
         if (!IsConfigValid())
         {
             ShowStatus(Strings.Get("Status_ConfigNotLoaded"), true);
@@ -481,8 +483,26 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         {
             Logger.Error(ex, "Failed to start bridge");
             ShowStatus(Strings.Format("Status_FailedToStartBridgeFormat", ex.Message), true);
+            DisposeBridgeManager();
             ResetStartButton();
         }
+    }
+
+    /// <summary>
+    /// Detaches both event handlers from the current bridge manager, disposes it and clears
+    /// the field. Safe to call when none is present.
+    /// </summary>
+    private void DisposeBridgeManager()
+    {
+        if (bridgeManager == null) return;
+
+        bridgeManager.DetectedAircraftChanged -= OnDetectedAircraftChanged;
+        bridgeManager.DcsBiosVersionChanged -= OnDcsBiosVersionChanged;
+
+        try { bridgeManager.Dispose(); }
+        catch (Exception ex) { Logger.Error(ex, "Error disposing bridge manager"); }
+
+        bridgeManager = null;
     }
 
     private void OnDetectedAircraftChanged(string? dcsBiosName)
@@ -650,8 +670,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
     private void UpdateThemeToggleIcon()
     {
-        // ThemePreference.DCS is treated the same as Dark (folded into the default
-        // dark palette) — it can still show up here from an old persisted config.json.
         ThemeIcon.Text = _currentTheme switch
         {
             ThemePreference.Light => "☀",
@@ -668,8 +686,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
     private void LanguageToggle_Click(object sender, RoutedEventArgs e)
     {
-        // System first, then the user's own detected language, then the rest — so clicking
-        // the globe once lands on the user's language rather than a hardcoded one.
         var detected = LanguageDetector.DetectPreferredLanguage();
         var cycle = new List<LanguagePreference> { LanguagePreference.System, detected };
         cycle.AddRange(LanguageDetector.SupportedLanguages.Where(l => l != detected));
@@ -758,14 +774,13 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             try
             {
                 if (bridgeManager.IsLoopActive) bridgeManager.Stop();
-                bridgeManager.DcsBiosVersionChanged -= OnDcsBiosVersionChanged;
-                bridgeManager.Dispose();
-                bridgeManager = null;
             }
             catch (Exception ex)
             {
                 Logger.Error(ex, "Error stopping bridge during close");
             }
+
+            DisposeBridgeManager();
         }
 
         if (!_disposed)
