@@ -109,7 +109,7 @@ internal partial class A10C_Listener : AircraftListener
         {
             var currentBrightness = GetDisplayBrightnessPercent();
             if (v == 0)
-                SetCduDisplayBrightnessPercent(Math.Min(100, currentBrightness - BRT_STEP));
+                SetCduDisplayBrightnessPercent(Math.Max(0, currentBrightness - BRT_STEP));
             else if (v == 2)
                 SetCduDisplayBrightnessPercent(Math.Min(100, currentBrightness + BRT_STEP));
         });
@@ -144,7 +144,7 @@ internal partial class A10C_Listener : AircraftListener
         RegisterLight("UFC_INTEN", v =>
         {
             if (v == 0)
-                FlightDeck.SegmentBrightnessPercent = Math.Min(100, FlightDeck.SegmentBrightnessPercent - BRT_STEP);
+                FlightDeck.SegmentBrightnessPercent = Math.Max(0, FlightDeck.SegmentBrightnessPercent - BRT_STEP);
             if (v == 2)
                 FlightDeck.SegmentBrightnessPercent = Math.Min(100, FlightDeck.SegmentBrightnessPercent + BRT_STEP);
         });
