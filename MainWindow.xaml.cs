@@ -441,10 +441,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
     private async Task StartBridge()
     {
-        // This re-enters: StartBridge calls DetectDevicesAsync when nothing is connected, and
-        // DetectDevicesAsync calls back here on auto-start. The inner call's StartAsync only
-        // returns at shutdown, so without this guard the outer one would resume afterwards and
-        // build a second BridgeManager over the field. One bridge per window.
         if (IsBridgeLoopActive) return;
 
         if (!IsConfigValid())
@@ -487,9 +483,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         {
             Logger.Error(ex, "Failed to start bridge");
             ShowStatus(Strings.Format("Status_FailedToStartBridgeFormat", ex.Message), true);
-            // Drop the failed manager before ResetStartButton, which reads IsBridgeLoopActive
-            // to decide whether Start becomes clickable again. Left in place it would be
-            // orphaned by the next StartBridge and keep firing its handlers into this window.
             DisposeBridgeManager();
             ResetStartButton();
         }
@@ -677,8 +670,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
     private void UpdateThemeToggleIcon()
     {
-        // ThemePreference.DCS is treated the same as Dark (folded into the default
-        // dark palette) — it can still show up here from an old persisted config.json.
         ThemeIcon.Text = _currentTheme switch
         {
             ThemePreference.Light => "☀",
@@ -695,8 +686,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
     private void LanguageToggle_Click(object sender, RoutedEventArgs e)
     {
-        // System first, then the user's own detected language, then the rest — so clicking
-        // the globe once lands on the user's language rather than a hardcoded one.
         var detected = LanguageDetector.DetectPreferredLanguage();
         var cycle = new List<LanguagePreference> { LanguagePreference.System, detected };
         cycle.AddRange(LanguageDetector.SupportedLanguages.Where(l => l != detected));
@@ -782,8 +771,6 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
         if (bridgeManager != null)
         {
-            // Stop() rethrows on failure, so keep disposal outside the try — otherwise a
-            // failing Stop would skip both the unsubscribe and the Dispose.
             try
             {
                 if (bridgeManager.IsLoopActive) bridgeManager.Stop();
