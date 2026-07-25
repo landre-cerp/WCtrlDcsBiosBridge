@@ -224,8 +224,12 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         if (cdu != null)
         {
             RegisterCduControls();
-            // Load the correct font for this aircraft
-            var fontFile = descriptor.FontFile;
+            // Load the correct font for this aircraft. Descriptor paths are relative to the
+            // install folder (the .csproj copies the font JSONs next to the executable), so
+            // anchor them to the base directory rather than the process working directory —
+            // a shortcut with a different "Start in", or a launch from another process, would
+            // otherwise leave the CDU showing whatever glyphs the device already held.
+            var fontFile = Path.Combine(AppContext.BaseDirectory, descriptor.FontFile);
             try
             {
                 using var fileStream = new FileStream(fontFile, FileMode.Open, FileAccess.Read);
