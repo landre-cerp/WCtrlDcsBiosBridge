@@ -36,11 +36,7 @@ public static class UserOptionsStorage
             if (!File.Exists(ConfigFilePath))
             {
                 var defaultOptions = GetDefaultOptions();
-                var saveResult = TrySave(defaultOptions);
-                if (!saveResult.IsSuccess)
-                {
-                    return Result<UserOptions>.Success(defaultOptions);
-                }
+                TrySave(defaultOptions);
                 return Result<UserOptions>.Success(defaultOptions);
             }
 

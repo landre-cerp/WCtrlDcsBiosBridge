@@ -140,7 +140,12 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         _detectCts?.Cancel();
         _detectCts?.Dispose();
         _detectCts = new CancellationTokenSource();
+
+        // Release the USB handles before re-detecting; reconnecting would otherwise fail.
+        DeviceManager.DisposeDevices(devices,
+            userOptions.DisableLightingManagement ? null : CloseResetOptions.From(userOptions));
         devices.Clear();
+
         ShowStatus(Strings.Get("Status_DetectingDevices"), false);
 
         try
@@ -247,15 +252,16 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
 
     private void BuildDeviceUI()
     {
-        if (devices.Count == 0)
-        {
-            ShowStatus(Strings.Get("Status_NoDevicesDetected"), true);
-            return;
-        }
         try
         {
             DeviceListPanel.Children.Clear();
             _deviceCards.Clear();
+
+            if (devices.Count == 0)
+            {
+                ShowStatus(Strings.Get("Status_NoDevicesDetected"), true);
+                return;
+            }
 
             foreach (var deviceInfo in devices)
                 AddDeviceCard(deviceInfo);
