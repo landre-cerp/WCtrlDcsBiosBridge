@@ -98,6 +98,7 @@ public partial class OptionsPanel : UserControl
         DisableLightingManagementOption.Content = Strings.Get("DisableLightingManagementOption");
         AutoStartOption.Content = Strings.Get("AutoStartOption");
         MinimizeOnStartOption.Content = Strings.Get("MinimizeOnStartOption");
+        EnableLiveExportOption.Content = Strings.Get("EnableLiveExportOption");
 
         OnCloseHeader.Text = Strings.Get("OnCloseHeader");
         LightingManagementDisabledBadge.Text = Strings.Get("LightingManagementDisabledBadge");

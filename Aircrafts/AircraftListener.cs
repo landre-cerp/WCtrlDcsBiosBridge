@@ -186,7 +186,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     {
         this.descriptor = descriptor;
         this.options = options;
-        DCSBIOSControlLocator.DCSAircraft = DCSAircraft.GetAircraft(descriptor.ModuleId);
+        DCSBIOSControlLocator.DCSAircraft = DCSAircraft.GetAircraft(descriptor.EffectiveDcsBiosModuleId);
         _UpdateCounterDCSBIOSOutput = DCSBIOSOutput.GetUpdateCounter();
 
         _DisplayCDUTimer = new(_TICK_DISPLAY);

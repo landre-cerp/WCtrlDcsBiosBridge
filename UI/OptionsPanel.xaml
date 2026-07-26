@@ -21,6 +21,10 @@
                   IsChecked="{Binding MinimizeOnStart, Mode=TwoWay}"
                   Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
                   Margin="0,4"/>
+        <CheckBox x:Name="EnableLiveExportOption" x:Uid="EnableLiveExportOption" Content="Use DCS live data export (requires wctrl-export.lua)"
+                  IsChecked="{Binding EnableLiveExport, Mode=TwoWay}"
+                  Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+                  Margin="0,4"/>
 
         <Border Height="1" Background="{StaticResource CardBorderBrush}" Margin="0,12"/>
 

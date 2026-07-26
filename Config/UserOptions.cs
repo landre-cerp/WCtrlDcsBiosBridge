@@ -18,6 +18,13 @@ public class UserOptions
     /// <summary>Minimize the main window after the bridge starts.</summary>
     public bool MinimizeOnStart { get; set; }
 
+    /// <summary>
+    /// When true, the bridge listens for the JSON export sent by wctrl-export.lua (UDP 31090):
+    /// live wind/position for the A-10C performance pages, and the CDNU rows for the F-14B(U),
+    /// which DCS-BIOS does not carry. Requires wctrl-export.lua chained from DCS Scripts/Export.lua.
+    /// </summary>
+    public bool EnableLiveExport { get; set; }
+
     /// <summary>Preferred application theme (System, Light, or Dark).</summary>
     public ThemePreference Theme { get; set; } = ThemePreference.System;
 

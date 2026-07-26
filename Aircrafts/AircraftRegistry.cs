@@ -25,7 +25,16 @@ internal sealed record AircraftDescriptor(
     string FontFile,
     bool HasSeatSelection,
     string[] DcsBiosNames,
-    Func<AircraftCreationContext, AircraftListener> Create);
+    Func<AircraftCreationContext, AircraftListener> Create,
+    int? DcsBiosModuleId = null)
+{
+    /// <summary>
+    /// The id to look up in DCS-BIOS' own aircraft list. Normally the same as
+    /// <see cref="ModuleId"/>, but variants DCS-BIOS does not know about (the F-14B(U))
+    /// need a registry id of their own while still loading a real module's controls.
+    /// </summary>
+    public int EffectiveDcsBiosModuleId => DcsBiosModuleId ?? ModuleId;
+}
 
 /// <summary>
 /// The user's resolved aircraft choice: which module, and which seat (pilot vs
@@ -85,12 +94,24 @@ internal static class AircraftRegistry
         new[] { "F-14B", "F-14A-135-GR" },
         c => new F14_Listener(c.Options));
 
+    // DCS-BIOS has no F-14B(U) module: MetadataStart still reports the name, so detection
+    // works, but no F-14 control data is exported for it. Everything this listener shows
+    // comes from the wctrl-export.lua export instead. It borrows the F-14B DCS-BIOS id so the
+    // control locator still has a real module to load.
+    public static readonly AircraftDescriptor F14BU = new(
+        1016, "F-14B(U)", "F-14.json", "resources/f14bu-font-21x31.json", false,
+        new[] { "F-14BU" },
+        c => new F14BU_Listener(c.Options),
+        DcsBiosModuleId: 16);
+
     /// <summary>
-    /// Registry order is menu order.
+    /// Registry order is menu order. It is also match order for
+    /// <see cref="FindByDcsBiosName"/>, which matches on prefix: "F-14BU" also starts
+    /// with "F-14B", so the variant must come before the base aircraft.
     /// </summary>
     public static readonly IReadOnlyList<AircraftDescriptor> All = new[]
     {
-        A10C, AH64D, FA18C, CH47, F15E, M2000C, F16C, OH58D, UH1H, F14B
+        A10C, AH64D, FA18C, CH47, F15E, M2000C, F16C, OH58D, UH1H, F14BU, F14B
     };
 
     public static AircraftDescriptor Find(int moduleId) =>
@@ -111,5 +132,5 @@ internal static class AircraftRegistry
             d.DcsBiosNames.Any(n => dcsBiosName.StartsWith(n, StringComparison.OrdinalIgnoreCase)));
     }
 
-    public static IEnumerable<string> ExpectedJsonFiles => All.Select(d => d.JsonFile);
+    public static IEnumerable<string> ExpectedJsonFiles => All.Select(d => d.JsonFile).Distinct();
 }

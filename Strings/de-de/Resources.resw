@@ -202,6 +202,7 @@
   <data name="NextPageKeyLabel" xml:space="preserve"><value>Taste Nächste Seite:</value></data>
   <data name="PrevPageKeyLabel" xml:space="preserve"><value>Taste Vorherige Seite:</value></data>
   <data name="ForwardCduKeysOption" xml:space="preserve"><value>CDU-Tasten an den Simulator weiterleiten (LSK/Ziffern/„/“ in DCS entbinden)</value></data>
+  <data name="EnableLiveExportOption" xml:space="preserve"><value>DCS-Live-Datenexport verwenden (erfordert wctrl-export.lua)</value></data>
   <data name="EnablePerfPagesOption" xml:space="preserve"><value>Leistungsseiten aktivieren</value></data>
   <data name="AlignCduBottomOption" xml:space="preserve"><value>CDU-Anzeige unten ausrichten</value></data>
   <data name="DisplayCmsOption" xml:space="preserve"><value>CMS auf dem CDU anzeigen</value></data>

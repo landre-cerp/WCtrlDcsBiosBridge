@@ -58,10 +58,18 @@ internal partial class A10C_Listener
     {
         switch (key)
         {
-            case Key.LineSelectLeft1: Scratchpad.CommitToField(ref _elevFt); break;
+            case Key.LineSelectLeft1:
+                bool elevDelete = Scratchpad.IsDeleteMode;
+                Scratchpad.CommitToField(ref _elevFt);
+                _elevManuallySet = !elevDelete && _elevFt != null;
+                break;
             case Key.LineSelectLeft2: Scratchpad.CommitToField(ref _rwyLenFt); break;
             case Key.LineSelectLeft3: Scratchpad.CommitToField(ref _qfuDeg); break;
-            case Key.LineSelectLeft4: Scratchpad.CommitToField(ref _wind); break;
+            case Key.LineSelectLeft4:
+                bool windDelete = Scratchpad.IsDeleteMode;
+                Scratchpad.CommitToField(ref _wind);
+                _windManuallySet = !windDelete && _wind != null;
+                break;
             case Key.LineSelectLeft5: Scratchpad.CommitToField(ref _gw); break;
             case Key.LineSelectRight1: Scratchpad.CommitToField(ref _tempC); break;
             case Key.LineSelectRight3: CycleRcr(); break;

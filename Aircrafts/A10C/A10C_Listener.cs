@@ -1,4 +1,5 @@
 using DCS_BIOS.Serialized;
+using WCtrlDcsBiosBridge.Services;
 using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Aircrafts;
@@ -14,6 +15,10 @@ internal partial class A10C_Listener : AircraftListener
     private readonly Key _prevPageKey;
     private readonly Key _perfPageKey;
     private readonly bool _perfPagesEnabled;
+
+    private SimExportReceiver? _exportReceiver;
+    private bool _windManuallySet;
+    private bool _elevManuallySet;
 
     // multi-use: registered in both RegisterCduControls and RegisterFrontpanelControls
     private DCSBIOSOutput? _CONSOLE_BRT;
@@ -45,6 +50,13 @@ internal partial class A10C_Listener : AircraftListener
             AddNewPage(TAKEOFF_PAGE);
             AddNewPage(LANDING_PAGE);
         }
+        
+        if (_perfPagesEnabled && options.EnableLiveExport)
+        {
+            _exportReceiver = new SimExportReceiver();
+            _exportReceiver.DataReceived += OnLiveExportData;
+            _exportReceiver.Start();
+        }
     }
 
     private void HandleKeyDown(object? sender, KeyEventArgs e)
@@ -52,8 +64,6 @@ internal partial class A10C_Listener : AircraftListener
         switch (_currentPage)
         {
             case TAKEOFF_PAGE:
-                // Typing keys (digits, letters, CLR…) feed the scratchpad first.
-                // Anything it doesn't consume (LSKs, navigation) goes to the page.
                 if (!Scratchpad.HandleKey(e.Key))
                     HandleTakeoffKey(e.Key);
                 break;
@@ -64,10 +74,6 @@ internal partial class A10C_Listener : AircraftListener
                 break;
 
             default:
-                // Default (live) page. The perf-page key opens the takeoff page when perf
-                // pages are enabled; other keys are forwarded to the real A-10C CDU over
-                // DCS-BIOS when forwarding is on (i.e. the user unbound them in DCS). The two
-                // are independent. Rendering happens on this (input) thread only.
                 if (_perfPagesEnabled && e.Key == _perfPageKey)
                 { _currentPage = TAKEOFF_PAGE; Compute(); RenderTakeoffPage(); }
                 else if (options.A10C.ForwardCduKeysToSim)
@@ -340,11 +346,30 @@ internal partial class A10C_Listener : AircraftListener
         return "00";
     }
 
+    // Runs on the UDP receiver thread, pre-filling the takeoff page fields the pilot
+    // has not typed over. The render timer picks them up on its next tick.
+    private void OnLiveExportData(SimExportData data)
+    {
+        if (!_windManuallySet
+            && data.Environment?.WindDirectionDeg.HasValue == true
+            && data.Environment?.WindSpeedKts.HasValue == true)
+        {
+            _wind = $"{data.Environment.WindDirectionDeg}/{(int)data.Environment.WindSpeedKts.Value}";
+        }
+
+        if (!_elevManuallySet && data.Position?.AltFt.HasValue == true)
+            _elevFt = ((int)Math.Round(data.Position.AltFt.Value)).ToString();
+    }
+
     protected override void Dispose(bool disposing)
     {
-        if (disposing && CduDevice != null)
+        if (disposing)
         {
-            CduDevice.KeyDown -= HandleKeyDown;
+            if (CduDevice != null)
+                CduDevice.KeyDown -= HandleKeyDown;
+
+            _exportReceiver?.Dispose();
+            _exportReceiver = null;
         }
         base.Dispose(disposing);
     }
