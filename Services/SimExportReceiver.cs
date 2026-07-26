@@ -3,25 +3,28 @@ using System.Net.Sockets;
 using System.Text;
 using Newtonsoft.Json;
 using NLog;
-using WCtrlDcsBiosBridge.Aircrafts;
 
 namespace WCtrlDcsBiosBridge.Services;
 
 /// <summary>
-/// Listens for JSON UDP packets sent by a10c-calc.lua on port 31090 and fires
+/// Listens for JSON UDP packets sent by wctrl-export.lua on port 31090 and fires
 /// <see cref="DataReceived"/> for each successfully parsed packet.
 /// </summary>
-internal sealed class A10CExportReceiver : IDisposable
+internal sealed class SimExportReceiver : IDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public const int DefaultPort = 31090;
 
-    public event Action<A10CExportData>? DataReceived;
+    /// <summary>Envelope version this build understands.</summary>
+    public const int SupportedVersion = 1;
+
+    public event Action<SimExportData>? DataReceived;
 
     private UdpClient?   _udp;
     private Thread?      _thread;
     private volatile bool _running;
+    private bool _loggedVersionMismatch;
 
     public void Start(int port = DefaultPort)
     {
@@ -31,16 +34,16 @@ internal sealed class A10CExportReceiver : IDisposable
         _udp.Client.ReceiveTimeout = 200;
 
         _running = true;
-        _thread  = new Thread(ReceiveLoop) { IsBackground = true, Name = "A10CExportReceiver" };
+        _thread  = new Thread(ReceiveLoop) { IsBackground = true, Name = "SimExportReceiver" };
         _thread.Start();
-        Logger.Info($"A10CExportReceiver started on UDP port {port}");
+        Logger.Info($"SimExportReceiver started on UDP port {port}");
     }
 
     public void Stop()
     {
         _running = false;
         try { _udp?.Close(); } catch { /* ignore */ }
-        Logger.Info("A10CExportReceiver stopped");
+        Logger.Info("SimExportReceiver stopped");
     }
 
     public void Dispose() => Stop();
@@ -54,8 +57,8 @@ internal sealed class A10CExportReceiver : IDisposable
             {
                 var bytes = _udp!.Receive(ref ep);
                 var json  = Encoding.UTF8.GetString(bytes);
-                var data  = JsonConvert.DeserializeObject<A10CExportData>(json);
-                if (data != null)
+                var data  = JsonConvert.DeserializeObject<SimExportData>(json);
+                if (data != null && AcceptVersion(data))
                     DataReceived?.Invoke(data);
             }
             catch (SocketException ex) when (ex.SocketErrorCode == SocketError.TimedOut)
@@ -69,8 +72,25 @@ internal sealed class A10CExportReceiver : IDisposable
             }
             catch (Exception ex)
             {
-                Logger.Warn(ex, "A10CExportReceiver: failed to parse packet");
+                Logger.Warn(ex, "SimExportReceiver: failed to parse packet");
             }
         }
+    }
+
+    // The lua script is installed into DCS by hand and updates independently of this
+    // build, so a stale script is expected rather than exceptional. Drop the packet and
+    // say so once, instead of silently reporting every field as absent.
+    private bool AcceptVersion(SimExportData data)
+    {
+        if (data.Ver == SupportedVersion) return true;
+
+        if (!_loggedVersionMismatch)
+        {
+            _loggedVersionMismatch = true;
+            Logger.Warn($"Ignoring export packets: protocol version {data.Ver?.ToString() ?? "missing"}, " +
+                        $"expected {SupportedVersion}. Update wctrl-export.lua in DCS Scripts.");
+        }
+
+        return false;
     }
 }

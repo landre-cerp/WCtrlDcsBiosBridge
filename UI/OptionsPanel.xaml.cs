@@ -18,12 +18,12 @@ public partial class OptionsPanel : UserControl
     public OptionsPanel()
     {
         InitializeComponent();
-        
+
         foreach (var combo in new[]
                  {
                      A10CPerfPageKeyCombo, A10CNextPageKeyCombo, A10CPrevPageKeyCombo,
                      FA18CShowIfeiKeyCombo, FA18CShowUfcKeyCombo,
-                     F14RioKeyCombo, F14RadioKeyCombo,
+                     F14RioKeyCombo, F14RadioKeyCombo, F14CdnuKeyCombo,
                      F16CDedKeyCombo, F16CNavKeyCombo, F16CRwrKeyCombo
                  })
         {
@@ -32,50 +32,33 @@ public partial class OptionsPanel : UserControl
 
         _aircraftSections = new Dictionary<string, (ContentControl, Border)>(StringComparer.Ordinal)
         {
-            combo.ItemsSource = McduKeyNames;
-        }
+            ["A-10C"] = (A10CSection, A10CBadge),
+            ["F/A-18C"] = (FA18CSection, FA18CBadge),
+            ["F-14B"] = (F14Section, F14Badge),
+            ["F-16C"] = (F16CSection, F16CBadge),
+        };
 
-        _aircraftSections = new Dictionary<string, (ContentControl, Border)>(StringComparer.Ordinal)
+        DataContextChanged += OnDataContextChanged;
+    }
+
+    private void OnDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
+    {
+        _isInitializing = true;
+        DispatcherQueue.TryEnqueue(() =>
         {
-        
-            perfPageCombo.ItemsSource = keyNames;
-        }
+            _isInitializing = false;
+            A10CPerfPagesPanel.IsEnabled = A10CEnablePerfPagesCheckBox.IsChecked == true;
+        });
+    }
 
-        if (FindName("F14RioDisplayKeyComboBox") is ComboBox f14RioCombo)
-        {
-            f14RioCombo.ItemsSource = keyNames;
-        }
-
-        if (FindName("F14RadioDisplayKeyComboBox") is ComboBox f14RadioCombo)
-        {
-            f14RadioCombo.ItemsSource = keyNames;
-        }
-
-        if (FindName("F16CNextDisplayKeyComboBox") is ComboBox f16cNextCombo)
+    /// <summary>Greys out (with a badge) the section for the aircraft currently running the bridge.</summary>
+    public void SetDetectedAircraft(string? detectedAircraftName)
+    {
+        foreach (var (name, (section, badge)) in _aircraftSections)
         {
             bool isActive = string.Equals(name, detectedAircraftName, StringComparison.Ordinal);
             section.IsEnabled = !isActive;
             badge.Visibility = isActive ? Visibility.Visible : Visibility.Collapsed;
-        }
-
-        if (FindName("A10CNextPageKeyComboBox") is ComboBox a10cNextCombo)
-        {
-            a10cNextCombo.ItemsSource = keyNames;
-        }
-
-        if (FindName("A10CPrevPageKeyComboBox") is ComboBox a10cPrevCombo)
-        {
-            a10cPrevCombo.ItemsSource = keyNames;
-        }
-
-        if (FindName("A10CNextPageKeyComboBox") is ComboBox a10cNextCombo)
-        {
-            a10cNextCombo.ItemsSource = keyNames;
-        }
-
-        if (FindName("A10CPrevPageKeyComboBox") is ComboBox a10cPrevCombo)
-        {
-            a10cPrevCombo.ItemsSource = keyNames;
         }
     }
 
@@ -115,6 +98,7 @@ public partial class OptionsPanel : UserControl
         DisableLightingManagementOption.Content = Strings.Get("DisableLightingManagementOption");
         AutoStartOption.Content = Strings.Get("AutoStartOption");
         MinimizeOnStartOption.Content = Strings.Get("MinimizeOnStartOption");
+        EnableLiveExportOption.Content = Strings.Get("EnableLiveExportOption");
 
         OnCloseHeader.Text = Strings.Get("OnCloseHeader");
         LightingManagementDisabledBadge.Text = Strings.Get("LightingManagementDisabledBadge");
@@ -139,6 +123,7 @@ public partial class OptionsPanel : UserControl
         RioCapRadioHeader.Text = Strings.Get("RioCapRadioHeader");
         ShowRioKeyLabel.Text = Strings.Get("ShowRioKeyLabel");
         ShowRadioKeyLabel.Text = Strings.Get("ShowRadioKeyLabel");
+        ShowCdnuKeyLabel.Text = Strings.Get("ShowCdnuKeyLabel");
 
         DisabledWhileInUseF16CBadge.Text = Strings.Get("DisabledWhileInUseF16CBadge");
         DedNavRwrHeader.Text = Strings.Get("DedNavRwrHeader");

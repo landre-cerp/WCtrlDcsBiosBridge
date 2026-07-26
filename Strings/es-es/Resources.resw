@@ -202,6 +202,7 @@
   <data name="NextPageKeyLabel" xml:space="preserve"><value>Tecla página siguiente:</value></data>
   <data name="PrevPageKeyLabel" xml:space="preserve"><value>Tecla página anterior:</value></data>
   <data name="ForwardCduKeysOption" xml:space="preserve"><value>Reenviar teclas CDU al simulador (desvincular LSK/dígitos/"/" en DCS)</value></data>
+  <data name="EnableLiveExportOption" xml:space="preserve"><value>Usar exportación de datos en vivo de DCS (requiere wctrl-export.lua)</value></data>
   <data name="EnablePerfPagesOption" xml:space="preserve"><value>Activar páginas de rendimiento</value></data>
   <data name="AlignCduBottomOption" xml:space="preserve"><value>Alinear pantalla CDU abajo</value></data>
   <data name="DisplayCmsOption" xml:space="preserve"><value>Mostrar CMS en el CDU</value></data>
@@ -210,6 +211,7 @@
   <data name="ShowUfcKeyLabel" xml:space="preserve"><value>Tecla Mostrar UFC:</value></data>
   <data name="RioCapRadioHeader" xml:space="preserve"><value>Teclas página RIO CAP / Radio</value></data>
   <data name="ShowRioKeyLabel" xml:space="preserve"><value>Tecla Mostrar RIO:</value></data>
+  <data name="ShowCdnuKeyLabel" xml:space="preserve"><value>Tecla CDNU:</value></data>
   <data name="ShowRadioKeyLabel" xml:space="preserve"><value>Tecla Mostrar Radio:</value></data>
   <data name="DedNavRwrHeader" xml:space="preserve"><value>Teclas página DED / NAV / RWR</value></data>
   <data name="ShowDedKeyLabel" xml:space="preserve"><value>Tecla Mostrar DED:</value></data>

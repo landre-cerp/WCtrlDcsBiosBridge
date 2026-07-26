@@ -202,6 +202,7 @@
   <data name="NextPageKeyLabel" xml:space="preserve"><value>Next Page Key:</value></data>
   <data name="PrevPageKeyLabel" xml:space="preserve"><value>Prev Page Key:</value></data>
   <data name="ForwardCduKeysOption" xml:space="preserve"><value>Forward CDU keys to sim (unbind LSK/digits/"/" in DCS)</value></data>
+  <data name="EnableLiveExportOption" xml:space="preserve"><value>Use DCS live data export (requires wctrl-export.lua)</value></data>
   <data name="EnablePerfPagesOption" xml:space="preserve"><value>Enable Performance Pages</value></data>
   <data name="AlignCduBottomOption" xml:space="preserve"><value>Align CDU Display to Bottom</value></data>
   <data name="DisplayCmsOption" xml:space="preserve"><value>Display CMS on CDU</value></data>
@@ -210,6 +211,7 @@
   <data name="ShowUfcKeyLabel" xml:space="preserve"><value>Show UFC Key:</value></data>
   <data name="RioCapRadioHeader" xml:space="preserve"><value>RIO CAP / Radio page keys</value></data>
   <data name="ShowRioKeyLabel" xml:space="preserve"><value>Show RIO Key:</value></data>
+  <data name="ShowCdnuKeyLabel" xml:space="preserve"><value>Show CDNU Key:</value></data>
   <data name="ShowRadioKeyLabel" xml:space="preserve"><value>Show Radio Key:</value></data>
   <data name="DedNavRwrHeader" xml:space="preserve"><value>DED / NAV / RWR page keys</value></data>
   <data name="ShowDedKeyLabel" xml:space="preserve"><value>Show DED Key:</value></data>

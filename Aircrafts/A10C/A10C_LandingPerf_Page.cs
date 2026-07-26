@@ -51,18 +51,12 @@ internal partial class A10C_Listener
             case Key.LineSelectRight5: _lndMinSpeed = !_lndMinSpeed; break;
 
             default:
-                if (key == _nextPageKey)
+                if (key == _nextPageKey || key == _prevPageKey)
                 {
                     Scratchpad.Clear();
                     _currentPage = TAKEOFF_PAGE;
                     Compute();
                     RenderTakeoffPage();
-                }
-                else if (key == _prevPageKey)
-                {
-                    Scratchpad.Clear();
-                    _currentPage = LOADOUT_PAGE;
-                    RenderLoadoutPage();
                 }
                 else if (key == _perfPageKey)
                 {
@@ -138,7 +132,7 @@ internal partial class A10C_Listener
         var c = GetCompositor(LANDING_PAGE);
         c.Clear();
 
-        c.Line(0).Small().White().Write("3/3").Centered("LANDING");
+        c.Line(0).Small().White().Write("2/2").Centered("LANDING");
         c.Column(Metrics.Columns - 4).White().Write("FL20");
 
         LabelLeft(c, 1, "ELEV(ft)");    BoxLeft(c, 2, _lndElevFt, 5);      // L1
