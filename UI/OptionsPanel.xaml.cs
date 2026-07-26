@@ -23,7 +23,7 @@ public partial class OptionsPanel : UserControl
                  {
                      A10CPerfPageKeyCombo, A10CNextPageKeyCombo, A10CPrevPageKeyCombo,
                      FA18CShowIfeiKeyCombo, FA18CShowUfcKeyCombo,
-                     F14RioKeyCombo, F14RadioKeyCombo, F14CdnuKeyCombo,
+                     F14RioKeyCombo, F14RadioKeyCombo,
                      F16CDedKeyCombo, F16CNavKeyCombo, F16CRwrKeyCombo
                  })
         {
@@ -123,7 +123,6 @@ public partial class OptionsPanel : UserControl
         RioCapRadioHeader.Text = Strings.Get("RioCapRadioHeader");
         ShowRioKeyLabel.Text = Strings.Get("ShowRioKeyLabel");
         ShowRadioKeyLabel.Text = Strings.Get("ShowRadioKeyLabel");
-        ShowCdnuKeyLabel.Text = Strings.Get("ShowCdnuKeyLabel");
 
         DisabledWhileInUseF16CBadge.Text = Strings.Get("DisabledWhileInUseF16CBadge");
         DedNavRwrHeader.Text = Strings.Get("DedNavRwrHeader");

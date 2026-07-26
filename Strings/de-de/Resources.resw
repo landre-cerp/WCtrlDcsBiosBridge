@@ -211,7 +211,6 @@
   <data name="ShowUfcKeyLabel" xml:space="preserve"><value>Taste UFC anzeigen:</value></data>
   <data name="RioCapRadioHeader" xml:space="preserve"><value>Tasten RIO CAP / Funkseite</value></data>
   <data name="ShowRioKeyLabel" xml:space="preserve"><value>Taste RIO anzeigen:</value></data>
-  <data name="ShowCdnuKeyLabel" xml:space="preserve"><value>CDNU-Taste:</value></data>
   <data name="ShowRadioKeyLabel" xml:space="preserve"><value>Taste Funk anzeigen:</value></data>
   <data name="DedNavRwrHeader" xml:space="preserve"><value>Tasten DED / NAV / RWR-Seite</value></data>
   <data name="ShowDedKeyLabel" xml:space="preserve"><value>Taste DED anzeigen:</value></data>

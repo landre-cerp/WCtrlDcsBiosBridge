@@ -1,19 +1,17 @@
 using WCtrlDcsBiosBridge.Services;
-using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Aircrafts.F14;
 
 /// <summary>
-/// F-14B(U): an F-14B plus the CDNU.
+/// F-14B(U) CDNU repeater.
 ///
-/// Every F-14 control comes from the base listener. DCS-BIOS only exports them once
-/// its F-14 module lists "F-14BU" among its aircraft names — a local edit, since that
-/// variant is not supported upstream. The CDNU is not carried by DCS-BIOS at all and
-/// arrives over the wctrl-export.lua UDP feed instead.
+/// DCS-BIOS has no module for this variant, so nothing arrives on the DCS-BIOS stream
+/// while it is loaded — no gear, no clock, no RIO or radio page. Everything shown here
+/// comes from the wctrl-export.lua UDP feed, which scrapes the CDNU indication directly,
+/// and the CDNU is therefore the only page this listener offers.
 /// </summary>
-internal sealed class F14BU_Listener : F14_Listener
+internal sealed class F14BU_Listener : AircraftListener
 {
-    private const string CDNU_PAGE = "CDNU";
     private const int CDNU_LINE_COUNT = 8;
 
     /// <summary>
@@ -40,7 +38,8 @@ internal sealed class F14BU_Listener : F14_Listener
     ///
     /// U+0012 sits at column 0 of the scratchpad row only, and is a double-headed vertical
     /// arrow. The font has one, but keyed as Delta: a glyph's Character is only the device
-    /// slot it loads into, and the bitmap in that slot decides what is actually drawn.
+    /// slot it loads into, and the bitmap in that slot decides what is actually drawn. The
+    /// underscore is the same story — that slot draws a cross, not the block the cursor needs.
     /// </summary>
     private static readonly Dictionary<char, char> CdnuGlyphs = new()
     {
@@ -52,17 +51,10 @@ internal sealed class F14BU_Listener : F14_Listener
         ['_'] = '\u2B21',   // scratchpad cursor: the underscore slot draws a cross, not a block
     };
 
-    private readonly Key _cdnuDisplayKey;
-
     private SimExportReceiver? _exportReceiver;
 
     public F14BU_Listener(UserOptions options) : base(AircraftRegistry.F14BU, options)
     {
-        _cdnuDisplayKey = Enum.TryParse<Key>(options.F14.CdnuKey, out var cdnuKey)
-            ? cdnuKey : Key.Data;
-
-        AddNewPage(CDNU_PAGE);
-
         if (options.EnableLiveExport)
         {
             _exportReceiver = new SimExportReceiver();
@@ -71,24 +63,10 @@ internal sealed class F14BU_Listener : F14_Listener
         }
     }
 
-    protected override void HandleKeyDown(object? sender, KeyEventArgs e)
-    {
-        if (e.Key == _cdnuDisplayKey)
-        {
-            _currentPage = CDNU_PAGE;
-            return;
-        }
+    protected override void RegisterCduControls() => RenderPlaceholder();
 
-        base.HandleKeyDown(sender, e);
-    }
-
-    protected override void RegisterCduControls()
-    {
-        base.RegisterCduControls();
-
-        RenderPlaceholder();
-        _currentPage = CDNU_PAGE;
-    }
+    // Nothing to register: DCS-BIOS exports no controls for the F-14B(U).
+    protected override void RegisterFrontpanelControls() { }
 
     // Runs on the UDP receiver thread, like the A-10C live export path.
     private void OnLiveExportData(SimExportData data)
@@ -96,7 +74,7 @@ internal sealed class F14BU_Listener : F14_Listener
         if (data.Cdnu == null || data.Cdnu.Count == 0)
             return;
 
-        var c = GetCompositor(CDNU_PAGE);
+        var c = GetCompositor(DEFAULT_PAGE);
         c.Clear();
 
         // Off by default, the compositor renders lowercase as small uppercase. The CDNU
@@ -137,7 +115,7 @@ internal sealed class F14BU_Listener : F14_Listener
 
     private void RenderPlaceholder()
     {
-        var c = GetCompositor(CDNU_PAGE);
+        var c = GetCompositor(DEFAULT_PAGE);
         c.Clear();
 
         // Write() establishes column 0 before Centered so it knows the line width.

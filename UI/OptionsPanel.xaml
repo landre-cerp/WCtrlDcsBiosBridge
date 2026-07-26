@@ -171,12 +171,6 @@
                               SelectedValue="{Binding F14.RadioKey, Mode=TwoWay}"
                               SelectionChanged="ComboBox_Changed" Width="150"/>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,4">
-                    <TextBlock x:Name="ShowCdnuKeyLabel" x:Uid="ShowCdnuKeyLabel" Text="Show CDNU Key:" VerticalAlignment="Center" Width="120"/>
-                    <ComboBox x:Name="F14CdnuKeyCombo"
-                              SelectedValue="{Binding F14.CdnuKey, Mode=TwoWay}"
-                              SelectionChanged="ComboBox_Changed" Width="150"/>
-                </StackPanel>
             </StackPanel>
         </ContentControl>
 

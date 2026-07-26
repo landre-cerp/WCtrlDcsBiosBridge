@@ -211,7 +211,6 @@
   <data name="ShowUfcKeyLabel" xml:space="preserve"><value>Tecla Mostrar UFC:</value></data>
   <data name="RioCapRadioHeader" xml:space="preserve"><value>Teclas página RIO CAP / Radio</value></data>
   <data name="ShowRioKeyLabel" xml:space="preserve"><value>Tecla Mostrar RIO:</value></data>
-  <data name="ShowCdnuKeyLabel" xml:space="preserve"><value>Tecla CDNU:</value></data>
   <data name="ShowRadioKeyLabel" xml:space="preserve"><value>Tecla Mostrar Radio:</value></data>
   <data name="DedNavRwrHeader" xml:space="preserve"><value>Teclas página DED / NAV / RWR</value></data>
   <data name="ShowDedKeyLabel" xml:space="preserve"><value>Tecla Mostrar DED:</value></data>

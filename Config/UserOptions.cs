@@ -113,7 +113,4 @@ public class F14Options
 
     /// <summary>MCDU key that shows the radio display.</summary>
     public string RadioKey { get; set; } = "NextPage";
-
-    /// <summary>MCDU key that shows the CDNU display. F-14B(U) only.</summary>
-    public string CdnuKey { get; set; } = "Data";
 }
