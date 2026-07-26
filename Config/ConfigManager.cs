@@ -18,20 +18,6 @@ public static class ConfigManager
         Path.Combine(AppContext.BaseDirectory, "config.json");
 
     /// <summary>
-    /// Loads the configuration from the config file, creating a default one if it doesn't exist.
-    /// Uses the Result pattern internally.
-    /// </summary>
-    /// <returns>The loaded and validated configuration</returns>
-    /// <exception cref="ConfigException">Thrown when configuration is invalid or missing</exception>
-    public static DcsBiosConfig Load()
-    {
-        var result = TryLoad();
-        if (!result.IsSuccess)
-            throw new ConfigException(result.Error!);
-        return result.Value!;
-    }
-
-    /// <summary>
     /// Attempts to load the configuration from the config file, creating a default one if it doesn't exist.
     /// Returns a Result indicating success or failure without throwing exceptions.
     /// </summary>

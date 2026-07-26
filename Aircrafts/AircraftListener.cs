@@ -21,7 +21,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     private bool _disposed;
 
     private readonly DCSBIOSOutput _UpdateCounterDCSBIOSOutput;
-    private static readonly object _UpdateCounterLockObject = new();
+    private readonly object _UpdateCounterLockObject = new();
     private bool _HasSyncOnce;
     private uint _Count;
 
@@ -274,7 +274,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     public void Stop()
     {
         var capturedCdu = cdu;
-        cdu = null;   // prevent any thread-pool timer tick queued before Stop() from rendering
+        cdu = null;
 
         _DisplayCDUTimer.Stop();
 

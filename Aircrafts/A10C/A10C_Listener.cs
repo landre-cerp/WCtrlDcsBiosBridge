@@ -5,7 +5,7 @@ namespace WCtrlDcsBiosBridge.Aircrafts;
 
 internal partial class A10C_Listener : AircraftListener
 {
-    private const int BRT_STEP = 5;
+    private const int BRT_STEP = 10;
     private const string TAKEOFF_PAGE = "TAKEOFF";
     private const string LANDING_PAGE = "LANDING";
     private readonly DCSBIOSOutput?[] cduLines = new DCSBIOSOutput?[10];
@@ -45,11 +45,6 @@ internal partial class A10C_Listener : AircraftListener
             AddNewPage(TAKEOFF_PAGE);
             AddNewPage(LANDING_PAGE);
         }
-    }
-
-    ~A10C_Listener()
-    {
-        Dispose(false);
     }
 
     private void HandleKeyDown(object? sender, KeyEventArgs e)

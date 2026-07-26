@@ -28,11 +28,6 @@ public class FrontpanelHub : IDisposable
     private bool _disposed;
 
     /// <summary>
-    /// Gets the collection of frontpanel adapters.
-    /// </summary>
-    public IReadOnlyList<IFrontpanelAdapter> Adapters => _adapters.AsReadOnly();
-
-    /// <summary>
     /// Gets a value indicating whether any frontpanels are connected.
     /// </summary>
     public bool HasFrontpanels => _adapters.Count > 0;

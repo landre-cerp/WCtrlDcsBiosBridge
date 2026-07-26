@@ -124,9 +124,9 @@ public class BridgeManager : IDisposable
             detector.StartListening();
 
             using var versionProvider = new DcsBiosVersionProvider();
-            _dcsBiosVersion = versionProvider.CurrentVersion;
             versionProvider.VersionChanged += OnDcsBiosVersionChanged;
             versionProvider.StartListening();
+            _dcsBiosVersion = versionProvider.CurrentVersion;
 
             IsLoopActive = true;
 

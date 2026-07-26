@@ -1,7 +1,4 @@
-using Newtonsoft.Json;
 using NLog;
-using System.IO;
-using System.Linq;
 using WwDevicesDotNet;
 using WCtrlDcsBiosBridge.Common;
 using WCtrlDcsBiosBridge.Config;
