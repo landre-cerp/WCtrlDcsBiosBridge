@@ -105,9 +105,9 @@ internal static class AircraftRegistry
         DcsBiosModuleId: 16);
 
     /// <summary>
-    /// Registry order is menu order. It is also match order for
-    /// <see cref="FindByDcsBiosName"/>, which matches on prefix: "F-14BU" also starts
-    /// with "F-14B", so the variant must come before the base aircraft.
+    /// Registry order is menu order, and nothing else — <see cref="FindByDcsBiosName"/>
+    /// resolves by longest match, so reordering this list cannot change which aircraft
+    /// a given DCS-BIOS name maps to.
     /// </summary>
     public static readonly IReadOnlyList<AircraftDescriptor> All = new[]
     {

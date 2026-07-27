@@ -65,9 +65,12 @@ internal sealed class SimExportReceiver : IDisposable
             {
                 // Normal: no data within 200 ms — keep looping
             }
-            catch (SocketException)
+            catch (SocketException ex)
             {
-                // Socket closed during Stop() — exit cleanly
+                // Stop() closes the socket under us, which is expected. Anything else ends
+                // reception permanently, so it must not go out silently.
+                if (_running)
+                    Logger.Error(ex, $"SimExportReceiver: receive failed ({ex.SocketErrorCode}), stopping");
                 break;
             }
             catch (Exception ex)
