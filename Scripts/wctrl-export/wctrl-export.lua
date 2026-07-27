@@ -139,12 +139,96 @@ end
 -- ---------------------------------------------------------------------------
 
 local CDNU_AIRCRAFT = "F-14BU"
-local CDNU_INDICATOR = 27
 local CDNU_LINE_COUNT = 8
 
+-- There is no starting index. It differs between installs — 27 on one, 26 on another — and
+-- a default that happens to be right on the developer's machine hides the search from the
+-- only person able to test it.
+--
+-- The indication holding the rows is named only by GUIDs, so it cannot be recognised alone.
+-- Its neighbour carries "cdnu_symbology_present", which gives an anchor that moves with it.
+--
+-- The anchor is not enough on its own. It exists with the CDNU dark, when the rows are gone
+-- and the neighbour on the other side is the TID and its 95 blocks — picking on size would
+-- lock onto that. So a candidate must also *look* like the CDNU: its last row is the
+-- scratchpad, bracketed, on every page seen so far.
+local CDNU_ANCHOR = "cdnu"
+local CDNU_NEIGHBOURS = { -1, 1, -2, 2, 0 }
+local SCAN_LIMIT = 60
+local RESOLVE_EVERY = 50            -- update ticks between attempts (~5 s at 10 Hz)
+
+local cdnu_indicator = nil
+local cdnu_resolved = false
+local resolve_wait = 0
+
+local function has_anchor(blocks)
+    for key in pairs(blocks) do
+        if type(key) == "string" and key:lower():find(CDNU_ANCHOR, 1, true) then
+            return true
+        end
+    end
+    return false
+end
+
+--- Enough rows, and the last one is the bracketed scratchpad. Both are required: the count
+--- alone matches several other displays, and the brackets alone would match nothing useful.
+local function looks_like_cdnu(blocks)
+    local count = blocks and blocks[0] or 0
+    if count < CDNU_LINE_COUNT then return false end
+
+    local last = blocks[count]
+    return type(last) == "string" and last:find("%[") ~= nil and last:sub(-1) == "]"
+end
+
+--- Locates the rows by name, then confirms by shape. Returns nil rather than a guess: a
+--- wrong indication that sticks is worse than none, because it looks like it works.
+local function resolve_cdnu()
+    local anchor
+    for id = 0, SCAN_LIMIT do
+        local ok, blocks = pcall(parse_indication, id)
+        if ok and blocks and has_anchor(blocks) then
+            anchor = id
+            break
+        end
+    end
+
+    if not anchor then return nil end
+
+    for _, offset in ipairs(CDNU_NEIGHBOURS) do
+        local id = anchor + offset
+        if id >= 0 then
+            local ok, blocks = pcall(parse_indication, id)
+            if ok and looks_like_cdnu(blocks) then
+                cdnu_indicator = id
+                cdnu_resolved = true
+                log(string.format("CDNU at indicator %d (%d blocks), anchored on %d",
+                    id, blocks[0], anchor))
+                return blocks
+            end
+        end
+    end
+
+    return nil
+end
+
 local function read_cdnu()
-    local blocks = parse_indication(CDNU_INDICATOR)
-    local block_count = blocks[0] or 0
+    local blocks, block_count
+
+    if cdnu_resolved then
+        blocks = parse_indication(cdnu_indicator)
+        block_count = blocks[0] or 0
+    else
+        -- Nothing to find while the CDNU is dark, and scanning every indicator is not free,
+        -- so retry on a timer rather than on every tick.
+        if resolve_wait > 0 then
+            resolve_wait = resolve_wait - 1
+            return nil
+        end
+        resolve_wait = RESOLVE_EVERY
+
+        blocks = resolve_cdnu()
+        block_count = blocks and blocks[0] or 0
+    end
 
     if block_count < CDNU_LINE_COUNT then
         return nil
