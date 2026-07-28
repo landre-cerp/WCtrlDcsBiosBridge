@@ -17,6 +17,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**;libs\**;DcsBios\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <!-- Tests\, libs\, and DcsBios\ are separate projects with their own sources — keep all
