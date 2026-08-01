@@ -23,7 +23,7 @@ This desktop application bridges DCS World with some of the WinCtrl hardware, en
 ## Requirements
 
 - DCS World
-- DCS-BIOS [v0.11.5](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.5) or later (required — nightly builds are no longer supported)
+- DCS-BIOS [v0.11.5](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.5) or later
 - .NET 8.0 runtime
 
 At least one of these devices.
