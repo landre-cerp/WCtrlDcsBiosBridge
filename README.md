@@ -51,7 +51,7 @@ See each aircraft's page for specifics.
 
 ### DCS-BIOS Setup
 
-1. **Download** DCS-BIOS [v0.11.5](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.5) or later (required — nightly builds are no longer supported):
+1. **Download** DCS-BIOS [v0.11.5](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.5) or later:
    - Standard: https://github.com/DCS-Skunkworks/dcs-bios/releases
 
 2. **Extract** the DCS-BIOS folder to your DCS saved games Scripts directory:
