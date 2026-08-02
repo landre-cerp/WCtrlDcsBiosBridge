@@ -236,16 +236,20 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     /// <param name="maxGlyphHeight"></param>
     private static string ResolveFontForPanel(string descriptorPath, int maxGlyphHeight)
     {
-        var fallback = Path.Combine(AppContext.BaseDirectory, descriptorPath);
+        var baseDir = AppContext.BaseDirectory;
+        var fallback = Path.Combine(baseDir, descriptorPath);
 
         var marker = descriptorPath.LastIndexOf('x');
         if (marker < 0) return fallback;
 
-        var candidate = Path.Combine(
-            AppContext.BaseDirectory,
-            $"{descriptorPath[..(marker + 1)]}{maxGlyphHeight}.json");
+        var prefix = descriptorPath[..(marker + 1)];
+        for (var h = maxGlyphHeight; h > 0; h--)
+        {
+            var candidate = Path.Combine(baseDir, $"{prefix}{h}.json");
+            if (File.Exists(candidate)) return candidate;
+        }
 
-        return File.Exists(candidate) ? candidate : fallback;
+        return fallback;
     }
 
     public void Start()
