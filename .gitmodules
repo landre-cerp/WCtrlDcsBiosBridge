@@ -4,6 +4,7 @@
 [submodule "libs/WwDevicesDotnet"]
 	path = libs/WwDevicesDotnet
 	url = https://github.com/landre-cerp/WwDevicesDotnet.git
+	branch = main
 [submodule "libs/A10C-PerfLib"]
 	path = libs/A10C-PerfLib
 	url = https://github.com/landre-cerp/A10C-PerfLib
