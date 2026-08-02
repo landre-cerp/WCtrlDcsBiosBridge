@@ -10,7 +10,17 @@ namespace WCtrlDcsBiosBridge.Aircrafts;
 /// </summary>
 internal sealed class CduScratchpad
 {
-    public const int MaxLength = Metrics.Columns;
+    /// <summary>
+    /// Longest buffer the scratchpad will accept. Defaults to the standard grid
+    /// width; pass the device's own <c>Screen.ColumnCount</c> for a panel that
+    /// runs a wider one.
+    /// </summary>
+    public int MaxLength { get; }
+
+    public CduScratchpad(int maxLength = Metrics.Columns)
+    {
+        MaxLength = maxLength;
+    }
 
     public string Buffer { get; private set; } = "";
     public bool IsDeleteMode { get; private set; }

@@ -213,6 +213,43 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     internal void AttachCduContext(AircraftCduContext cduContext)
     {
         cdu = cduContext ?? throw new ArgumentNullException(nameof(cduContext));
+
+        // The default page is built by a field initialiser, before the panel is known,
+        // so it carries the default grid. Rebuild it if this panel runs another one.
+        var deviceScreen = cdu.Device.Screen;
+        if (pages.TryGetValue(DEFAULT_PAGE, out var existing)
+            && (existing.ColumnCount != deviceScreen.ColumnCount
+                || existing.LineCount != deviceScreen.LineCount))
+        {
+            pages[DEFAULT_PAGE] = NewPage();
+        }
+    }
+
+    /// <summary>
+    /// Swaps the height in a font's filename for the one the panel can show. Descriptors
+    /// name a font by aircraft, but the ceiling belongs to the panel - the MCDU's aperture
+    /// is shorter than the PFP family's - and the same aircraft can appear on either.
+    /// Font files are named "...-21x31.json", so the height is whatever follows the last
+    /// 'x'. Falls back to the descriptor's own file when no variant exists.
+    /// </summary>
+    /// <param name="descriptorPath"></param>
+    /// <param name="maxGlyphHeight"></param>
+    private static string ResolveFontForPanel(string descriptorPath, int maxGlyphHeight)
+    {
+        var baseDir = AppContext.BaseDirectory;
+        var fallback = Path.Combine(baseDir, descriptorPath);
+
+        var marker = descriptorPath.LastIndexOf('x');
+        if (marker < 0) return fallback;
+
+        var prefix = descriptorPath[..(marker + 1)];
+        for (var h = maxGlyphHeight; h > 0; h--)
+        {
+            var candidate = Path.Combine(baseDir, $"{prefix}{h}.json");
+            if (File.Exists(candidate)) return candidate;
+        }
+
+        return fallback;
     }
 
     public void Start()
@@ -229,7 +266,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
             // anchor them to the base directory rather than the process working directory —
             // a shortcut with a different "Start in", or a launch from another process, would
             // otherwise leave the CDU showing whatever glyphs the device already held.
-            var fontFile = Path.Combine(AppContext.BaseDirectory, descriptor.FontFile);
+            var fontFile = ResolveFontForPanel(descriptor.FontFile, cdu.Device.MaxGlyphHeight);
             try
             {
                 using var fileStream = new FileStream(fontFile, FileMode.Open, FileAccess.Read);
@@ -363,14 +400,24 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     {
     }
 
+    /// <summary>
+    /// Pages are built at the panel's own grid size, not the default one. A listener
+    /// driving a wider CDU would otherwise compose into a 24 column buffer and lose
+    /// its last column on the way to the device.
+    /// </summary>
+    private Screen NewPage() =>
+        cdu == null
+            ? new Screen()
+            : new Screen(cdu.Device.Screen.LineCount, cdu.Device.Screen.ColumnCount);
+
     protected Compositor GetCompositor(string pageName)
     {
-        return new Compositor(pages.GetOrAdd(pageName, _ => new Screen()));
+        return new Compositor(pages.GetOrAdd(pageName, _ => NewPage()));
     }
 
     protected Screen AddNewPage(string pageName)
     {
-        return pages.GetOrAdd(pageName, _ => new Screen());
+        return pages.GetOrAdd(pageName, _ => NewPage());
     }
 
     public void Dispose()
