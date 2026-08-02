@@ -401,7 +401,6 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     /// driving a wider CDU would otherwise compose into a 24 column buffer and lose
     /// its last column on the way to the device.
     /// </summary>
-    /// <param name="pageName"></param>
     private Screen NewPage() =>
         cdu == null
             ? new Screen()
