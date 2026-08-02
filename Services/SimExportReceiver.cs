@@ -16,8 +16,12 @@ internal sealed class SimExportReceiver : IDisposable
 
     public const int DefaultPort = 31090;
 
-    /// <summary>Envelope version this build understands.</summary>
-    public const int SupportedVersion = 1;
+    /// <summary>
+    /// Envelope version this build understands. Must move in lockstep with
+    /// PROTOCOL_VERSION in wctrl-export.lua: the check is an equality, so a script and an app
+    /// from different releases talk past each other and show nothing.
+    /// </summary>
+    public const int SupportedVersion = 2;
 
     public event Action<SimExportData>? DataReceived;
 

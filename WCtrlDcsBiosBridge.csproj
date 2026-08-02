@@ -76,6 +76,15 @@
     <None Update="Resources\f14bu-font-21x32.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Resources\c130j-cni-pages.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\c130j-font-21x31.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\c130j-font-21x32.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Scripts\wctrl-export\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

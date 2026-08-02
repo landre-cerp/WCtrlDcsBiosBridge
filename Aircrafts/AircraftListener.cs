@@ -210,9 +210,34 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         };
     }
 
+    /// <summary>
+    /// The grid this aircraft's display needs, or null to leave the panel on its own.
+    /// The C-130J's CNI is 25 characters across where every other display here is 24,
+    /// and the panels are addressable enough to run either.
+    /// </summary>
+    protected virtual (int Lines, int Columns)? ScreenSize => null;
+
+    /// <summary>
+    /// The green this aircraft's display uses, as RRGGBB, or null for the library's own.
+    /// A module names its phosphor colour and they do not all agree, so an aircraft that
+    /// knows its own says so here.
+    /// </summary>
+    protected virtual string? DisplayGreenRgb => null;
+
     internal void AttachCduContext(AircraftCduContext cduContext)
     {
         cdu = cduContext ?? throw new ArgumentNullException(nameof(cduContext));
+
+        // A panel outlives the listener driving it, so an aircraft that wants its own
+        // grid has to put the panel back on the default one for whatever comes next.
+        var wanted = ScreenSize ?? cdu.Device.DefaultScreenSize;
+        cdu.Device.SetScreenSize(wanted.Lines, wanted.Columns);
+
+        // Same reasoning as the grid: the panel outlives the listener, so an aircraft that
+        // does not name a colour puts the default back rather than inheriting the last one's.
+        cdu.Device.Palette.Green.CopyFrom(
+            PaletteColour.Parse(DisplayGreenRgb ?? Palette.DefaultGreenRgb));
+        cdu.Device.RefreshPalette();
 
         // The default page is built by a field initialiser, before the panel is known,
         // so it carries the default grid. Rebuild it if this panel runs another one.

@@ -1,3 +1,4 @@
+using WCtrlDcsBiosBridge.Aircrafts.C130J;
 using WCtrlDcsBiosBridge.Aircrafts.F14;
 using WCtrlDcsBiosBridge.Aircrafts.UH1H;
 
@@ -104,6 +105,21 @@ internal static class AircraftRegistry
         c => new F14BU_Listener(c.Options),
         DcsBiosModuleId: 16);
 
+    // Same situation as the F-14B(U): DCS-BIOS has no C-130J module, so MetadataStart reports
+    // the name and nothing else follows. Everything shown comes from wctrl-export.lua, laid
+    // out against Resources/c130j-cni-pages.json. It borrows the A-10C DCS-BIOS id and json
+    // purely so the control locator has a real module to load; neither is read.
+    //
+    // The font is the A-10C's with one glyph redrawn. A CDU font's bitmaps need not look like
+    // the characters they are filed under — the A-10C's U+2610 is an open-ended bracket pair,
+    // which is what that aircraft wants there. The CNI uses the slot for an empty entry field
+    // and wants a closed box, in both sizes.
+    public static readonly AircraftDescriptor C130J = new(
+        1030, "C-130J", "A-10C.json", "resources/c130j-font-21x31.json", false,
+        new[] { "C-130J" },
+        c => new C130J_Listener(c.Options),
+        DcsBiosModuleId: 5);
+
     /// <summary>
     /// Registry order is menu order. It is also match order for
     /// <see cref="FindByDcsBiosName"/>, which matches on prefix: "F-14BU" also starts
@@ -111,7 +127,7 @@ internal static class AircraftRegistry
     /// </summary>
     public static readonly IReadOnlyList<AircraftDescriptor> All = new[]
     {
-        A10C, AH64D, FA18C, CH47, F15E, M2000C, F16C, OH58D, UH1H, F14BU, F14B
+        A10C, AH64D, FA18C, CH47, F15E, M2000C, F16C, OH58D, UH1H, F14BU, F14B, C130J
     };
 
     public static AircraftDescriptor Find(int moduleId) =>
