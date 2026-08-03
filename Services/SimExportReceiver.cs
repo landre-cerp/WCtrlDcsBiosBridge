@@ -9,10 +9,23 @@ namespace WCtrlDcsBiosBridge.Services;
 /// <summary>
 /// Listens for JSON UDP packets sent by wctrl-export.lua on port 31090 and fires
 /// <see cref="DataReceived"/> for each successfully parsed packet.
+///
+/// One UDP port can only really be read by one socket at a time, but several listeners
+/// may want the same feed at once — e.g. two CDUs both mapped to the F-14B(U). So this
+/// is a process-wide singleton (<see cref="Shared"/>) rather than something each listener
+/// owns: every subscriber attaches to the same socket instead of racing to bind their own.
 /// </summary>
 internal sealed class SimExportReceiver : IDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    private static readonly Lazy<SimExportReceiver> _shared = new(() => new SimExportReceiver());
+
+    /// <summary>
+    /// The single instance every listener subscribes to. Call <see cref="EnsureStarted"/>
+    /// before relying on it — construction alone does not bind the socket.
+    /// </summary>
+    public static SimExportReceiver Shared => _shared.Value;
 
     public const int DefaultPort = 31090;
 
@@ -25,41 +38,77 @@ internal sealed class SimExportReceiver : IDisposable
 
     public event Action<SimExportData>? DataReceived;
 
+    private readonly object _startLock = new();
     private UdpClient?   _udp;
     private Thread?      _thread;
     private volatile bool _running;
     private bool _loggedVersionMismatch;
 
-    public void Start(int port = DefaultPort)
+    /// <summary>
+    /// Binds the socket and starts the receive thread, unless another subscriber already
+    /// did. Safe to call from every listener that wants the feed — only the first call
+    /// actually binds; later ones are no-ops.
+    /// </summary>
+    public void EnsureStarted(int port = DefaultPort)
     {
-        _udp = new UdpClient();
-        _udp.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-        _udp.Client.Bind(new IPEndPoint(IPAddress.Any, port));
-        _udp.Client.ReceiveTimeout = 200;
+        if (_running) return;
 
-        _running = true;
-        _thread  = new Thread(ReceiveLoop) { IsBackground = true, Name = "SimExportReceiver" };
-        _thread.Start();
-        Logger.Info($"SimExportReceiver started on UDP port {port}");
+        lock (_startLock)
+        {
+            if (_running) return;
+
+            // Built on a local and only published once it is listening. A bind that throws
+            // has to leave the singleton exactly as it was, so the next subscriber's call is
+            // a clean retry rather than one that overwrites — and leaks — this socket.
+            var udp = new UdpClient();
+            try
+            {
+                udp.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                udp.Client.Bind(new IPEndPoint(IPAddress.Any, port));
+                udp.Client.ReceiveTimeout = 200;
+
+                _udp     = udp;
+                _running = true;
+                _thread  = new Thread(() => ReceiveLoop(udp)) { IsBackground = true, Name = "SimExportReceiver" };
+                _thread.Start();
+            }
+            catch
+            {
+                _running = false;
+                _udp     = null;
+                _thread  = null;
+                udp.Dispose();
+                throw;
+            }
+
+            Logger.Info($"SimExportReceiver started on UDP port {port}");
+        }
     }
 
     public void Stop()
     {
-        _running = false;
-        try { _udp?.Close(); } catch { /* ignore */ }
+        lock (_startLock)
+        {
+            _running = false;
+            try { _udp?.Close(); } catch { /* ignore */ }
+            _udp    = null;
+            _thread = null;
+        }
         Logger.Info("SimExportReceiver stopped");
     }
 
     public void Dispose() => Stop();
 
-    private void ReceiveLoop()
+    // Takes the client it was started with rather than reading the field: Stop() clears
+    // _udp, and the loop must not race it into a null dereference on the way out.
+    private void ReceiveLoop(UdpClient udp)
     {
         var ep = new IPEndPoint(IPAddress.Any, 0);
         while (_running)
         {
             try
             {
-                var bytes = _udp!.Receive(ref ep);
+                var bytes = udp.Receive(ref ep);
                 var json  = Encoding.UTF8.GetString(bytes);
                 var data  = JsonConvert.DeserializeObject<SimExportData>(json);
                 if (data != null && AcceptVersion(data))
@@ -72,6 +121,11 @@ internal sealed class SimExportReceiver : IDisposable
             catch (SocketException)
             {
                 // Socket closed during Stop() — exit cleanly
+                break;
+            }
+            catch (ObjectDisposedException)
+            {
+                // Same, when Stop() won the race to dispose before the next Receive
                 break;
             }
             catch (Exception ex)
