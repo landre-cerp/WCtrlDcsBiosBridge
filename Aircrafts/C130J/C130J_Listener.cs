@@ -7,7 +7,14 @@ namespace WCtrlDcsBiosBridge.Aircrafts.C130J;
 ///
 /// DCS-BIOS has no module for this aircraft, so nothing arrives on the DCS-BIOS stream while
 /// it is loaded. Everything shown here comes from the wctrl-export.lua UDP feed, which scrapes
-/// the pilot CNI's indication, and the CNI is therefore the only page this listener offers.
+/// the pilot's and the copilot's CNI, and the CNI is therefore the only page this listener
+/// offers.
+///
+/// One listener drives one CDU and answers to one seat, named at construction and fixed for the
+/// life of the listener: the copilot's CNI reaches a panel only when a second CDU has been given
+/// that seat. The aircraft cannot say where the crew is sitting — pilot and copilot share a
+/// single camera point in the module's Views-30.lua and no cockpit state moves between them —
+/// so a lone CDU stays on the pilot's rather than guessing.
 ///
 /// The indication carries element names and values and nothing else — no position, no font
 /// size, no highlight. The layout comes from <c>Resources/c130j-cni-pages.json</c>, extracted
@@ -19,6 +26,13 @@ internal sealed class C130J_Listener : AircraftListener
 
     private readonly CniSchema? _schema;
     private readonly CniPageResolver? _resolver;
+
+    /// <summary>
+    /// The seat this CDU shows, as wctrl-export.lua names it. A page carries no marking of its
+    /// own, so this is the only thing keeping the other seat's off the panel.
+    /// </summary>
+    private readonly string _seat;
+
     private SimExportReceiver? _exportReceiver;
 
     /// <summary>
@@ -48,8 +62,11 @@ internal sealed class C130J_Listener : AircraftListener
     /// </summary>
     protected override string? DisplayGreenRgb => "05FF3F";
 
-    public C130J_Listener(UserOptions options) : base(AircraftRegistry.C130J, options)
+    public C130J_Listener(UserOptions options, bool pilot = true)
+        : base(AircraftRegistry.C130J, options)
     {
+        _seat = pilot ? "pilot" : "copilot";
+
         try
         {
             _schema = CniSchema.Load(Path.Combine(AppContext.BaseDirectory, SchemaFile));
@@ -85,6 +102,10 @@ internal sealed class C130J_Listener : AircraftListener
         // one carries no news, and clearing on it would make the display flicker.
         if (data.Cni is not { } cni || _resolver is null) return;
 
+        // Both seats arrive on the same feed, one page per packet. Anything but this CDU's
+        // own seat belongs to another panel.
+        if (!string.Equals(cni.Seat, _seat, StringComparison.OrdinalIgnoreCase)) return;
+
         var page = _resolver.Resolve(cni);
         if (page is null)
         {
@@ -95,7 +116,7 @@ internal sealed class C130J_Listener : AircraftListener
         if (!ReferenceEquals(page, _page))
         {
             _page = page;
-            App.Logger.Debug($"CNI page: {page.Name} ('{cni.Title}')");
+            App.Logger.Debug($"CNI page ({_seat}): {page.Name} ('{cni.Title}')");
         }
 
         var runs = CniGrid.Render(cni, page, _session);

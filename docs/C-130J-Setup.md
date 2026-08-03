@@ -29,17 +29,35 @@ and SRS, and overwriting it breaks them.
 ## 3. Turn it on
 
 In the app, under **GENERAL**, tick **Use DCS live data export**, then restart the bridge.
-Load the C-130J in DCS and the pilot's CNI-MU appears on the CDU.
+Load the C-130J in DCS and the CNI-MU appears on the CDU.
 
 ## What the C-130J shows
 
-**The pilot's CNI-MU, and nothing else.** DCS-BIOS has no module for this aircraft, so while
-it is loaded no C-130J data reaches the bridge: no gear, no clock, no switches. The copilot
-and augmented-crew displays are not carried either.
+**The CNI-MU, and nothing else.** DCS-BIOS has no module for this aircraft, so while it is
+loaded no C-130J data reaches the bridge: no gear, no clock, no switches. The augmented crew's
+display is not carried either.
 
-Pages are recognised by the title they draw, so the CDU follows whatever the pilot's CNI is
-showing. A page the app does not recognise leaves the screen as it was rather than drawing it
-against the wrong layout.
+Pages are recognised by the title they draw, so the CDU follows whatever the CNI is showing. A
+page the app does not recognise leaves the screen as it was rather than drawing it against the
+wrong layout.
+
+## Pilot and copilot
+
+Both CNIs are read and sent. Which one reaches a CDU depends on how many are plugged in:
+
+- **One CDU** — the pilot's CNI.
+- **Two or more CDUs** — each one asks which seat it is, on the same screen the CH-47F uses.
+  Pick **PILOT** or **COPILOT** on the first, and the other takes the seat you did not pick.
+
+A CDU keeps the seat it was given for as long as the aircraft is loaded.
+
+**It does not follow you when you change seat**, and cannot: pressing 1 or 2 in this aircraft
+does not move you. Pilot and copilot share one camera point in the module's `Views-30.lua` —
+the two view modes differ only in shoulder size and whether the view can turn a full circle —
+and you reach the other station by leaning across, within a 6DOF box either seat already
+allows. Nothing in the cockpit changes, so nothing can be read: no cockpit parameter moves,
+and there is no camera position to compare. Each CNI is its own device with its own buttons,
+which is why the module never needs to know where you are sitting either.
 
 ## What the highlight can and cannot follow
 

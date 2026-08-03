@@ -46,7 +46,7 @@ public class BridgeManager : IDisposable
     private bool _disposed = false;
 
     private UserOptions _options = new();
-    private bool _ch47SwitchWithSeat;
+    private bool _switchWithSeat;
 
     private List<DeviceInfo>? _devices;
 
@@ -102,9 +102,9 @@ public class BridgeManager : IDisposable
             _devices = devices.ToList();
             var cduDevices = _devices.Where(d => d.Cdu != null).ToList();
 
-            _ch47SwitchWithSeat = cduDevices.Count <= 1;
+            _switchWithSeat = cduDevices.Count <= 1;
 
-            Contexts = cduDevices.Select(d => new CduDeviceContext(d.Cdu!, _options, _ch47SwitchWithSeat)).ToList();
+            Contexts = cduDevices.Select(d => new CduDeviceContext(d.Cdu!, _options, _switchWithSeat)).ToList();
 
             frontpanelHub = BuildFrontpanelHub(_devices, manageLighting: _manageLighting);
             Logger.Info($"Created {Contexts.Count} CDU context(s); frontpanel hub has {frontpanelHub.Count} device(s)");
@@ -382,7 +382,7 @@ public class BridgeManager : IDisposable
             if (headlessListener == null)
             {
                 headlessListener = new AircraftListenerFactory().CreateListener(
-                    new AircraftSelection(_activeDescriptor.ModuleId, true), null, _options, _ch47SwitchWithSeat);
+                    new AircraftSelection(_activeDescriptor.ModuleId, true), null, _options, _switchWithSeat);
                 headlessListener.Start();
             }
             source = headlessListener;
@@ -493,9 +493,9 @@ public class BridgeManager : IDisposable
 
     private void AddCduContext(ICdu cdu)
     {
-        // CH-47 seat-switch mode applies only when this becomes the single CDU
+        // Seat-switch mode applies only when this becomes the single CDU
         // (option (a): existing contexts keep their captured mode).
-        var ctx = new CduDeviceContext(cdu, _options, ch47SwitchWithSeat: Contexts!.Count == 0);
+        var ctx = new CduDeviceContext(cdu, _options, switchWithSeat: Contexts!.Count == 0);
 
         lock (_waitingScreenLock)
             Contexts.Add(ctx);

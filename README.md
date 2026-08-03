@@ -91,12 +91,12 @@ You no longer pick the aircraft yourself. While the bridge is running, the CDU s
 - An **unsupported** module is shown in red as **"Not supported"**, and the bridge keeps waiting.
 - When you **switch or exit** the aircraft, the bridge resets and returns to the waiting screen on its own — **no restart needed**.
 
-The only manual choice left is the **seat** for the CH-47F when two or more CDUs are connected (see below).
+The only manual choice left is the **seat** for a dual-seat aircraft (AH-64D, CH-47F, C-130J) when two or more CDUs are connected (see below). With a single CDU there is nothing to choose: the AH-64D and CH-47F follow you from one seat to the other, and the C-130J shows the pilot's CNI-MU.
 
 ### Controls
 
 - **CDU Keys:** Map them in DCS.
-- **Seat selection (CH-47F with 2+ CDUs):** when prompted, press the line-select key next to **PILOT** or **COPILOT**. See the [CH-47F documentation](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/CH-47F).
+- **Seat selection (dual-seat aircraft with 2+ CDUs):** when prompted, press the line-select key next to **PILOT** or **COPILOT**; the other CDU takes the seat you did not pick. See the [CH-47F documentation](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/CH-47F).
 
 ## Troubleshooting
 
