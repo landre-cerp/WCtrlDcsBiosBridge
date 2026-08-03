@@ -382,7 +382,7 @@ local function resolve_cni()
     if found[2] and found[2] ~= found[1] + 1 then
         log(string.format("CNI at indicator %d is not the copilot's, ignoring it", found[2]),
             "WARN")
-        found[2] = nil
+        table.remove(found, 2)
     end
 
     cni_indicators = found
