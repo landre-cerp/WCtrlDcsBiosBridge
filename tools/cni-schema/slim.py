@@ -104,6 +104,46 @@ def variant_font(group):
     return 1 if source.get("small") else 0
 
 
+def reposition_disc_fields(slots):
+    """The discontinuity marker draws where its column puts it, not where Add() called it.
+
+    legs_progress.lua builds a leg's row as bearing, dist, eta, name, disc, via, ... - name
+    comes before disc in source order because the loop reaches the line below before doubling
+    back for the centred marker above it. But bearing, disc, dist and eta all sit on that same
+    upper line, disc's column between bearing's and dist's, and the indication draws left to
+    right by screen position: bearing, disc, dist, eta. Add() order stranded disc two slots
+    later than that, which meant reaching it required skipping dist, eta AND name - one skip
+    more than the alignment's gap penalty allows before dropping the block instead, so
+    ">> DISCONTINUITY <<" arrived with nowhere to land.
+
+    Every other field on the page keeps Add() order; moving anything beyond the marker itself
+    risks the same fix this page already has for toggles and size variants. ctrl is checked
+    directly (not the field-stem CniBlockMatcher reads later) because a bare "_disc" suffix is
+    the one thing every such field is known to share.
+    """
+    discs, rest = [], []
+    for s in slots:
+        if (s.get("ctrl") or "").endswith("_disc"):
+            discs.append(s)
+        else:
+            rest.append(s)
+
+    if not discs:
+        return slots
+
+    out = list(rest)
+    for d in discs:
+        line, col = d.get("line"), d.get("col")
+        insert_at = len(out)
+        if line is not None and col is not None:
+            for idx, s in enumerate(out):
+                if s.get("line") == line and s.get("col") is not None and s["col"] > col:
+                    insert_at = idx
+                    break
+        out.insert(insert_at, d)
+    return out
+
+
 def indication_order(slots):
     """Reorder Add() order into the order list_indication reports.
 
@@ -176,7 +216,7 @@ def slim_page(p):
     ctrl_of = effective_controllers(p["slots"])
 
     slots = []
-    for s in indication_order(pair_variants(p["slots"])):
+    for s in indication_order(pair_variants(reposition_disc_fields(p["slots"]))):
         out = {"n": s["n"], "a": ANCHORS.get(s.get("anchor", "Left"), 0)}
 
         # Two different keys on purpose. "ct" is a field the module builds in two states, and

@@ -286,6 +286,36 @@ end
 -- nothing at all, and the pattern as a whole gets the same alternative.
 local UNSET = "[-\\]]"
 
+-- A controller-driven field sometimes starts life holding its own filler rather than a "%s" —
+-- string.format is only called once the sim has a real value, so extract.lua sees whatever the
+-- page script wrote as the element's initial text. The module's own convention for that filler
+-- is a single letter repeated to the field's width ("AAA/" for a 3-digit CAS speed, "BBBB" for
+-- a 4-digit ground speed) or, for numeric fields, a run of the UNSET placeholder class alone
+-- ("------"). Neither is text the sim will ever draw again once flying, so recording it as a
+-- literal turns a field that legitimately varies into a landmark that forbids every value it
+-- takes - which is what cost CRZ SPEED and ALTN their slot the moment the runtime capture
+-- showed "]]]/" or a dash short of the six the script initialised it with.
+--
+-- A real label never fits this shape: repeating one letter twice or more is not how English
+-- words are built ("NORM", "ALL", "OFF", "ON" all fail on the first repeat), so the check does
+-- not need the controller to disambiguate on its own - but requiring one anyway keeps a
+-- coincidence in an unrelated static label from being reinterpreted as a placeholder.
+-- Lua patterns cannot quantify a back-reference (%1+ never matches, %1%1 only ever matches a
+-- fixed count), so the repeated-letter run is walked by hand instead. UNSET is reused for its
+-- characters only, not as a pattern - it is built for the PCRE the .NET side reads, and "\\]"
+-- means something else entirely to Lua's own matcher.
+local function placeholder_suffix(value)
+    if value == "" then return nil end
+    if value:match("^[%]%-]+$") then return "" end
+
+    local letters, rest = value:match("^(%a+)(.-)$")
+    if not letters or #letters < 2 or rest:match("%a") then return nil end
+    for i = 2, #letters do
+        if letters:sub(i, i) ~= letters:sub(1, 1) then return nil end
+    end
+    return rest
+end
+
 -- 25 of the 154 pages build their title through a printf format driven by a controller
 -- ("INAV%d CTRL SOLN", "%sLZ %2d INIT"), so a literal title lookup misses them entirely.
 -- Precomputing the pattern here keeps the .NET side free of Lua format semantics.
@@ -391,6 +421,13 @@ local function describe(env, el, ordinal)
         fmts = fmts or {}
         fmts[#fmts + 1] = value
         value = nil
+    elseif value and ctrl then
+        local suffix = placeholder_suffix(value)
+        if suffix then
+            fmts = fmts or {}
+            fmts[#fmts + 1] = "%s" .. suffix
+            value = nil
+        end
     end
 
     -- Identity, not size: SMALL_FONT_CNI and SMALL_FONT_CNI0 share a height but only the
