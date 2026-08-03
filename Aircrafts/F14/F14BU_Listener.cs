@@ -64,9 +64,9 @@ internal sealed class F14BU_Listener : AircraftListener
     {
         if (options.EnableLiveExport)
         {
-            _exportReceiver = new SimExportReceiver();
+            _exportReceiver = SimExportReceiver.Shared;
             _exportReceiver.DataReceived += OnLiveExportData;
-            _exportReceiver.Start();
+            _exportReceiver.EnsureStarted();
         }
     }
 
@@ -142,7 +142,11 @@ internal sealed class F14BU_Listener : AircraftListener
     {
         if (disposing)
         {
-            _exportReceiver?.Dispose();
+            // The receiver is shared across every listener that wants the feed (other CDUs
+            // on the same or a different aircraft may still be reading it), so unsubscribe
+            // rather than tearing the socket down.
+            if (_exportReceiver != null)
+                _exportReceiver.DataReceived -= OnLiveExportData;
             _exportReceiver = null;
         }
         base.Dispose(disposing);

@@ -53,9 +53,9 @@ internal partial class A10C_Listener : AircraftListener
         
         if (_perfPagesEnabled && options.EnableLiveExport)
         {
-            _exportReceiver = new SimExportReceiver();
+            _exportReceiver = SimExportReceiver.Shared;
             _exportReceiver.DataReceived += OnLiveExportData;
-            _exportReceiver.Start();
+            _exportReceiver.EnsureStarted();
         }
     }
 
@@ -368,7 +368,11 @@ internal partial class A10C_Listener : AircraftListener
             if (CduDevice != null)
                 CduDevice.KeyDown -= HandleKeyDown;
 
-            _exportReceiver?.Dispose();
+            // The receiver is shared across every listener that wants the feed (other CDUs
+            // on the same or a different aircraft may still be reading it), so unsubscribe
+            // rather than tearing the socket down.
+            if (_exportReceiver != null)
+                _exportReceiver.DataReceived -= OnLiveExportData;
             _exportReceiver = null;
         }
         base.Dispose(disposing);
