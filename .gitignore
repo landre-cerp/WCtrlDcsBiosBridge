@@ -3,3 +3,5 @@ obj
 .vs
 Properties/PublishProfiles
 *.csproj.user
+Scripts/c130-probe
+
