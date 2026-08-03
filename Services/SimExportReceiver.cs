@@ -57,14 +57,30 @@ internal sealed class SimExportReceiver : IDisposable
         {
             if (_running) return;
 
-            _udp = new UdpClient();
-            _udp.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            _udp.Client.Bind(new IPEndPoint(IPAddress.Any, port));
-            _udp.Client.ReceiveTimeout = 200;
+            // Built on a local and only published once it is listening. A bind that throws
+            // has to leave the singleton exactly as it was, so the next subscriber's call is
+            // a clean retry rather than one that overwrites — and leaks — this socket.
+            var udp = new UdpClient();
+            try
+            {
+                udp.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                udp.Client.Bind(new IPEndPoint(IPAddress.Any, port));
+                udp.Client.ReceiveTimeout = 200;
 
-            _running = true;
-            _thread  = new Thread(ReceiveLoop) { IsBackground = true, Name = "SimExportReceiver" };
-            _thread.Start();
+                _udp     = udp;
+                _running = true;
+                _thread  = new Thread(() => ReceiveLoop(udp)) { IsBackground = true, Name = "SimExportReceiver" };
+                _thread.Start();
+            }
+            catch
+            {
+                _running = false;
+                _udp     = null;
+                _thread  = null;
+                udp.Dispose();
+                throw;
+            }
+
             Logger.Info($"SimExportReceiver started on UDP port {port}");
         }
     }
@@ -75,20 +91,24 @@ internal sealed class SimExportReceiver : IDisposable
         {
             _running = false;
             try { _udp?.Close(); } catch { /* ignore */ }
+            _udp    = null;
+            _thread = null;
         }
         Logger.Info("SimExportReceiver stopped");
     }
 
     public void Dispose() => Stop();
 
-    private void ReceiveLoop()
+    // Takes the client it was started with rather than reading the field: Stop() clears
+    // _udp, and the loop must not race it into a null dereference on the way out.
+    private void ReceiveLoop(UdpClient udp)
     {
         var ep = new IPEndPoint(IPAddress.Any, 0);
         while (_running)
         {
             try
             {
-                var bytes = _udp!.Receive(ref ep);
+                var bytes = udp.Receive(ref ep);
                 var json  = Encoding.UTF8.GetString(bytes);
                 var data  = JsonConvert.DeserializeObject<SimExportData>(json);
                 if (data != null && AcceptVersion(data))
@@ -101,6 +121,11 @@ internal sealed class SimExportReceiver : IDisposable
             catch (SocketException)
             {
                 // Socket closed during Stop() — exit cleanly
+                break;
+            }
+            catch (ObjectDisposedException)
+            {
+                // Same, when Stop() won the race to dispose before the next Receive
                 break;
             }
             catch (Exception ex)

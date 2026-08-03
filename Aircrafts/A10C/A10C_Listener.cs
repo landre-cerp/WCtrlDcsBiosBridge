@@ -53,9 +53,13 @@ internal partial class A10C_Listener : AircraftListener
         
         if (_perfPagesEnabled && options.EnableLiveExport)
         {
-            _exportReceiver = SimExportReceiver.Shared;
-            _exportReceiver.DataReceived += OnLiveExportData;
-            _exportReceiver.EnsureStarted();
+            // Started before subscribing: the receiver lives as long as the process, so a
+            // handler attached ahead of a throwing EnsureStarted would outlive this
+            // half-built listener and keep being called on it.
+            var receiver = SimExportReceiver.Shared;
+            receiver.EnsureStarted();
+            receiver.DataReceived += OnLiveExportData;
+            _exportReceiver = receiver;
         }
     }
 
