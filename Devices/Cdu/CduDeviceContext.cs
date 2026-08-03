@@ -32,7 +32,7 @@ internal class CduDeviceContext : IDisposable
         new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     private readonly UserOptions options;
-    private readonly bool ch47SwitchWithSeat;
+    private readonly bool switchWithSeat;
     private readonly AircraftCduContext cduContext;
     private AircraftListener? listener;
     private bool isSelectedAircraft = false;
@@ -41,15 +41,15 @@ internal class CduDeviceContext : IDisposable
     /// <summary>
     /// Creates a context for a CDU device.
     /// </summary>
-    /// <param name="ch47SwitchWithSeat">
-    /// True when a single CDU is connected: the CH-47F display follows the
-    /// seat position at runtime.
+    /// <param name="switchWithSeat">
+    /// True when a single CDU is connected: a dual-seat aircraft's display
+    /// follows the seat position at runtime rather than being tied to one seat.
     /// </param>
-    public CduDeviceContext(ICdu mcdu, UserOptions options, bool ch47SwitchWithSeat)
+    public CduDeviceContext(ICdu mcdu, UserOptions options, bool switchWithSeat)
     {
         Mcdu = mcdu;
         this.options = options;
-        this.ch47SwitchWithSeat = ch47SwitchWithSeat;
+        this.switchWithSeat = switchWithSeat;
         cduContext = new AircraftCduContext(mcdu);
     }
 
@@ -173,7 +173,7 @@ internal class CduDeviceContext : IDisposable
 
         try
         {
-            listener = new AircraftListenerFactory().CreateListener(SelectedAircraft, cduContext, options, ch47SwitchWithSeat);
+            listener = new AircraftListenerFactory().CreateListener(SelectedAircraft, cduContext, options, switchWithSeat);
             listener.Start();
         }
         catch (Exception ex)

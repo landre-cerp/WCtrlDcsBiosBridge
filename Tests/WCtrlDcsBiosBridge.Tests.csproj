@@ -29,6 +29,11 @@
           LinkBase="Fixtures\Cni" />
     <None Include="..\Resources\c130j-cni-pages.json" CopyToOutputDirectory="PreserveNewest"
           LinkBase="Resources" />
+
+    <!-- The other half of the export protocol, so the two halves can be checked against
+         each other rather than only against themselves. -->
+    <None Include="..\Scripts\wctrl-export\wctrl-export.lua" CopyToOutputDirectory="PreserveNewest"
+          LinkBase="Scripts" />
   </ItemGroup>
 
 </Project>

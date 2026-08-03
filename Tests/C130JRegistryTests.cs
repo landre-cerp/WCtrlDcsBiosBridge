@@ -34,6 +34,17 @@ public class C130JRegistryTests
         Assert.Contains(AircraftRegistry.C130J.JsonFile, AircraftRegistry.ExpectedJsonFiles);
     }
 
+    /// <summary>
+    /// Both CNIs are carried, so the bridge has a seat to ask about when more than one CDU is
+    /// connected. Without this the seat-selection screen never comes up and every CDU shows
+    /// the pilot's.
+    /// </summary>
+    [Fact]
+    public void OffersASeatToChoose()
+    {
+        Assert.True(AircraftRegistry.C130J.HasSeatSelection);
+    }
+
     [Fact]
     public void DoesNotShadowAnotherAircraft()
     {

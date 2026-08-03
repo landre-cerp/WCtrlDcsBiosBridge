@@ -8,7 +8,7 @@ local socket = require("socket") --[[@as Socket]]
 local json = loadfile("Scripts\\JSON.lua")()
 local udp = nil
 
-local PROTOCOL_VERSION = 2
+local PROTOCOL_VERSION = 3
 local SEND_INTERVAL = 0.1
 
 local log_file_path = lfs.writedir() .. "Logs/wctrl-export.log"
@@ -313,8 +313,13 @@ end
 --
 -- Easier to find than the CDNU: every page names its title element "cni_title", so the anchor
 -- is an exact key rather than a substring, and it sits on the indicator that actually holds
--- the page. Indicators 8, 9 and 10 are pilot, copilot and augmented crew; scanning upwards
--- lands on the pilot without needing to know that.
+-- the page. Indicators 8, 9 and 10 are pilot, copilot and augmented crew — device_init.lua
+-- registers them in that order — so scanning upwards lands on the pilot's, then the copilot's.
+--
+-- Both are read every tick and each keeps its own change detection, but only one page goes out
+-- per packet: a page runs to a few kilobytes and only one crew member is usually touching
+-- theirs, so alternating between the seats that have news costs nothing and keeps the packet
+-- the size it always was.
 --
 -- Blocks go out as found, values and structure only. Position, font size and inversion are
 -- not in the indication at all — those come from the offline page schema on the app side.
@@ -326,13 +331,19 @@ local CNI_MIN_BLOCKS = 6            -- a lit page never has fewer; a dark one is
 local CNI_HEARTBEAT  = 2.0          -- seconds between resends of an unchanged page
 local CNI_MAX_BYTES  = 8000
 
-local cni_indicator   = nil
+-- Index is the scan order the indicators come back in, and the value is what the app calls the
+-- seat. A page carries no marking of its own, so this name is the only thing that says which
+-- CDU it belongs on.
+local CNI_SEATS = { "pilot", "copilot" }
+
+local cni_indicators  = {}
 local cni_resolved    = false
 local cni_resolve_wait = 0
-local cni_last_sig    = nil
-local cni_last_sent   = 0
+local cni_next_seat   = 1
 local cni_oversize_logged = false
-local cni_last_content = nil
+
+-- Per seat: the page signature last sent, when it went, and the page content last seen.
+local cni_state = { {}, {} }
 
 local function find_named(nodes, name)
     for _, node in ipairs(nodes or {}) do
@@ -348,17 +359,35 @@ local function looks_like_cni(nodes, total)
     return find_named(nodes, CNI_ANCHOR) ~= nil
 end
 
+--- The pilot's CNI, and the copilot's when it is the very next indicator.
+---
+--- Adjacency is a guard rather than the lookup: the three CNIs are registered consecutively, so
+--- a second match that is not the first plus one is the augmented crew's, found because the
+--- copilot's screen was dark at that moment. Showing that as the copilot would be wrong, and
+--- carrying on with the pilot's alone is what this did before there was a second seat.
 local function resolve_cni()
+    local found = {}
+
     for id = 0, SCAN_LIMIT do
         local ok, nodes, total = pcall(parse_indication_tree, id)
         if ok and looks_like_cni(nodes, total or 0) then
-            cni_indicator = id
-            cni_resolved = true
+            found[#found + 1] = id
             log(string.format("CNI at indicator %d (%d blocks)", id, total))
-            return nodes, total
+            if #found == #CNI_SEATS then break end
         end
     end
-    return nil, 0
+
+    if #found == 0 then return false end
+
+    if found[2] and found[2] ~= found[1] + 1 then
+        log(string.format("CNI at indicator %d is not the copilot's, ignoring it", found[2]),
+            "WARN")
+        found[2] = nil
+    end
+
+    cni_indicators = found
+    cni_resolved = true
+    return true
 end
 
 --- Every value on the page, and which element carried it.
@@ -507,23 +536,12 @@ local function radio_signature(radios)
     return table.concat(parts, "\2")
 end
 
+--- One seat's page, or nil when neither seat has news.
+---
+--- Every resolved seat is read each tick so each keeps its own change detection, and the
+--- alternating start makes sure a busy seat cannot starve the other.
 local function read_cni(model_time, radios)
-    local nodes, total
-
-    if cni_resolved then
-        nodes, total = parse_indication_tree(cni_indicator)
-        total = total or 0
-
-        -- Deliberately not re-checking the title anchor here. Finding the indicator needs it,
-        -- staying on it must not: the BASIC page names its title element with a GUID like any
-        -- other, so demanding cni_title every read would abandon a perfectly good indicator
-        -- the moment that page came up. Emptiness is the only signal worth reacting to.
-        if total < CNI_MIN_BLOCKS then
-            cni_resolved = false
-            cni_indicator = nil
-            return nil
-        end
-    else
+    if not cni_resolved then
         -- Nothing to find while the CNI is unpowered, and scanning every indicator is not
         -- free, so retry on a timer rather than on every tick.
         if cni_resolve_wait > 0 then
@@ -532,40 +550,75 @@ local function read_cni(model_time, radios)
         end
         cni_resolve_wait = RESOLVE_EVERY
 
-        nodes, total = resolve_cni()
-        if not nodes then return nil end
+        if not resolve_cni() then return nil end
     end
+
+    -- Deliberately not re-checking the title anchor here. Finding an indicator needs it,
+    -- staying on it must not: the BASIC page names its title element with a GUID like any
+    -- other, so demanding cni_title every read would abandon a perfectly good indicator
+    -- the moment that page came up. Emptiness is the only signal worth reacting to.
+    local lit, turned, count = {}, false, 0
+    for i = 1, #cni_indicators do
+        local nodes, total = parse_indication_tree(cni_indicators[i])
+        total = total or 0
+
+        if total >= CNI_MIN_BLOCKS then
+            count = count + 1
+            local content = cni_signature(nodes)
+            lit[i] = { nodes = nodes, total = total }
+            if content ~= cni_state[i].content then turned = true end
+            cni_state[i].content = content
+        end
+    end
+
+    -- One seat going dark is that screen switched off; all of them is the aircraft gone, and
+    -- the indicator list is rebuilt per aircraft.
+    if count == 0 then
+        cni_resolved = false
+        cni_indicators = {}
+        return nil
+    end
+
+    -- The page changing is exactly when the ship solution is worth re-reading: a SHIP SOLN
+    -- switch reaches us as a swapped element on that page and nothing else. Everywhere else
+    -- the cached value stands and the PFD goes untouched.
+    local soln = read_ship_solution(model_time, turned)
 
     -- The radios are folded in because a power switch changes what the page means without
     -- changing a single element on it: the highlight moves from ON to OFF and the indication
     -- reads the same either way.
-    -- The page changing is exactly when the ship solution is worth re-reading: a SHIP SOLN
-    -- switch reaches us as a swapped element on this page and nothing else. Everywhere else
-    -- the cached value stands and the PFD goes untouched.
-    local content = cni_signature(nodes)
-    local turned  = content ~= cni_last_content
-    cni_last_content = content
+    local tail = "\3" .. radio_signature(radios) .. "\4" .. tostring(soln)
 
-    local soln = read_ship_solution(model_time, turned)
+    for step = 0, #cni_indicators - 1 do
+        local seat  = (cni_next_seat + step - 1) % #cni_indicators + 1
+        local page  = lit[seat]
+        local state = cni_state[seat]
 
-    local signature = content .. "\3" .. radio_signature(radios) .. "\4" .. tostring(soln)
-    if signature == cni_last_sig and (model_time - cni_last_sent) < CNI_HEARTBEAT then
-        return nil
+        if page then
+            local signature = state.content .. tail
+            local due = model_time - (state.sent or 0) >= CNI_HEARTBEAT
+
+            if signature ~= state.sig or due then
+                state.sig  = signature
+                state.sent = model_time
+                cni_next_seat = seat % #cni_indicators + 1
+
+                local title = find_named(page.nodes, CNI_ANCHOR)
+
+                return {
+                    seat   = CNI_SEATS[seat],
+                    idx    = cni_indicators[seat],
+                    title  = title and title.v or "",
+                    n      = page.total,
+                    blocks = page.nodes,
+                    radios = radios,
+                    soln   = soln,
+                }
+            end
+        end
     end
-    cni_last_sig = signature
-    cni_last_sent = model_time
 
-    local title = find_named(nodes, CNI_ANCHOR)
-
-    return {
-        seat   = "pilot",
-        idx    = cni_indicator,
-        title  = title and title.v or "",
-        n      = total,
-        blocks = nodes,
-        radios = radios,
-        soln   = soln,
-    }
+    return nil
 end
 
 -- ---------------------------------------------------------------------------
@@ -661,11 +714,11 @@ function M.stop()
 
     -- The indicator list is rebuilt per aircraft, so a resolved index carried into the next
     -- mission would point at something else entirely.
-    cni_indicator, cni_resolved, cni_resolve_wait = nil, false, 0
-    cni_last_sig, cni_last_sent = nil, 0
+    cni_indicators, cni_resolved, cni_resolve_wait = {}, false, 0
+    cni_next_seat = 1
+    cni_state = { {}, {} }
     radio_ids = nil
     soln_value, soln_next = nil, 0
-    cni_last_content = nil
 end
 
 -- Chain onto any previously installed export hooks (e.g. DCS-BIOS)

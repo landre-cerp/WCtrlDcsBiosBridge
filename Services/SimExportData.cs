@@ -30,6 +30,10 @@ internal record PositionData(
 /// Only present when the page changed, plus a heartbeat every couple of seconds, so a null
 /// here means "nothing new" and never "clear the screen".
 ///
+/// The pilot's and the copilot's CNI both come this way, one per packet, named by
+/// <see cref="Seat"/> — a page carries no marking of its own, so that name is the only thing
+/// saying which screen it belongs on.
+///
 /// The indication carries names and values and nothing else: no position, no font size, no
 /// inverted state. Laying the page out therefore needs the offline schema in
 /// <c>tools/cni-schema</c>, matched against these blocks.

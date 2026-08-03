@@ -10,7 +10,7 @@ namespace WCtrlDcsBiosBridge.Aircrafts;
 internal sealed record AircraftCreationContext(
     UserOptions Options,
     bool IsPilot,
-    bool Ch47SwitchWithSeat);
+    bool SwitchWithSeat);
 
 /// <summary>
 /// Self-describing aircraft registration: DCS-BIOS module id, names, resources
@@ -53,7 +53,7 @@ internal static class AircraftRegistry
     public static readonly AircraftDescriptor AH64D = new(
         46, "AH-64D", "AH-64D.json", "resources/ah64d-font-21x31.json", true,
         new[] { "AH-64D" },
-        c => new AH64D_Listener(c.Options, c.IsPilot, c.Ch47SwitchWithSeat));
+        c => new AH64D_Listener(c.Options, c.IsPilot, c.SwitchWithSeat));
 
     public static readonly AircraftDescriptor FA18C = new(
         20, "F/A-18C", "FA-18C_hornet.json", "resources/a10c-font-21x31.json", false,
@@ -63,7 +63,7 @@ internal static class AircraftRegistry
     public static readonly AircraftDescriptor CH47 = new(
         50, "CH-47F", "CH-47F.json", "resources/ch47f-font-21x31.json", true,
         new[] { "CH-47F" },
-        c => new CH47F_Listener(c.Options, c.IsPilot, c.Ch47SwitchWithSeat));
+        c => new CH47F_Listener(c.Options, c.IsPilot, c.SwitchWithSeat));
 
     public static readonly AircraftDescriptor F15E = new(
         44, "F-15E", "F-15E.json", "resources/a10c-font-21x31.json", false,
@@ -115,9 +115,9 @@ internal static class AircraftRegistry
     // which is what that aircraft wants there. The CNI uses the slot for an empty entry field
     // and wants a closed box, in both sizes.
     public static readonly AircraftDescriptor C130J = new(
-        1030, "C-130J", "A-10C.json", "resources/c130j-font-21x31.json", false,
+        1030, "C-130J", "A-10C.json", "resources/c130j-font-21x31.json", true,
         new[] { "C-130J" },
-        c => new C130J_Listener(c.Options),
+        c => new C130J_Listener(c.Options, c.IsPilot),
         DcsBiosModuleId: 5);
 
     /// <summary>
