@@ -22,4 +22,13 @@
     <ProjectReference Include="..\WCtrlDcsBiosBridge.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Real packets captured from a running mission, and the page schema they are laid out
+         against. The layout work has no other way to be checked without hardware. -->
+    <None Include="Fixtures\Cni\*.json" CopyToOutputDirectory="PreserveNewest"
+          LinkBase="Fixtures\Cni" />
+    <None Include="..\Resources\c130j-cni-pages.json" CopyToOutputDirectory="PreserveNewest"
+          LinkBase="Resources" />
+  </ItemGroup>
+
 </Project>

@@ -5,6 +5,7 @@ Per-aircraft documentation has moved to the [project wiki](https://github.com/la
 | Aircraft | Wiki page |
 |----------|-----------|
 | A-10C | https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/A-10C |
+| C-130J | [C-130J-Setup.md](C-130J-Setup.md) — CNI-MU only, via the live export |
 | AH-64D | https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/AH-64D |
 | CH-47F | https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/CH-47F |
 | F-14B | https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/F-14B |
