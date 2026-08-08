@@ -42,9 +42,10 @@ internal sealed class C130J_Listener : AircraftListener
     private CniPage? _page;
 
     /// <summary>
-    /// What the crew's own switching has revealed about the rotaries, kept for the life of this
-    /// listener. The GUIDs it is keyed on are regenerated every session, so it starts empty and
-    /// is worth nothing to anyone else.
+    /// Which element of a field is the highlighted one, wherever that has been established —
+    /// from the pages themselves, from the radios, or from the crew's own switching. Kept for
+    /// the life of this listener. The GUIDs it is keyed on are regenerated every session, so it
+    /// starts empty and is worth nothing to anyone else, this aircraft's other seat included.
     /// </summary>
     private readonly CniSessionMap _session = new();
 

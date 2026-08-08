@@ -15,6 +15,44 @@ public class CniGridTests
         return CniGrid.ToLines(CniGrid.Render(data, page));
     }
 
+    /// <summary>
+    /// Several elements can share one anchor and space themselves apart with their own leading
+    /// blanks. TOLD INIT's RCR/RSC line is three of them issued at column 0 — "23", "  /" and
+    /// "    0" — and the blanks of the later ones were landing on the characters of the earlier,
+    /// rubbing the slash off a line the cockpit reads as 23/ 0.
+    ///
+    /// Ink over ink is still allowed: that is the deliberate overdraw COMM TUNE INDEX does when
+    /// it puts a highlighted GUARD on top of the identifier it replaces.
+    /// </summary>
+    [Fact]
+    public void SpacesDoNotRubOutWhatIsAlreadyOnTheLine()
+    {
+        Assert.StartsWith("23/ 0 ", Render("told-init-1of2")[10]);
+    }
+
+    /// <summary>
+    /// A leg the route is broken at draws two things and no more: the banner, alone on its line,
+    /// and the leg's own name on the line below. Everything the FMS cannot compute for it — the
+    /// bearing, the distance, the time, the speed, the altitude — is simply absent.
+    ///
+    /// Read as an ordinary leg, the dashes standing in for that name went to the distance beside
+    /// the banner, which reads the same and comes first, and the whole route below moved up a
+    /// line: the aircraft's approach speeds and altitudes against the wrong waypoints.
+    /// </summary>
+    [Fact]
+    public void ABrokenLegDrawsItsBannerAndItsNameAndNothingElse()
+    {
+        var lines = Render("legs-1");
+
+        Assert.Equal(">> DISCONTINUITY <<", lines[1].Trim());
+        Assert.Equal("-----", lines[2].Trim());
+
+        // And the route below it starts where it should, down to the last altitude — the one
+        // the alignment used to throw overboard to keep a blank.
+        Assert.Equal("LAMU3B ---°       ----:--".Replace("\u00b0", "°"), lines[3].TrimEnd());
+        Assert.Equal("RW31           210/ 01574", lines[8].TrimEnd());
+    }
+
     [Theory]
     [MemberData(nameof(FixtureNames))]
     public void GridIsAlwaysFourteenByTwentyFive(string fixture)

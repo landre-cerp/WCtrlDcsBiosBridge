@@ -264,6 +264,122 @@ public class CniInvertTests
     }
 
     /// <summary>
+    /// A pair the module marks by size alone has no highlight to drop, so the smaller of its two
+    /// forms is not the quieter one — it is simply the other state. POWER UP's MSTR AV ON and
+    /// AUTONAV are drawn full size and redrawn small once set, and taking the small form for the
+    /// neutral one had the device saying the crew had already set them.
+    /// </summary>
+    [Fact]
+    public void PairMarkedBySizeAloneDrawsTheUnselectedForm()
+    {
+        var runs = Render("dump-001");
+
+        var master = runs.Where(r => r.Line == 8).ToList();
+        Assert.NotEmpty(master);
+        Assert.All(master, r => Assert.False(r.Small));
+
+        var autonav = runs.Single(r => r.Line == 10 && r.Text.Trim() == "AUTONAV");
+        Assert.False(autonav.Small);
+    }
+
+    /// <summary>
+    /// The NAV DB lines are marked by size too, the other way round — the loaded database is the
+    /// large one — so the unselected form is the small one on both, and neither claims to be
+    /// loaded. This is the reading that had 09SEP09OCT24 on the device while the cockpit had
+    /// 12AUG10SEP25.
+    /// </summary>
+    [Fact]
+    public void NeitherNavDatabaseClaimsToBeTheLoadedOne()
+    {
+        var runs = Render("dump-001");
+
+        Assert.True(runs.Single(r => r.Text.Trim() == "12AUG10SEP25").Small);
+        Assert.True(runs.Single(r => r.Text.Trim() == "09SEP09OCT24").Small);
+    }
+
+    private static string Row(IReadOnlyList<CniRun> runs, int line) =>
+        CniGrid.ToLines(runs)[line].Trim();
+
+    /// <summary>
+    /// A table row is built as every highlighted cell followed by every plain one, so with a
+    /// column selected the sim sends that column's value first and the rest in column order:
+    /// LANDING DATA's approach speeds arrive "126 153 135" for a row that reads 153 135 126.
+    ///
+    /// Read as though the wire were column order, the row came out 126 153 135 — the aircraft's
+    /// landing speeds against the wrong flap settings. Worse than a missing highlight, and the
+    /// reason this page was looked at at all.
+    /// </summary>
+    [Theory]
+    [InlineData("landing-1of2-flaps100")]
+    [InlineData("landing-1of2-flaps50")]
+    [InlineData("landing-1of2-plain")]
+    public void TableRowsKeepTheirColumnsWhicheverIsSelected(string fixture)
+    {
+        var runs = Render(fixture);
+
+        Assert.Equal("FLAPS     0  50  100 MAX", Row(runs, 2));
+        Assert.Equal("APP    153 135 126 ---", Row(runs, 4));
+        Assert.Equal("THR    143 125 116  99", Row(runs, 6));
+        Assert.Equal("TD     137 119 110  93", Row(runs, 8));
+    }
+
+    /// <summary>
+    /// And the column the header points at is the one the rows beneath it light.
+    ///
+    /// The header is the only row of the four made of literals, which is what makes it readable:
+    /// "0", "50" and "100" are spelled the same in both halves of their pair, but no plain
+    /// reading can put "100" ahead of the two that follow it, so the matcher has to seat it on
+    /// the highlighted half. The three rows of figures have nothing of their own to go on and
+    /// take the answer from the column.
+    /// </summary>
+    [Fact]
+    public void SelectedColumnIsReadOffTheHeaderAndCarriesDownTheTable()
+    {
+        var lit = Render("landing-1of2-flaps100")
+            .Where(r => r.Invert)
+            .Select(r => $"L{r.Line}:{r.Text.Trim()}")
+            .ToArray();
+
+        Assert.Equal(new[] { "L2:100", "L4:126", "L6:116", "L8:110" }, lit);
+
+        // The middle column is the one that caught the last of it. Its cell is drawn highlighted,
+        // so the plain half of that same cell is not drawn at all — and until that was said
+        // outright, the value of the column beyond it took the plain half instead, two figures
+        // in one cell and the last column blank.
+        var middle = Render("landing-1of2-flaps50")
+            .Where(r => r.Invert)
+            .Select(r => $"L{r.Line}:{r.Text.Trim()}")
+            .ToArray();
+
+        Assert.Equal(new[] { "L2:50", "L4:135", "L6:125", "L8:119" }, middle);
+
+        // The same page with no column selected sends its values in column order and claims
+        // nothing, which is the reading that must not acquire a highlight of its own.
+        Assert.DoesNotContain(Render("landing-1of2-plain"), r => r.Invert);
+    }
+
+    /// <summary>
+    /// The other half of the same fault. A pair's two halves sit in one cell, and filling both
+    /// drew the plain one over the highlighted one and lost the value underneath: LANDING DATA
+    /// 2/2 showed the ground roll figures on the 50 FT LDG line, and TOLD INDEX three of its six
+    /// lines with the fourth written over the first.
+    /// </summary>
+    [Fact]
+    public void BothHalvesOfACellAreNeverFilledAtOnce()
+    {
+        var landing = Render("landing-2of2-flaps0");
+
+        Assert.Equal("5546  4440  3867  -----", Row(landing, 4));
+        Assert.Equal("2645  1922  1648   1241", Row(landing, 6));
+
+        var told = Render("told-index");
+
+        Assert.Equal("<TOLD INIT       UGKS/09", Row(told, 2));
+        foreach (var line in new[] { 4, 6, 8, 10, 12 })
+            Assert.EndsWith("-----/---", Row(told, line));
+    }
+
+    /// <summary>
     /// The bottom-line message is the highlight no variant competes with.
     /// </summary>
     [Fact]
