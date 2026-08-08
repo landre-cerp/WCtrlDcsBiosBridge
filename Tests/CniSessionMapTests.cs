@@ -146,38 +146,131 @@ public class CniSessionMapTests
     {
         var map = new CniSessionMap();
 
-        // ADF spells itself differently in its two forms, so its value moves with its element
-        // just as the sim does it — that is what lets the matcher settle ADF on text alone.
-        static CniData Uhf1(bool adfLit, string bth, string mn, string sep)
+        var onAdf = Uhf1RadioMode(true,  "{BTH-OFF}", "{MN-OFF}", "{SEP-A}");
+        var onBth = Uhf1RadioMode(false, "{BTH-LIT}", "{MN-OFF}", "{SEP-B}");
+        var onMn  = Uhf1RadioMode(false, "{BTH-OFF}", "{MN-LIT}", "{SEP-A}");
+
+        RadioMode(map, onAdf); RadioMode(map, onBth); RadioMode(map, onMn);
+
+        Assert.Equal("BTH", RadioMode(map, onBth));
+        Assert.Equal("MN",  RadioMode(map, onMn));
+    }
+
+    /// <summary>
+    /// ADF is the one member of that rotary the page settles by itself, spelling itself "ADF/ "
+    /// when it is not the selected one. Knowing which element draws the selected ADF is knowing
+    /// that the elements drawing MN and BTH beside it are not selected — so the very first turn
+    /// away from ADF says which of the two it went to, where turn-watching alone needed a second.
+    /// </summary>
+    [Fact]
+    public void TextEvidenceOnOneMemberSettlesTheOnesBesideIt()
+    {
+        var map = new CniSessionMap();
+
+        var onAdf = Uhf1RadioMode(adfLit: true,  bth: "{BTH-A}", mn: "{MN-A}", sep: "{SEP-A}");
+        var onBth = Uhf1RadioMode(adfLit: false, bth: "{BTH-B}", mn: "{MN-A}", sep: "{SEP-B}");
+
+        Assert.Equal("ADF", RadioMode(map, onAdf));
+        Assert.Equal("BTH", RadioMode(map, onBth));
+    }
+
+    /// <summary>
+    /// The PWR toggle is settled by the radio device, which the page can only be paired with
+    /// while it is printing the frequency that device is on. Kept against the element rather than
+    /// the frame, the reading survives the page that gives no frequency to pair on — and the
+    /// element the sim swaps to when the crew cuts the power is, by the same token, the other one.
+    /// </summary>
+    [Fact]
+    public void RadioPowerOutlivesTheFrameThatProvedIt()
+    {
+        var map = new CniSessionMap();
+
+        var tuned = CniFixtures.Load("232316-006") with
         {
-            var data = CniFixtures.Load("232316-006");
-            var blocks = data.Blocks!.Select(b => b.V switch
-            {
-                "ADF" => b with { K = adfLit ? "{ADF-LIT}" : "{ADF-PLAIN}",
-                                  V = adfLit ? "ADF" : "ADF/ " },
-                "BTH" => b with { K = bth },
-                "MN"  => b with { K = mn },
-                "/"   => b with { K = sep },
-                _     => b,
-            }).ToList();
-            return data with { Blocks = blocks };
-        }
+            Radios = new List<RadioState> { new(7, 243_000, true) },
+        };
 
-        var onAdf = Uhf1(true,  "{BTH-OFF}", "{MN-OFF}", "{SEP-A}");
-        var onBth = Uhf1(false, "{BTH-LIT}", "{MN-OFF}", "{SEP-B}");
-        var onMn  = Uhf1(false, "{BTH-OFF}", "{MN-LIT}", "{SEP-A}");
+        Assert.Equal("ON", Power(map, tuned));
 
-        string? Lit(CniData d)
+        // Same session, same elements behind PWR, and nothing to pair a radio with.
+        Assert.Equal("ON", Power(map, CniFixtures.Load("232316-016")));
+
+        // Same session, other elements behind PWR. A field draws one of two forms and no more.
+        Assert.Equal("OFF", Power(map, CniFixtures.Load("232316-015")));
+    }
+
+    /// <summary>
+    /// The reading is about elements, so it has to end when they do. A rebuilt page issues fresh
+    /// GUIDs for everything, and an identity that is unknown because it is new would otherwise
+    /// read — through the very rule that makes the map useful — as the opposite of the one on
+    /// file, lighting the wrong word with full confidence.
+    /// </summary>
+    [Fact]
+    public void RebuiltPageIsNotReadThroughTheElementsItReplaced()
+    {
+        var map = new CniSessionMap();
+
+        var tuned = CniFixtures.Load("232316-006") with
         {
-            var runs = CniGrid.Render(d, Resolver.Resolve(d), map);
-            return runs.Where(r => r.Invert && r.Text.Trim() is "ADF" or "ADF/" or "BTH" or "MN")
-                       .Select(r => r.Text.Trim())
-                       .FirstOrDefault();
-        }
+            Radios = new List<RadioState> { new(7, 243_000, true) },
+        };
 
-        Lit(onAdf); Lit(onBth); Lit(onMn);
+        Assert.Equal("ON", Power(map, tuned));
+        Assert.Null(Power(map, Rebuilt(CniFixtures.Load("232316-006"))));
+    }
 
-        Assert.Equal("BTH", Lit(onBth));
-        Assert.Equal("MN",  Lit(onMn));
+    /// <summary>COMM TUNE U1's PWR word the device is showing lit, or null for neither.</summary>
+    private static string? Power(CniSessionMap map, CniData data) =>
+        CniGrid.Render(data, Resolver.Resolve(data), map)
+               .Where(r => r.Invert && r.Line == 2 && r.Column > 16)
+               .Select(r => r.Text.Trim())
+               .FirstOrDefault();
+
+    /// <summary>COMM TUNE U1's lit ADF/MN/BTH position, or null for none.</summary>
+    private static string? RadioMode(CniSessionMap map, CniData data) =>
+        CniGrid.Render(data, Resolver.Resolve(data), map)
+               .Where(r => r.Invert && r.Text.Trim() is "ADF" or "ADF/" or "BTH" or "MN")
+               .Select(r => r.Text.Trim())
+               .FirstOrDefault();
+
+    /// <summary>
+    /// COMM TUNE U1 with its ADF/MN/BTH rotary posed by naming the element drawing each word.
+    /// ADF's value moves with its element the way the sim does it, which is what lets the matcher
+    /// settle that member on text alone.
+    /// </summary>
+    private static CniData Uhf1RadioMode(bool adfLit, string bth, string mn, string sep)
+    {
+        var data = CniFixtures.Load("232316-006");
+
+        var blocks = data.Blocks!.Select(b => b.V switch
+        {
+            "ADF" => b with { K = adfLit ? "{ADF-LIT}" : "{ADF-PLAIN}",
+                              V = adfLit ? "ADF" : "ADF/ " },
+            "BTH" => b with { K = bth },
+            "MN"  => b with { K = mn },
+            "/"   => b with { K = sep },
+            _     => b,
+        }).ToList();
+
+        return data with { Blocks = blocks };
+    }
+
+    /// <summary>
+    /// The same page as the sim builds it a second time: every value where it was, every element
+    /// name new. Only the two the sim names itself keep theirs, as they do in a real rebuild.
+    /// </summary>
+    private static CniData Rebuilt(CniData data)
+    {
+        var issued = 0;
+
+        List<CniBlock> Reissue(List<CniBlock> blocks) => blocks.Select(b => b with
+        {
+            K = b.K is "cni_title" or "cni_scratchpad"
+                ? b.K
+                : $"{{REBUILT-{++issued:0000}}}",
+            C = b.C is null ? null : Reissue(b.C),
+        }).ToList();
+
+        return data with { Blocks = Reissue(data.Blocks!) };
     }
 }
