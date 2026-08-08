@@ -26,7 +26,15 @@ import json
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import percent
+
 MIN_RUN = 3
+
+
+# Redrawn at the end instead of derived, against the '/' this pass has just produced. See
+# percent.py for why deriving it does not work.
+DRAWN_AFTERWARDS = frozenset("%")
 
 
 def bbox(rows):
@@ -166,6 +174,8 @@ def main(argv):
     broken, missing, overflow, done = [], [], [], 0
     for glyph in font["SmallGlyphs"]:
         ch = glyph["Character"]
+        if ch in DRAWN_AFTERWARDS:
+            continue
         source = large.get(ch)
         if source is None:
             missing.append(ch)
@@ -186,6 +196,9 @@ def main(argv):
 
         glyph["BitArray"] = rows
         done += 1
+
+    small = {g["Character"]: g for g in font["SmallGlyphs"]}
+    small["%"]["BitArray"] = percent.draw(small["/"]["BitArray"], "SmallGlyphs")
 
     path.write_text(json.dumps(font, ensure_ascii=False), encoding="utf-8")
 

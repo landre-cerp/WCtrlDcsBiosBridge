@@ -29,8 +29,13 @@ public class CniBlockMatcherTests
         var blocks = CniBlockMatcher.Flatten(data.Blocks);
         var matched = CniBlockMatcher.Align(blocks, page!.Slots);
 
+        // Blanks excepted. The sim emits an element for every field of every leg whether or not
+        // it holds anything, and on a route with a break the last leg sends one more of them
+        // than the page has room for. A blank that finds no slot draws nothing, so it costs the
+        // screen nothing — and pricing it apart from a real value is what stopped the landing
+        // altitude going overboard in its place. A block carrying text still has to land.
         var orphans = blocks
-            .Where((_, i) => matched[i] is null)
+            .Where((b, i) => matched[i] is null && !string.IsNullOrEmpty(b.V))
             .Select(b => $"n={b.N} v='{b.V}'")
             .ToList();
 

@@ -13,6 +13,12 @@ namespace WCtrlDcsBiosBridge.Aircrafts.C130J;
 /// Either way the answer then applies to every element the field drives, which is how the GUARD
 /// word in the IDENT column settles the GUARD toggle three lines below it.
 ///
+/// Every such answer also goes to <see cref="CniSessionMap"/>, which keeps it against the element
+/// that gave it rather than against the frame. That is what carries a reading past the moment it
+/// was available — the radio that settled PWR while its frequency was on the page still settles
+/// it on the page that does not print one — and past the field it was about, since a rotary with
+/// one member accounted for has said something about the others.
+///
 /// A field with no evidence is drawn unselected — plain and small, on every member. That is not
 /// the same as guessing: the alternative is a highlight on the wrong half of a rotary, and the
 /// highlight is the whole of what a rotary says.
@@ -36,7 +42,10 @@ internal static class CniVariants
 
         if (page is not null && blocks is not null && session is not null)
         {
-            session.Observe(page, blocks, matched);
+            // Handed everything the three passes above settled, because each of those is as much
+            // a reading of the element that carried it as of the state — and the element is
+            // still there on the frames where the reading is not.
+            session.Observe(page, blocks, matched, states);
             ObserveSession(states, matched, blocks, session);
         }
 
@@ -60,29 +69,54 @@ internal static class CniVariants
                 continue;
             }
 
-            // No answer, so take whichever of the pair claims the least. A toggle has no neutral
-            // state of its own — the module builds one branch per position and each marks its
-            // own word — but the two forms of a single word do, and the unmarked one is it.
-            matched[i] = Emphasis(slot) <= Emphasis(other) ? slot : other;
+            matched[i] = Neutral(slot, other);
         }
+    }
+
+    /// <summary>
+    /// Which of a pair to draw when nothing has settled the field.
+    ///
+    /// Two shapes, and they want opposite answers.
+    ///
+    /// A toggle marks its selection with the inverted material, and it has no neutral state of
+    /// its own: the module builds one branch per position and each marks its own word, so
+    /// picking either branch asserts a position. What does have a neutral state is a single
+    /// word taken on its own — the two forms of the ON in COMM TUNE's PWR are the same word
+    /// marked and unmarked — so each is drawn in whichever of its forms claims the least, and
+    /// the toggle comes out plain on both words.
+    ///
+    /// Where the module marks the selection with size alone, that reasoning has nothing to
+    /// stand on: with no mark to drop, the smaller of the two forms is not the quieter one but
+    /// simply the other state. These are the twenty-two soft-key labels and status lines built
+    /// large and redrawn small once their action is spent or their state is set — MSTR AV ON,
+    /// AUTONAV, START, STOP — and drawing them small was saying the crew had already used them.
+    /// The unselected form is what the page shows before anything has happened, so that is the
+    /// one drawn, whichever of the two sizes it happens to be.
+    /// </summary>
+    private static CniSlot Neutral(CniSlot slot, CniSlot other)
+    {
+        if (!slot.IsInvert && !other.IsInvert && slot.IsSelected != other.IsSelected)
+            return slot.IsSelected ? other : slot;
+
+        return Emphasis(slot) <= Emphasis(other) ? slot : other;
     }
 
     /// <summary>
     /// How loudly a slot claims to be the selected one.
     ///
-    /// The inverted material is the usual mark and outranks everything. Where the module does
-    /// not use it, size carries the selection alone: POWER UP has no highlight on its two NAV DB
-    /// lines and simply draws the loaded one large. Twenty-two pairs across the pages are like
-    /// that, and reading only the highlight left them asserting a state on their size — the
-    /// device showed 09SEP09OCT24 as the loaded database while the cockpit had 12AUG10SEP25.
+    /// The inverted material is the usual mark and outranks everything, and size comes after it
+    /// because the two travel together: the selected member of a field is drawn large as well as
+    /// highlighted, so reading only the highlight left the pairs that use both asserting a state
+    /// on their size.
     /// </summary>
     private static int Emphasis(CniSlot slot) => (slot.IsInvert ? 2 : 0) + (slot.IsSmall ? 0 : 1);
 
     /// <summary>
-    /// What the crew has already shown us this session.
+    /// What the elements on screen have already been shown to be, earlier in the session.
     ///
-    /// Recorded last of the four so that anything derived from the page itself wins: those hold
-    /// on the first frame, where this holds only once a rotary has been turned twice.
+    /// Read last of the four, and only for the fields the other three left open. It is never in
+    /// conflict with them — what it holds was put there by them — but it is the older reading of
+    /// the two, and a field the page is settling for itself this frame has no need of it.
     /// </summary>
     private static void ObserveSession(Dictionary<string, bool?> states, CniSlot?[] matched,
                                        IReadOnlyList<CniBlock> blocks, CniSessionMap session)
@@ -168,6 +202,19 @@ internal static class CniVariants
         if (!slot.FieldHasTwoStates) return false;
 
         if (slot.Counterpart is not { } other) return true;
+
+        // A table column, where the matcher pays to seat a block on the highlighted half and so
+        // only does it where every plain reading came out strictly worse. That makes the seating
+        // itself an answer, and it is the only one LANDING DATA's header row gives: "0", "50"
+        // and "100" read the same in both halves, but the sim sends the selected one first, and
+        // no plain reading can put "100" ahead of the two that follow it.
+        //
+        // Columns only. A toggle offers the matcher two branches holding one highlighted word
+        // each, so the two cost the same and it takes the earlier by tie-break rather than on
+        // any evidence — reading that as proof lit SQL and TONE on COMM TUNE U1, which is
+        // exactly the invention this whole pass exists to avoid.
+        if (slot.Column is not null && slot.IsInvert && !other.IsInvert) return true;
+
         if (!slot.IsStatic || !other.IsStatic) return false;
 
         return !string.Equals(slot.Value, other.Value, StringComparison.Ordinal);

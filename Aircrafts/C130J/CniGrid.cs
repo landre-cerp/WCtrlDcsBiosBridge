@@ -33,6 +33,12 @@ internal static class CniGrid
     {
         ['^'] = '°',   // degree
         [']'] = '☐',   // empty entry field
+
+        // The em dash the module rules its alternate-route pages with, twenty times over. The
+        // panel has no slot for it — its character set is ASCII plus a short list of symbols,
+        // and U+2014 is in neither — so unlike '&' and '#' no amount of drawing would land it.
+        // A hyphen is what a rule of them looks like on a monospaced grid anyway.
+        ['—'] = '-',
     };
 
     /// <summary>
@@ -128,6 +134,14 @@ internal static class CniGrid
         {
             var col = start + i;
             if (col < 0 || col >= Columns) continue;
+
+            // A space never rubs out what is already there. Several elements can share one
+            // anchor and space themselves apart with their own leading blanks — TOLD INIT's
+            // RCR/RSC line is "23", "  /" and "    0" all issued at column 0 — and letting the
+            // blanks land wiped the slash off a line that reads 23/ 0 in the cockpit. Ink over
+            // ink is still allowed: that is the deliberate overdraw COMM TUNE INDEX does when it
+            // puts GUARD on top of the identifier it replaces.
+            if (text[i] == ' ' && grid[line, col] != ' ') continue;
 
             grid[line, col] = text[i];
             small[line, col] = slot.IsSmall;
@@ -230,10 +244,13 @@ internal static class CniGrid
         grid[line, col] != ' ' || invert[line, col];
 
     /// <summary>
-    /// Translates the two repurposed characters. Anything else passes through: the CNI sends
+    /// Translates the repurposed characters. Anything else passes through: the CNI sends
     /// printable ASCII only, so unlike the CDNU there is nothing to blank out.
+    ///
+    /// Public so the tests can hold the schema's own literals against the font through the same
+    /// substitutions the renderer makes, rather than a second copy of them.
     /// </summary>
-    private static string MapGlyphs(string? raw)
+    public static string MapGlyphs(string? raw)
     {
         if (string.IsNullOrEmpty(raw)) return string.Empty;
 

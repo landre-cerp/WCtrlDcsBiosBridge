@@ -79,6 +79,19 @@ internal sealed class CniSlot
     /// </summary>
     [JsonProperty("cs")] public string? Source { get; init; }
 
+    /// <summary>
+    /// The column of a table this slot belongs to, or null when it is not in one.
+    ///
+    /// LANDING DATA is four rows of the same four flap settings, and one setting is selected for
+    /// the page rather than for each row: the module names them <c>told_landing_flaps_100</c>,
+    /// <c>told_landing_app_100</c>, <c>told_landing_thr_100</c>, all at the same grid column. So
+    /// whatever settles one of them settles the column, which is what lets the header row — the
+    /// only one made of literals — speak for the three rows of figures below it.
+    /// </summary>
+    public string? Column { get; private set; }
+
+    internal void JoinColumn(string key) => Column = key;
+
     public bool IsStatic => Value != null;
     public bool IsSmall => Small != 0;
     public bool IsInvert => Invert != 0;
@@ -177,6 +190,43 @@ internal sealed class CniPage
         PairLeftovers();
         MarkTwoStateFields();
         Selectors = FindSelectors();
+        FindColumns();
+    }
+
+    /// <summary>
+    /// Ties together the fields of one table column.
+    ///
+    /// A column is what several rows call by the same last name at the same place: the four
+    /// <c>_100</c> fields of LANDING DATA all sit at column 19, on four different lines, under
+    /// four different row names. One flap setting is selected for the page, so those four are
+    /// one decision — and the header row, alone in being made of literals, is the one the
+    /// matcher can read it off.
+    ///
+    /// Two lines at least, and two row names at least: one field on its own is not a column, and
+    /// neither are the two halves of a toggle, which share a line and differ in nothing but the
+    /// last name this keys on.
+    /// </summary>
+    private void FindColumns()
+    {
+        var groups = Slots
+            .Where(s => s is { FieldHasTwoStates: true, Controller: not null, Col: not null }
+                        && s.Counterpart is not null)
+            .GroupBy(s => $"{LastName(s.Controller!)}|{s.Col}|{(int)s.Anchor}", StringComparer.Ordinal);
+
+        foreach (var group in groups)
+        {
+            var members = group.ToList();
+            if (members.Select(s => s.Line).Distinct().Count() < 2) continue;
+            if (members.Select(s => s.Controller).Distinct(StringComparer.Ordinal).Count() < 2) continue;
+
+            foreach (var slot in members) slot.JoinColumn(group.Key);
+        }
+    }
+
+    private static string LastName(string field)
+    {
+        var cut = field.LastIndexOf('_');
+        return cut >= 0 ? field[(cut + 1)..] : field;
     }
 
     /// <summary>

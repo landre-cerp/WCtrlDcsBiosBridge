@@ -174,17 +174,23 @@ def indication_order(slots):
 
 
 def pair_variants(slots):
-    """Bring the two variants of one field next to each other.
+    """Bring the two variants of one field next to each other. No longer used - see below.
 
-    A field that can be highlighted is built twice: once inverted, once not, at the same spot,
-    and the sim draws whichever matches the state. told_landing_1.lua adds all three inverted
-    speeds for a row, then all three plain ones — so the wire order for "153 135 126" is
-    126 first, because it is the highlighted one and its slot comes earlier.
+    Kept as the record of a fix that made things worse, because the shape it was aimed at is
+    real and the next person will meet it again.
 
-    Aligned against that order, the renderer puts each value in the column of whichever slot
-    it happened to land on, and a row reads 126 153 135 instead of 153 135 126. Interleaving
-    the variants makes one emitted value per field fall on the right field whichever variant
-    the sim chose.
+    A field that can be highlighted is built twice, once inverted and once not, at the same
+    spot. told_landing_1.lua adds all three inverted speeds of a row and then all three plain
+    ones, so with a column selected the wire for "153 135 126" arrives as 126 153 135: the
+    highlighted cell first, because its slot was built first, then the rest in column order.
+
+    Interleaving looked like the answer and is not, for two reasons. It throws away the very
+    thing that says which column is highlighted - the answer is in the wire order, and only an
+    alignment against Add() order can read it, which is how "100" arriving before "0" on the
+    FLAPS header identifies flap 100 outright. And it puts a cell's two halves side by side,
+    which the index tie-break then fills both of, drawing the plain half over the highlighted
+    one and losing a column of speeds. The alignment now prefers the plain half of a pair
+    outright, which is what that tie-break needed all along.
     """
     groups = defaultdict(list)
     for s in slots:
@@ -216,7 +222,7 @@ def slim_page(p):
     ctrl_of = effective_controllers(p["slots"])
 
     slots = []
-    for s in indication_order(pair_variants(reposition_disc_fields(p["slots"]))):
+    for s in indication_order(p["slots"]):
         out = {"n": s["n"], "a": ANCHORS.get(s.get("anchor", "Left"), 0)}
 
         # Two different keys on purpose. "ct" is a field the module builds in two states, and

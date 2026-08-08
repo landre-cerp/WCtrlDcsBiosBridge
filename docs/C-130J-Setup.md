@@ -72,17 +72,61 @@ It follows the cockpit on:
   its absence, off
 - fields whose two states spell themselves differently: ADF against `ADF/ `, ON against OUT
 - **radio power**, read from the radio device rather than from the display
+- the boxed INAV digit in the top-left corner, read from the PFD's active solution
+- **the selected column of a table**, read off the order the sim sends it in. A row is built as
+  every highlighted cell followed by every plain one, so LANDING DATA sends the flap headers as
+  `100 0 50` when 100 is selected — and no reading that takes all three as plain can put `100`
+  ahead of the two behind it. One flap setting is selected for the page, so the header row
+  answers for the three rows of speeds below it, which have no literals of their own
 
-Everywhere else it shows nothing. Of the 460 highlightable fields across the 145 pages, 455
-cannot be resolved: `OFF/ON` reads the same either way, and the sim sends the words without
-saying which it drew. SQL, TONE, ADF's MN and BTH positions, and every field on the IFF page
-are in that group.
+Each of those answers is then kept against the element that gave it, for as long as the sim
+keeps issuing that element — the identifiers are random, but they hold steady within a session.
+That is what makes the answers travel:
+
+- **past the frame.** The radio can only be paired with a page while that page prints the
+  frequency it is tuned to. Once PWR's two elements are told apart, the toggle keeps following
+  the radio on the pages that print nothing to pair on.
+- **to the fields beside them.** Exactly one position of a rotary is lit, so settling ADF is
+  settling that the MN and BTH elements next to it are the plain ones — and the first turn away
+  from ADF then says which of the two it went to.
+- **from the crew's own switching.** Turn a rotary and two positions swap element while the
+  rest hold; a position that held was not the lit one either side of the turn. That alone reads
+  POWER UP's GPS/LAST/REF, where nothing outside the CNI moves at all.
+
+Everything learned is dropped when the page is rebuilt, which the page's own fixed text gives
+away: a literal cannot move with any state, so an element behind one that changed means fresh
+identifiers for the whole page.
+
+A pair the module marks by size instead of by highlight is drawn in the form the page shows
+before anything has happened — full size for the soft-key labels that go small once used
+(`MSTR AV ON`, `AUTONAV`, `START`, `STOP`), small for the two NAV DB lines, whose loaded
+database is the large one. Twenty-two pairs across the pages work that way.
+
+What is still out of reach is a field whose two forms are identical and which nothing else on
+the aircraft moves with. `OFF/ON` reads the same either way, and the sim sends the words without
+saying which it drew. SQL, TONE and **the whole of IFF 2/3** are in that group: the module's
+`add_cni_toggle` builds one container per position holding the same two words, at the same
+places, in the same order, differing only in `el.material` — and material is not in the
+indication. Nothing distinguishes the two but the identifier, which is random. Of the 460
+highlightable fields across the 145 pages, the great majority have nothing of their own to give
+away; how many end up settled depends on what the flight has shown so far.
 
 Nothing is guessed. A highlight on the wrong half of a rotary is worse than none, because the
 highlight is the whole of what a rotary says. The text itself is always correct.
 
+The aircraft's own devices were the last place it could have come from, and they have now been
+swept. Fourteen of the ninety-seven answer a reader, and every one of them is a stock ED
+interface: `get_frequency`/`get_modulation`/`is_on` on the radios, `get_altitude`/`get_mode` on
+the radar altimeters, `get_bank`/`get_pitch`/`get_sideslip` on the gyro, the intercom's signal
+levels. Not one of the module's own `herc::` classes exposes anything — `herc::Iff` (device 51)
+and `MAIN_COMPUTER` (device 1) answer nothing at all, and the CNIs themselves (25, 26, 27) are
+write-only down to their opaque `link`. So IFF 2/3 and POWER UP's alignment source cannot be
+read, by us or by anyone else scraping this aircraft, and the request to ASC is the whole of
+what is left.
+
 Fixed element identifiers from the module's authors, or a page indicator, would settle all of
-it at once. The DCS-BIOS project has asked for them.
+it at once, and none of the above would be needed. The DCS-BIOS project has asked for them
+([issue 1469](https://github.com/DCS-Skunkworks/dcs-bios/issues/1469)).
 
 ## If the page stays empty
 

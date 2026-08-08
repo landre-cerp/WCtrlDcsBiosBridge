@@ -52,6 +52,21 @@ public class CniContactSheetTests
             var invertRuns = runs.Where(r => r.Invert).Select(r => $"L{r.Line}:{r.Text.Trim()}");
             sheet.WriteLine("  inverse: " + string.Join(" | ", invertRuns));
 
+            // Where the matcher put each block. The sheet shows what came out; this shows the
+            // decision behind it, which is the only way to tell a layout fault from a matching
+            // one — LANDING DATA looked like a placement bug and was an alignment drifting
+            // across rows.
+            var blocks = CniBlockMatcher.Flatten(data.Blocks);
+            var matched = CniBlockMatcher.Align(blocks, page.Slots);
+
+            sheet.WriteLine("  places: " + string.Join(" ", blocks.Select((b, i) =>
+            {
+                var slot = matched[i];
+                return slot is null
+                    ? $"[{b.V}]->rien"
+                    : $"[{b.V}]->n{slot.N}L{slot.Line}C{slot.Col}{(slot.IsInvert ? "i" : "")}";
+            })));
+
             sheet.WriteLine("  recu: " + string.Join(" ",
                 CniBlockMatcher.Flatten(data.Blocks)
                     .Select(b => b.V)

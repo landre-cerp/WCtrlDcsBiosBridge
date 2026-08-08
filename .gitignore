@@ -7,3 +7,4 @@ Scripts/c130-probe
 tools/cni-schema/audit.py
 tools/cni-schema/validate.py
 
+__pycache__/
