@@ -336,6 +336,13 @@
                             </TextBlock>
                         </Grid>
 
+                        <!-- Last resort, so it closes the troubleshooting list: whatever went
+                             wrong, the full exception is in the log even when the panel or the
+                             status bar only had room for the first line of it. -->
+                        <TextBlock FontSize="12" TextWrapping="Wrap" Margin="0,10,0,0">
+                            <Hyperlink x:Name="ViewLogHyperlink" Click="ViewLogLink_Click"><Run x:Name="ViewLogLink" x:Uid="ViewLogLink">View log file</Run></Hyperlink>
+                        </TextBlock>
+
                     </StackPanel>
                 </ScrollViewer>
             </PivotItem>
@@ -354,6 +361,20 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center">
             <config:ConfigPanel x:Name="ConfigPanelControl"/>
+        </Border>
+    </Grid>
+
+    <!-- Log overlay: same in-window approach as ConfigOverlay above, but wider — log lines
+         carry a timestamp and a level before the message and are not wrapped. -->
+    <Grid x:Name="LogOverlay" Visibility="Collapsed" Background="#AA000000">
+        <Border MaxWidth="900" MaxHeight="640"
+                Background="{StaticResource WindowBackground}"
+                BorderBrush="{StaticResource CardBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+            <ui:LogViewerPanel x:Name="LogViewerPanelControl"/>
         </Border>
     </Grid>
     </Grid>

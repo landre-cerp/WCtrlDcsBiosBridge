@@ -77,6 +77,7 @@
   <data name="HelpStep3Text" xml:space="preserve"><value>Load into a mission in DCS World. The aircraft module is detected automatically — no manual selection needed.</value></data>
   <data name="HelpStep4Text" xml:space="preserve"><value>Your CDU or FCU/EFIS will sync with the in-game cockpit. The Dashboard tab shows live status.</value></data>
   <data name="SupportedAircraftLink" xml:space="preserve"><value>Supported aircraft</value></data>
+  <data name="ViewLogLink" xml:space="preserve"><value>View log file</value></data>
   <data name="TroubleshootingHeader" xml:space="preserve"><value>Troubleshooting</value></data>
   <data name="Trouble1Strong" xml:space="preserve"><value>Device not shown in Dashboard:</value></data>
   <data name="Trouble1Rest" xml:space="preserve"><value> unplug and replug the USB cable, then restart the app.</value></data>
@@ -184,6 +185,15 @@
   <!-- StatusBarControl -->
   <data name="StatusLabel" xml:space="preserve"><value>Status:</value></data>
   <data name="Status_Ready" xml:space="preserve"><value>Ready.</value></data>
+
+  <!-- LogViewerPanel -->
+  <data name="LogViewerHeader" xml:space="preserve"><value>Application log</value></data>
+  <data name="LogViewerCopyButtonControl" xml:space="preserve"><value>Copy</value></data>
+  <data name="LogViewerCloseButtonControl" xml:space="preserve"><value>Close</value></data>
+  <data name="LogViewer_Empty" xml:space="preserve"><value>The log file is empty.</value></data>
+  <data name="LogViewer_NotFound" xml:space="preserve"><value>No log file found.</value></data>
+  <data name="LogViewer_ReadFailedFormat" xml:space="preserve"><value>Could not read the log file: {0}</value></data>
+  <data name="LogViewer_Copied" xml:space="preserve"><value>Copied to clipboard.</value></data>
 
   <!-- OptionsPanel -->
   <data name="GeneralHeader" xml:space="preserve"><value>GENERAL</value></data>
