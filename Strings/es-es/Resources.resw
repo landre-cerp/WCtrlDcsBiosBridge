@@ -188,9 +188,11 @@
 
   <!-- LogViewerPanel -->
   <data name="LogViewerHeader" xml:space="preserve"><value>Registro de la aplicación</value></data>
+  <data name="LogViewerErrorsOnlyButtonControl" xml:space="preserve"><value>Solo errores</value></data>
   <data name="LogViewerCopyButtonControl" xml:space="preserve"><value>Copiar</value></data>
   <data name="LogViewerCloseButtonControl" xml:space="preserve"><value>Cerrar</value></data>
   <data name="LogViewer_Empty" xml:space="preserve"><value>El archivo de registro está vacío.</value></data>
+  <data name="LogViewer_NoErrors" xml:space="preserve"><value>No hay errores en esta parte del registro.</value></data>
   <data name="LogViewer_NotFound" xml:space="preserve"><value>No se encontró ningún archivo de registro.</value></data>
   <data name="LogViewer_ReadFailedFormat" xml:space="preserve"><value>No se pudo leer el archivo de registro: {0}</value></data>
   <data name="LogViewer_Copied" xml:space="preserve"><value>Copiado al portapapeles.</value></data>

@@ -188,9 +188,11 @@
 
   <!-- LogViewerPanel -->
   <data name="LogViewerHeader" xml:space="preserve"><value>Anwendungsprotokoll</value></data>
+  <data name="LogViewerErrorsOnlyButtonControl" xml:space="preserve"><value>Nur Fehler</value></data>
   <data name="LogViewerCopyButtonControl" xml:space="preserve"><value>Kopieren</value></data>
   <data name="LogViewerCloseButtonControl" xml:space="preserve"><value>Schließen</value></data>
   <data name="LogViewer_Empty" xml:space="preserve"><value>Die Protokolldatei ist leer.</value></data>
+  <data name="LogViewer_NoErrors" xml:space="preserve"><value>Keine Fehler in diesem Teil des Protokolls.</value></data>
   <data name="LogViewer_NotFound" xml:space="preserve"><value>Keine Protokolldatei gefunden.</value></data>
   <data name="LogViewer_ReadFailedFormat" xml:space="preserve"><value>Die Protokolldatei konnte nicht gelesen werden: {0}</value></data>
   <data name="LogViewer_Copied" xml:space="preserve"><value>In die Zwischenablage kopiert.</value></data>

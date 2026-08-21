@@ -188,9 +188,11 @@
 
   <!-- LogViewerPanel -->
   <data name="LogViewerHeader" xml:space="preserve"><value>Journal de l'application</value></data>
+  <data name="LogViewerErrorsOnlyButtonControl" xml:space="preserve"><value>Erreurs seules</value></data>
   <data name="LogViewerCopyButtonControl" xml:space="preserve"><value>Copier</value></data>
   <data name="LogViewerCloseButtonControl" xml:space="preserve"><value>Fermer</value></data>
   <data name="LogViewer_Empty" xml:space="preserve"><value>Le fichier journal est vide.</value></data>
+  <data name="LogViewer_NoErrors" xml:space="preserve"><value>Aucune erreur dans cette partie du journal.</value></data>
   <data name="LogViewer_NotFound" xml:space="preserve"><value>Aucun fichier journal trouvé.</value></data>
   <data name="LogViewer_ReadFailedFormat" xml:space="preserve"><value>Impossible de lire le fichier journal : {0}</value></data>
   <data name="LogViewer_Copied" xml:space="preserve"><value>Copié dans le presse-papiers.</value></data>

@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using NLog;
 using NLog.Targets;
 
@@ -45,6 +46,57 @@ internal static class LogFileAccess
     /// </summary>
     public static string ResolveAgainstBase(string renderedFileName, string baseDirectory) =>
         Path.GetFullPath(Path.Combine(baseDirectory, renderedFileName));
+
+    /// <summary>
+    /// Start of a log entry: the "${longdate}|${level:uppercase=true}|" prefix NLog.config
+    /// writes. Anything that does not match is a continuation of the entry above it — the
+    /// "${exception:format=tostring}" tail of a message is a whole stack trace, several
+    /// physical lines of it.
+    /// </summary>
+    private static readonly Regex EntryHeader = new(
+        @"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+\|(?<level>[A-Z]+)\|",
+        RegexOptions.Compiled);
+
+    /// <summary>Levels the "errors only" filter keeps. FATAL is in: it is the worst line the
+    /// log can hold, and a filter named "errors" that hides it would be a trap.</summary>
+    private static readonly HashSet<string> ErrorLevels = new(StringComparer.Ordinal)
+    {
+        "ERROR", "FATAL"
+    };
+
+    /// <summary>
+    /// The ERROR and FATAL entries of <paramref name="text"/>, each with its continuation
+    /// lines, in order; empty when there are none.
+    ///
+    /// Filters whole entries rather than matching lines, because the line the user opened the
+    /// viewer for is rarely the header — it is the stack frame three lines below it, which
+    /// carries no level of its own and would be dropped by a per-line grep.
+    ///
+    /// Lines before the first header are dropped: <see cref="TailLines"/> cuts at a line
+    /// boundary, not an entry boundary, so a tail can open midway through an entry whose level
+    /// was never read. Keeping those would be guessing.
+    /// </summary>
+    public static string FilterErrors(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return string.Empty;
+
+        var kept = new List<string>();
+        var keeping = false;
+
+        foreach (var line in text.Split('\n'))
+        {
+            // Split on the newline alone so a file written with either line ending survives;
+            // the '\r' of a CRLF pair would otherwise ride along into the output.
+            var content = line.TrimEnd('\r');
+
+            var header = EntryHeader.Match(content);
+            if (header.Success) keeping = ErrorLevels.Contains(header.Groups["level"].Value);
+
+            if (keeping) kept.Add(content);
+        }
+
+        return string.Join(Environment.NewLine, kept);
+    }
 
     /// <summary>
     /// Last <paramref name="maxLines"/> lines of the log. Throws whatever the file system

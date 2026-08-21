@@ -188,9 +188,11 @@
 
   <!-- LogViewerPanel -->
   <data name="LogViewerHeader" xml:space="preserve"><value>Application log</value></data>
+  <data name="LogViewerErrorsOnlyButtonControl" xml:space="preserve"><value>Errors only</value></data>
   <data name="LogViewerCopyButtonControl" xml:space="preserve"><value>Copy</value></data>
   <data name="LogViewerCloseButtonControl" xml:space="preserve"><value>Close</value></data>
   <data name="LogViewer_Empty" xml:space="preserve"><value>The log file is empty.</value></data>
+  <data name="LogViewer_NoErrors" xml:space="preserve"><value>No errors in this part of the log.</value></data>
   <data name="LogViewer_NotFound" xml:space="preserve"><value>No log file found.</value></data>
   <data name="LogViewer_ReadFailedFormat" xml:space="preserve"><value>Could not read the log file: {0}</value></data>
   <data name="LogViewer_Copied" xml:space="preserve"><value>Copied to clipboard.</value></data>

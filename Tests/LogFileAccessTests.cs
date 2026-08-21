@@ -93,4 +93,121 @@ public class LogFileAccessTests
         Assert.StartsWith("2026-08-17", result);
         Assert.EndsWith("StartBridge()", result);
     }
+
+    /// <summary>
+    /// A log entry as NLog.config lays it out: longdate, level, message.
+    /// </summary>
+    private static string Entry(string level, string message, params string[] continuation) =>
+        string.Join(Environment.NewLine,
+            new[] { $"2026-08-17 10:00:00.0000|{level}|{message}" }.Concat(continuation));
+
+    [Fact]
+    public void FilterErrors_KeepsErrorEntries_DropsTheRest()
+    {
+        var log = string.Join(Environment.NewLine,
+            Entry("INFO", "Bridge started"),
+            Entry("ERROR", "Failed to start listener"),
+            Entry("DEBUG", "Polling"));
+
+        var result = LogFileAccess.FilterErrors(log);
+
+        Assert.Equal(Entry("ERROR", "Failed to start listener"), result);
+    }
+
+    /// <summary>
+    /// The reason this filters entries and not lines: the stack frames under an ERROR carry no
+    /// level of their own, and they are the half of the entry worth reading.
+    /// </summary>
+    [Fact]
+    public void FilterErrors_KeepsTheStackTraceUnderAnError()
+    {
+        var log = string.Join(Environment.NewLine,
+            Entry("INFO", "Bridge started"),
+            Entry("ERROR", "Failed to start listener",
+                  "   at WCtrlDcsBiosBridge.Services.SimExportReceiver.EnsureStarted()",
+                  "   at WCtrlDcsBiosBridge.Devices.Cdu.CduDeviceContext.StartBridge()"),
+            Entry("INFO", "Retrying"));
+
+        var result = LogFileAccess.FilterErrors(log);
+
+        Assert.Equal(3, result.Split(Environment.NewLine).Length);
+        Assert.EndsWith("StartBridge()", result);
+    }
+
+    /// <summary>An INFO entry's own continuation lines must not follow the error out.</summary>
+    [Fact]
+    public void FilterErrors_StopsAtTheNextEntry()
+    {
+        var log = string.Join(Environment.NewLine,
+            Entry("ERROR", "Boom"),
+            Entry("INFO", "Recovered", "   continuation of the info entry"));
+
+        var result = LogFileAccess.FilterErrors(log);
+
+        Assert.Equal(Entry("ERROR", "Boom"), result);
+    }
+
+    /// <summary>FATAL is an error by any reading a user would give the button.</summary>
+    [Fact]
+    public void FilterErrors_KeepsFatal()
+    {
+        var log = string.Join(Environment.NewLine,
+            Entry("WARN", "Device busy"),
+            Entry("FATAL", "Unrecoverable"));
+
+        var result = LogFileAccess.FilterErrors(log);
+
+        Assert.Equal(Entry("FATAL", "Unrecoverable"), result);
+    }
+
+    [Fact]
+    public void FilterErrors_WarnIsNotAnError()
+    {
+        var log = Entry("WARN", "Device busy");
+
+        Assert.Equal(string.Empty, LogFileAccess.FilterErrors(log));
+    }
+
+    /// <summary>
+    /// TailLines cuts at a line boundary, so the tail can open partway through an entry whose
+    /// level was never read. Those orphan lines are dropped rather than guessed at.
+    /// </summary>
+    [Fact]
+    public void FilterErrors_DropsLinesBeforeTheFirstHeader()
+    {
+        var log = string.Join(Environment.NewLine,
+            "   at SomeFrame.FromAnEntryThatWasCutOff()",
+            Entry("ERROR", "Boom"));
+
+        var result = LogFileAccess.FilterErrors(log);
+
+        Assert.Equal(Entry("ERROR", "Boom"), result);
+    }
+
+    /// <summary>
+    /// The log on disk is CRLF, and the result is rejoined with Environment.NewLine — also CRLF
+    /// here. The carriage return of the input must not ride along on top of that, or every line
+    /// in the panel picks up a stray one.
+    /// </summary>
+    [Fact]
+    public void FilterErrors_HandlesCrLfWithoutLeavingCarriageReturns()
+    {
+        var log = "2026-08-17 10:00:00.0000|INFO|started@@" +
+                  "2026-08-17 10:00:01.0000|ERROR|Boom@@" +
+                  "   at Frame()";
+
+        var result = LogFileAccess.FilterErrors(log.Replace("@@", "\r\n"));
+
+        var lines = result.Split(Environment.NewLine);
+
+        Assert.Equal(2, lines.Length);
+        Assert.All(lines, line => Assert.DoesNotContain("\r", line));
+        Assert.StartsWith("2026-08-17 10:00:01.0000|ERROR|Boom", result);
+    }
+
+    [Fact]
+    public void FilterErrors_EmptyInput_ReturnsEmpty()
+    {
+        Assert.Equal(string.Empty, LogFileAccess.FilterErrors(string.Empty));
+    }
 }

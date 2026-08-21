@@ -17,9 +17,13 @@ public sealed partial class LogViewerPanel : UserControl
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    /// <summary>What Copy puts on the clipboard: the log tail as shown, or empty when the
-    /// panel is displaying a message about why there is nothing to show.</summary>
+    /// <summary>What Copy puts on the clipboard: the log as shown, or empty when the panel
+    /// is displaying a message about why there is nothing to show.</summary>
     private string _text = string.Empty;
+
+    /// <summary>The unfiltered tail, kept so toggling the filter off does not have to re-read
+    /// the file — and so it cannot come back different from what the user was just reading.</summary>
+    private string _tail = string.Empty;
 
     private TaskCompletionSource? _tcs;
 
@@ -34,6 +38,7 @@ public sealed partial class LogViewerPanel : UserControl
     public void Retranslate()
     {
         LogViewerHeader.Text = Strings.Get("LogViewerHeader");
+        ErrorsOnlyToggle.Content = Strings.Get("LogViewerErrorsOnlyButtonControl");
         CopyButton.Content = Strings.Get("LogViewerCopyButtonControl");
         CloseButton.Content = Strings.Get("LogViewerCloseButtonControl");
     }
@@ -53,6 +58,8 @@ public sealed partial class LogViewerPanel : UserControl
 
     private void LoadLog()
     {
+        _tail = string.Empty;
+
         var path = LogFileAccess.ResolvePath();
         LogPathText.Text = path ?? string.Empty;
 
@@ -64,14 +71,44 @@ public sealed partial class LogViewerPanel : UserControl
 
         try
         {
-            var tail = LogFileAccess.ReadTail(path);
-            SetBody(tail, tail.Length == 0 ? Strings.Get("LogViewer_Empty") : tail);
+            _tail = LogFileAccess.ReadTail(path);
+            ShowTail();
         }
         catch (Exception ex)
         {
             Logger.Warn(ex, "Failed to read the log file for the viewer");
             SetBody(string.Empty, Strings.Format("LogViewer_ReadFailedFormat", ex.Message));
         }
+    }
+
+    /// <summary>
+    /// Puts the tail on screen through the filter as it currently stands. Called both on load
+    /// and on every toggle, so the two paths cannot drift apart.
+    /// </summary>
+    private void ShowTail()
+    {
+        var errorsOnly = ErrorsOnlyToggle.IsChecked == true;
+        var body = errorsOnly ? LogFileAccess.FilterErrors(_tail) : _tail;
+
+        if (body.Length > 0)
+        {
+            SetBody(body, body);
+            return;
+        }
+
+        // Nothing to show, and which of the two reasons it is decides what the user does next:
+        // an empty log means the app has not logged anything, no errors means it has and none
+        // of it went wrong. Telling them "empty" in the second case would be a lie.
+        SetBody(string.Empty,
+                Strings.Get(errorsOnly && _tail.Length > 0 ? "LogViewer_NoErrors" : "LogViewer_Empty"));
+    }
+
+    private void ErrorsOnlyToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        // The copy confirmation refers to what was on screen a moment ago; the filter has just
+        // changed what that is.
+        StatusText.Visibility = Visibility.Collapsed;
+        ShowTail();
     }
 
     /// <summary>
@@ -113,6 +150,7 @@ public sealed partial class LogViewerPanel : UserControl
         // Dropped rather than kept: a viewer left holding a few hundred KB of log for the
         // life of the process is the one thing this panel should not do.
         _text = string.Empty;
+        _tail = string.Empty;
         LogText.Text = string.Empty;
 
         _tcs?.TrySetResult();
