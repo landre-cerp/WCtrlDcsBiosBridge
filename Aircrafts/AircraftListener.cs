@@ -1,4 +1,4 @@
-using ClassLibraryCommon;
+﻿using ClassLibraryCommon;
 using System.Collections.Concurrent;
 using DCS_BIOS.ControlLocator;
 using DCS_BIOS.EventArgs;
@@ -8,14 +8,25 @@ using Newtonsoft.Json;
 using System.IO;
 using Timer = System.Timers.Timer;
 using WwDevicesDotNet;
+using WCtrlDcsBiosBridge.Config;
 using WCtrlDcsBiosBridge.Devices.Cdu;
+using WCtrlDcsBiosBridge.Devices.Frontpanels;
 
 namespace WCtrlDcsBiosBridge.Aircrafts;
 
 internal abstract class AircraftListener : IDcsBiosListener, IDisposable
 {
     private static readonly double _TICK_DISPLAY = 100;
+
+    // The annunciators run at 30 Hz on their own timer while the screen keeps its 10 Hz.
+    // DCS-BIOS exports every rendered frame, so the tick is the only thing quantizing a lamp,
+    // and a flashing caution sampled at 10 Hz blinks visibly slower than the cockpit's. A LED
+    // tick costs nothing unless something moved (see CduRenderer.RenderLeds), a screen tick
+    // copies the whole buffer.
+    private static readonly double _TICK_LEDS = 33;
+
     private readonly Timer _DisplayCDUTimer;
+    private readonly Timer _LedCDUTimer;
     protected AircraftCduContext? cdu;
 
     private bool _disposed;
@@ -208,6 +219,20 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
                 App.Logger.Error(ex, "CDU render tick failed");
             }
         };
+
+        _LedCDUTimer = new(_TICK_LEDS);
+        _LedCDUTimer.Elapsed += (_, _) =>
+        {
+            // Same reasoning as the display tick: an unplugged device must not crash the app.
+            try
+            {
+                cdu?.RenderLeds();
+            }
+            catch (Exception ex)
+            {
+                App.Logger.Error(ex, "CDU LED tick failed");
+            }
+        };
     }
 
     /// <summary>
@@ -281,7 +306,11 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
     {
         InitializeDcsBiosOutputs();
 
+        // This aircraft's declared LED defaults, then whatever it computes for itself, then
+        // the user's own bindings — each layer having the last word over the one before it.
+        RegisterDefaultLedBindings();
         RegisterFrontpanelControls();
+        RegisterUserLedBindings();
 
         if (cdu != null)
         {
@@ -322,6 +351,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
 
         cdu?.Render(pages[_currentPage]);
         _DisplayCDUTimer.Start();
+        _LedCDUTimer.Start();
 
     }
 
@@ -339,6 +369,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         cdu = null;
 
         _DisplayCDUTimer.Stop();
+        _LedCDUTimer.Stop();
 
         BIOSEventHandler.DetachConnectionListener(this);
         BIOSEventHandler.DetachDataListener(this);
@@ -389,6 +420,11 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         }
     }
 
+    /// <summary>
+    /// Sets the MCDU annunciators this aircraft drives. LEDs the user has bound to a
+    /// DCS-BIOS control of their own are left alone: a user binding wins over the
+    /// aircraft's built-in one, the same rule the frontpanel renderers follow.
+    /// </summary>
     protected void SetCduLeds(
         bool? fail = null,
         bool? fm1 = null,
@@ -397,18 +433,166 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         bool? ind = null,
         bool? rdy = null)
     {
-        if (cdu == null) return;
-        lock (cdu.State.SyncRoot)
+        if (fail.HasValue) SetDefaultCduLed(McduLed.Fail, fail.Value);
+        if (fm1.HasValue) SetDefaultCduLed(McduLed.Fm1, fm1.Value);
+        if (fm2.HasValue) SetDefaultCduLed(McduLed.Fm2, fm2.Value);
+        if (fm.HasValue) SetDefaultCduLed(McduLed.Fm, fm.Value);
+        if (ind.HasValue) SetDefaultCduLed(McduLed.Ind, ind.Value);
+        if (rdy.HasValue) SetDefaultCduLed(McduLed.Rdy, rdy.Value);
+    }
+
+    /// <summary>Writes an annunciator the aircraft owns, unless the user took it over.</summary>
+    private void SetDefaultCduLed(McduLed led, bool on)
+    {
+        if (IsUserBound(led)) return;
+        WriteCduLed(led, on);
+    }
+
+    /// <summary>
+    /// Writes one annunciator. Only marks the LEDs dirty when a value actually changed: some
+    /// aircraft read their lamps out of a shared register that DCS-BIOS resends whenever any
+    /// bit in it moves, and a dirty flag costs a USB write on the next render tick.
+    /// </summary>
+    private void WriteCduLed(McduLed led, bool on)
+    {
+        var c = cdu;
+        if (c == null) return;
+
+        lock (c.State.SyncRoot)
         {
-            if (fail.HasValue) cdu.State.LedFail = fail.Value;
-            if (fm1.HasValue) cdu.State.LedFm1 = fm1.Value;
-            if (fm2.HasValue) cdu.State.LedFm2 = fm2.Value;
-            if (fm.HasValue) cdu.State.LedFm = fm.Value;
-            if (ind.HasValue) cdu.State.LedInd = ind.Value;
-            if (rdy.HasValue) cdu.State.LedRdy = rdy.Value;
-            cdu.State.LedsDirty = true;
+            var state = c.State;
+            bool changed;
+
+            switch (led)
+            {
+                case McduLed.Fail: changed = state.LedFail != on; state.LedFail = on; break;
+                case McduLed.Fm1: changed = state.LedFm1 != on; state.LedFm1 = on; break;
+                case McduLed.Fm2: changed = state.LedFm2 != on; state.LedFm2 = on; break;
+                case McduLed.Fm: changed = state.LedFm != on; state.LedFm = on; break;
+                case McduLed.Ind: changed = state.LedInd != on; state.LedInd = on; break;
+                case McduLed.Rdy: changed = state.LedRdy != on; state.LedRdy = on; break;
+                default: changed = false; break;
+            }
+
+            if (changed) state.LedsDirty = true;
         }
     }
+
+    // ── User LED bindings (ledmappings.json) ─────────────────────────────────
+
+    /// <summary>MCDU annunciators the user bound on this aircraft.</summary>
+    private readonly HashSet<McduLed> _userBoundCduLeds = new();
+
+    private bool IsUserBound(McduLed led) => _userBoundCduLeds.Contains(led);
+
+    /// <summary>
+    /// Registers this aircraft's declared LED defaults (see <see cref="LedDefaults"/>). Keeping
+    /// them in a table rather than in each listener means the LED editor can show what a LED
+    /// already follows without starting the aircraft, and cannot fall out of step with what the
+    /// bridge actually does.
+    /// </summary>
+    private void RegisterDefaultLedBindings()
+    {
+        var defaults = LedDefaults.For(descriptor);
+
+        foreach (var signal in defaults.Signals)
+        {
+            // Each control keeps its own last value, so a signal read off several of them
+            // reflects all of them and not just whichever moved last.
+            var lit = new bool[signal.Controls.Count];
+
+            for (var i = 0; i < signal.Controls.Count; i++)
+            {
+                var slot = i;
+                TryRegisterDefault(signal.Controls[slot], v =>
+                {
+                    lit[slot] = v != 0;
+                    FlightDeck.SetSignal(signal.Signal, Array.IndexOf(lit, true) >= 0);
+                });
+            }
+        }
+
+        foreach (var led in defaults.McduLeds)
+            TryRegisterDefault(led.Control, v => SetDefaultCduLed(led.Led, v != 0));
+    }
+
+    /// <summary>
+    /// Registers a declared default. Same reasoning as the user bindings: a control the
+    /// installed DCS-BIOS no longer defines must cost that one LED, not the bridge.
+    /// </summary>
+    private void TryRegisterDefault(string controlId, Action<uint> handler)
+    {
+        try
+        {
+            RegisterUInt(controlId, handler);
+        }
+        catch (Exception ex)
+        {
+            App.Logger.Warn(ex, $"Built-in LED default ignored: '{controlId}' is not a control of " +
+                                $"the {descriptor.DisplayName}");
+        }
+    }
+
+    /// <summary>
+    /// Registers the user's own LED bindings for this aircraft. Frontpanel LEDs land in
+    /// <see cref="FlightDeck"/> for the renderers to pick up; MCDU LEDs are written straight
+    /// to the CDU state. Called from <see cref="Start"/> for every aircraft — no listener
+    /// has to know the feature exists.
+    /// </summary>
+    private void RegisterUserLedBindings()
+    {
+        var bindings = LedMappingStore.ForAircraft(descriptor.DisplayName);
+        if (bindings.Count == 0) return;
+
+        // User LEDs are lighting like any other: SimApp Pro users own the panels.
+        if (options.DisableLightingManagement)
+        {
+            App.Logger.Info($"{bindings.Count} user LED binding(s) skipped: lighting management is disabled");
+            return;
+        }
+
+        foreach (var binding in bindings)
+        {
+            if (binding.Device == LedDeviceFamily.Mcdu)
+            {
+                if (LedCatalog.ParseMcduLed(binding.Led) is not McduLed led) continue;
+
+                // Only claim the LED once the control resolved: a binding that failed to
+                // register must not suppress the aircraft's own use of that annunciator.
+                if (TryRegisterUserLed(binding, v => WriteCduLed(led, binding.IsOn(v))))
+                    _userBoundCduLeds.Add(led);
+            }
+            else
+            {
+                TryRegisterUserLed(binding, v => FlightDeck.SetUserLed(binding.Device, binding.Led, binding.IsOn(v)));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Registers a handler for a user-supplied control id. Unlike the hard-coded ids the
+    /// listeners use, this one comes from a file the user (or whoever shared it) wrote, and
+    /// <see cref="DCSBIOSControlLocator.GetUIntDCSBIOSOutput"/> throws on an identifier the
+    /// module does not define — a stale binding after a DCS-BIOS update would otherwise take
+    /// the whole bridge down. Report it and carry on with the rest.
+    /// </summary>
+    private bool TryRegisterUserLed(LedBinding binding, Action<uint> handler)
+    {
+        try
+        {
+            RegisterUInt(binding.Control, handler);
+            App.Logger.Info($"User LED binding: {binding.Device}/{binding.Led} follows {binding.Control}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            App.Logger.Warn(ex, $"User LED binding ignored: {binding.Device}/{binding.Led} cannot follow " +
+                                $"'{binding.Control}' on the {descriptor.DisplayName}");
+            return false;
+        }
+    }
+
+
 
     protected virtual void InitializeDcsBiosOutputs() { }
     protected abstract void RegisterCduControls();
@@ -459,6 +643,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         {
             Stop();
             _DisplayCDUTimer.Dispose();
+            _LedCDUTimer.Dispose();
         }
 
         _disposed = true;

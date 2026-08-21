@@ -1,4 +1,4 @@
-using DCS_BIOS.Serialized;
+﻿using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Devices.Cdu;
@@ -20,6 +20,18 @@ public bool BrightnessDirty { get; set; } = false;
     public bool LedRdy { get; set; }
     public bool LedsDirty { get; set; } = true;
 
+    /// <summary>
+    /// Forgets which annunciators were lit, after the device itself has been blanked. This
+    /// state outlives the listener that wrote it — the same context serves the next aircraft —
+    /// so leaving it claiming a lamp is lit while the hardware is dark would keep the next
+    /// session from lighting it again when the same value comes back.
+    /// </summary>
+    public void ForgetLeds()
+    {
+        LedFail = LedFm1 = LedFm2 = LedFm = LedInd = LedRdy = false;
+        LedsDirty = true;
+    }
+
     public McduFontFile? Font { get; set; }
     public bool FontDirty { get; set; }
 }
@@ -31,6 +43,28 @@ internal sealed class CduRenderer
     public CduRenderer(ICdu device)
     {
         _device = device;
+    }
+
+    /// <summary>
+    /// Pushes the annunciators, if any of them moved. Runs on its own tick, far more often
+    /// than the screen: a flashing caution lamp sampled at 10 Hz blinks visibly slower than
+    /// the one in the cockpit, and this costs nothing on the ticks where nothing changed.
+    /// </summary>
+    public void RenderLeds(CduRenderState state)
+    {
+        lock (state.SyncRoot)
+        {
+            if (!state.LedsDirty) return;
+
+            _device.Leds.Fail = state.LedFail;
+            _device.Leds.Fm1 = state.LedFm1;
+            _device.Leds.Fm2 = state.LedFm2;
+            _device.Leds.Fm = state.LedFm;
+            _device.Leds.Ind = state.LedInd;
+            _device.Leds.Rdy = state.LedRdy;
+            _device.RefreshLeds();
+            state.LedsDirty = false;
+        }
     }
 
     public void Render(Screen source, CduRenderState state)
@@ -55,17 +89,7 @@ internal sealed class CduRenderer
                 state.BrightnessDirty = false;
             }
 
-            if (state.LedsDirty)
-            {
-                _device.Leds.Fail = state.LedFail;
-                _device.Leds.Fm1 = state.LedFm1;
-                _device.Leds.Fm2 = state.LedFm2;
-                _device.Leds.Fm = state.LedFm;
-                _device.Leds.Ind = state.LedInd;
-                _device.Leds.Rdy = state.LedRdy;
-                _device.RefreshLeds();
-                state.LedsDirty = false;
-            }
+            RenderLeds(state);
         }
     }
 
@@ -96,15 +120,26 @@ internal sealed class AircraftCduContext
         remove => Device.KeyDown -= value;
     }
 
-    public void Reset() => Device.Reset();
+    public void Reset()
+    {
+        Device.Reset();
+        lock (State.SyncRoot)
+        {
+            State.ForgetLeds();
+        }
+    }
 
     public void Render(Screen screen) => _renderer.Render(screen, State);
+
+    /// <summary>Pushes the annunciators alone, on the LED tick.</summary>
+    public void RenderLeds() => _renderer.RenderLeds(State);
 
     public void Cleanup()
     {
         lock (State.SyncRoot)
         {
             _renderer.Cleanup();
+            State.ForgetLeds();
         }
     }
 }

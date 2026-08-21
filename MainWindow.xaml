@@ -207,6 +207,11 @@
                 </Grid>
             </PivotItem>
 
+            <!-- ══ LEDs ══ -->
+            <PivotItem x:Name="LedMappingPivotItem" x:Uid="LedMappingPivotItem" Header="LEDs">
+                <ui:LedMappingPanel x:Name="LedMappingPanel"/>
+            </PivotItem>
+
             <!-- ══ Help ══ -->
             <PivotItem x:Name="HelpPivotItem" x:Uid="HelpPivotItem" Header="Help">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">

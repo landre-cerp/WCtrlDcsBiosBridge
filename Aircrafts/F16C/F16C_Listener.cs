@@ -1,4 +1,4 @@
-using DCS_BIOS.EventArgs;
+﻿using DCS_BIOS.EventArgs;
 using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Aircrafts;
@@ -80,8 +80,6 @@ internal partial class F16C_Listener : AircraftListener
         RegisterLight("PRI_CONSOLES_BRT_KNB",    (ctrl, v) => SetCduBacklightBrightnessPercent((int)(v * 100 / ctrl.MaxValue)));
         RegisterLight("PRI_DATA_DISPLAY_BRT_KNB", (ctrl, v) => SetCduDisplayBrightnessPercent((int)(v * 100 / ctrl.MaxValue)));
 
-        RegisterUInt("LIGHT_MASTER_CAUTION", v => SetCduLeds(fail: v == 1));
-
         RegisterDedControls();
         RegisterNavControls();
         RegisterRwrControls();
@@ -89,10 +87,7 @@ internal partial class F16C_Listener : AircraftListener
 
     protected override void RegisterFrontpanelControls()
     {
-        RegisterUInt("LIGHT_GEAR_L",    v => FlightDeck.GearLeftDown = v == 1);
-        RegisterUInt("LIGHT_GEAR_N",    v => FlightDeck.GearNoseDown = v == 1);
-        RegisterUInt("LIGHT_GEAR_R",    v => FlightDeck.GearRightDown = v == 1);
-        RegisterUInt("LIGHT_GEAR_WARN", v => FlightDeck.GearWarning = v == 1);
+        // Gear lights and the master caution are declared in LedDefaults.
     }
 
     protected override void Dispose(bool disposing)

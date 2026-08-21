@@ -1,0 +1,131 @@
+<UserControl
+    x:Class="WCtrlDcsBiosBridge.UI.LedMappingPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Margin="14,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
+            <TextBlock x:Name="LedMappingHeader" x:Uid="LedMappingHeader" Text="LED MAPPING"
+                       FontWeight="SemiBold" FontSize="11"
+                       Foreground="{StaticResource SubtleTextForeground}"
+                       VerticalAlignment="Center"/>
+            <Border x:Name="InUseBadge" Margin="8,0,0,0" CornerRadius="4" Padding="6,2"
+                    VerticalAlignment="Center" Visibility="Collapsed"
+                    Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
+                <TextBlock x:Name="InUseBadgeText" x:Uid="LedMappingInUseBadge"
+                           Text="In use — stop the bridge to change it"
+                           FontSize="10" Foreground="#E65100"/>
+            </Border>
+        </StackPanel>
+
+        <TextBlock Grid.Row="1" x:Name="LedMappingIntro" x:Uid="LedMappingIntro"
+                   Text="Bind a DCS-BIOS indicator to any LED on your panels."
+                   TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+        <!-- Aircraft / panel selection -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock x:Name="AircraftLabel" x:Uid="LedMappingAircraftLabel" Text="Aircraft:"
+                       VerticalAlignment="Center" Margin="0,0,8,0"/>
+            <ComboBox x:Name="AircraftCombo" MinWidth="140"
+                      SelectionChanged="Aircraft_Changed"/>
+
+            <TextBlock x:Name="DeviceLabel" x:Uid="LedMappingDeviceLabel" Text="Panel:"
+                       VerticalAlignment="Center" Margin="16,0,8,0"/>
+            <ComboBox x:Name="DeviceCombo" MinWidth="140"
+                      SelectionChanged="Device_Changed"/>
+
+            <CheckBox x:Name="AdvancedOption" x:Uid="LedMappingAdvancedOption"
+                      Content="Show all integer outputs"
+                      Margin="16,0,0,0" VerticalAlignment="Center"
+                      Checked="Advanced_Changed" Unchecked="Advanced_Changed"/>
+        </StackPanel>
+
+        <!-- Notice: no JSON path configured, or the module declares no lamp -->
+        <Border Grid.Row="3" x:Name="NoticeBorder" Visibility="Collapsed"
+                CornerRadius="4" Padding="10,7" Margin="0,0,0,10"
+                Background="#1AE65100" BorderBrush="#E65100" BorderThickness="1">
+            <TextBlock x:Name="NoticeText" TextWrapping="Wrap" FontSize="12" Foreground="#E65100"/>
+        </Border>
+
+        <!-- One row per LED of the selected panel -->
+        <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Grid Margin="0,0,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" x:Name="LedColumnHeader" x:Uid="LedMappingLedHeader" Text="LED"
+                               FontWeight="SemiBold" FontSize="11"
+                               Foreground="{StaticResource SubtleTextForeground}"/>
+                    <TextBlock Grid.Column="1" x:Name="ControlColumnHeader" x:Uid="LedMappingControlHeader"
+                               Text="DCS-BIOS control" FontWeight="SemiBold" FontSize="11"
+                               Foreground="{StaticResource SubtleTextForeground}"/>
+                </Grid>
+
+                <ItemsControl x:Name="LedRows">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <!-- ContentControl, not the Grid: a Panel has no IsEnabled, and the
+                                 whole row goes read-only while the bridge runs this aircraft. -->
+                            <ContentControl IsEnabled="{Binding IsEnabled}" IsTabStop="False"
+                                            HorizontalContentAlignment="Stretch">
+                            <Grid Margin="0,3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="{Binding Label}"
+                                           VerticalAlignment="Center" Margin="0,0,8,0"
+                                           TextTrimming="CharacterEllipsis"/>
+
+                                <AutoSuggestBox Grid.Column="1" x:Name="ControlBox"
+                                                PlaceholderText="{Binding BuiltIn}"
+                                                TextMemberPath="Display"
+                                                DisplayMemberPath="Display"
+                                                Loaded="ControlBox_Loaded"
+                                                TextChanged="ControlBox_TextChanged"
+                                                SuggestionChosen="ControlBox_SuggestionChosen"
+                                                QuerySubmitted="ControlBox_QuerySubmitted"/>
+
+                                <ComboBox Grid.Column="2" MinWidth="96" Margin="8,0,0,0"
+                                          ItemsSource="{Binding ConditionNames}"
+                                          SelectedItem="{Binding ConditionName, Mode=TwoWay}"
+                                          Visibility="{Binding ConditionVisibility}"/>
+
+                                <NumberBox Grid.Column="3" MinWidth="86" Margin="8,0,0,0"
+                                           Minimum="0" SpinButtonPlacementMode="Compact"
+                                           Value="{Binding Value, Mode=TwoWay}"
+                                           Visibility="{Binding ConditionVisibility}"/>
+
+                                <Button Grid.Column="4" Content="✕" Margin="8,0,0,0"
+                                        Padding="8,4" Click="Clear_Click"/>
+                            </Grid>
+                            </ContentControl>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="5" x:Name="RestartHint" x:Uid="LedMappingRestartHint"
+                   Text="Changes apply the next time the bridge starts."
+                   FontSize="11" Foreground="{StaticResource SubtleTextForeground}"
+                   TextWrapping="Wrap" Margin="0,10,0,0"/>
+    </Grid>
+</UserControl>

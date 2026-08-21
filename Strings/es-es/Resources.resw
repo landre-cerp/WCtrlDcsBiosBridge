@@ -228,4 +228,20 @@
   <data name="ShowDedKeyLabel" xml:space="preserve"><value>Tecla Mostrar DED:</value></data>
   <data name="ShowNavKeyLabel" xml:space="preserve"><value>Tecla Mostrar NAV:</value></data>
   <data name="ShowRwrKeyLabel" xml:space="preserve"><value>Tecla Mostrar RWR:</value></data>
+  <!-- LedMappingPanel -->
+  <data name="LedMappingPivotItem" xml:space="preserve"><value>LEDs</value></data>
+  <data name="LedMappingHeader" xml:space="preserve"><value>ASIGNACIÓN DE LEDS</value></data>
+  <data name="LedMappingIntro" xml:space="preserve"><value>Elija una aeronave y un panel, y asocie cualquier indicador de DCS-BIOS a un LED. Sus asociaciones sustituyen a las integradas; los LEDs que deje vacíos conservan su comportamiento por defecto.</value></data>
+  <data name="LedMappingAircraftLabel" xml:space="preserve"><value>Aeronave:</value></data>
+  <data name="LedMappingDeviceLabel" xml:space="preserve"><value>Panel:</value></data>
+  <data name="LedMappingAdvancedOption" xml:space="preserve"><value>Mostrar todas las salidas enteras</value></data>
+  <data name="LedMappingLedHeader" xml:space="preserve"><value>LED</value></data>
+  <data name="LedMappingControlHeader" xml:space="preserve"><value>Control DCS-BIOS</value></data>
+  <data name="LedMappingInUseBadge" xml:space="preserve"><value>En uso — detenga el puente para cambiarlo</value></data>
+  <data name="LedMappingRestartHint" xml:space="preserve"><value>Los cambios se aplican al iniciar el puente la próxima vez.</value></data>
+  <data name="LedMappingNoControls" xml:space="preserve"><value>No se pudieron leer controles DCS-BIOS para esta aeronave. Compruebe la ubicación de los JSON de DCS-BIOS en Configuración.</value></data>
+  <data name="LedMappingNoLamps" xml:space="preserve"><value>Este módulo no declara ningún piloto indicador, por lo que se listan todas las salidas enteras.</value></data>
+  <data name="LedMappingSaveFailed" xml:space="preserve"><value>No se pudo guardar el archivo de asignación de LEDs.</value></data>
+  <data name="LedMappingBuiltInFormat" xml:space="preserve"><value>{0} (integrado)</value></data>
+  <data name="LedMappingComputedFormat" xml:space="preserve"><value>integrado, a partir de {0}</value></data>
 </root>

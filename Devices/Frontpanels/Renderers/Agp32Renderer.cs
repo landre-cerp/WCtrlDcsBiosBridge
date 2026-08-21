@@ -11,12 +11,14 @@ internal class Agp32Renderer : FrontpanelRenderer
 {
     private readonly Agp32State _state = new();
 
+    private readonly Agp32State.Agp32Leds _leds = new();
+
     public Agp32Renderer(IReadOnlyList<IFrontpanelAdapter> adapters, bool manageLighting)
         : base(adapters, manageLighting)
     {
     }
 
-    public override void Render(FlightDeckState model)
+    public override void RenderDisplay(FlightDeckState model)
     {
         // Family policy: stay visible even when the cockpit console brightness
         // is at zero — the AGP32 gear lights are useless when dark.
@@ -26,39 +28,16 @@ internal class Agp32Renderer : FrontpanelRenderer
         _state.ClockDisplay = model.ClockUtcTime ?? string.Empty;
         _state.EtDisplay = model.ClockElapsedTime ?? string.Empty;
 
-        var leds = new Agp32State.Agp32Leds();
+        SendDisplay(_state);
+    }
 
-        var left = model.GearLeftDown ?? false;
-        var nose = model.GearNoseDown ?? false;
-        var right = model.GearRightDown ?? false;
-        var warning = model.GearWarning ?? false;
-
-        leds.Set(Agp32State.Agp32Led.Gear1Down, left);
-        leds.Set(Agp32State.Agp32Led.Gear2Down, nose);
-        leds.Set(Agp32State.Agp32Led.Gear3Down, right);
-
-        leds.Set(Agp32State.Agp32Led.BrkFanHot , model.LedBrkFanHot ?? false);
-        leds.Set(Agp32State.Agp32Led.BrkFanOn, model.LedBrkFanOn ?? false);
-        leds.Set(Agp32State.Agp32Led.AutoBrkMedDecel , model.LedAutoBrkMedDecel ?? false);
-        leds.Set(Agp32State.Agp32Led.AutoBrkLoDecel, model.LedAutoBrkLoDecel ?? false);
-        leds.Set(Agp32State.Agp32Led.AutoBrkMaxDecel, model.LedAutoBrkMaxDecel ?? false);
-        leds.Set(Agp32State.Agp32Led.AutoBrkLoOn, model.LedAutoBrkLoOn ?? false);
-        leds.Set(Agp32State.Agp32Led.AutoBrkMedOn, model.LedAutoBrkMedOn ?? false);
-        leds.Set(Agp32State.Agp32Led.AutoBrkMaxOn, model.LedAutoBrkMaxOn ?? false);
-
-        // A single gear-in-transit warning maps to the A320 panel's red UNLK
-        // triangles (lit while a gear disagrees with the lever) plus the
-        // lever's red arrow.
-        leds.Set(Agp32State.Agp32Led.Gear1Unlk, warning);
-        leds.Set(Agp32State.Agp32Led.Gear2Unlk, warning);
-        leds.Set(Agp32State.Agp32Led.Gear3Unlk, warning);
-        leds.Set(Agp32State.Agp32Led.GearDownRed, warning);
-
-        foreach (var adapter in adapters)
-        {
-            if (!adapter.IsConnected) continue;
-            adapter.UpdateDisplay(_state);
-            adapter.UpdateLeds(leds);
-        }
+    public override void RenderLeds(FlightDeckState model)
+    {
+        // Every LED on this panel names the signal it shows (see LedCatalog), so the gear and
+        // autobrake mapping lives there rather than here. One signal can light several: a
+        // single gear-in-transit warning drives the three red UNLK triangles and the lever's
+        // red arrow together.
+        var mask = BuildLeds(model, _leds, LedDeviceFamily.Agp32);
+        if (LedsChanged(mask)) SendLeds(_leds);
     }
 }

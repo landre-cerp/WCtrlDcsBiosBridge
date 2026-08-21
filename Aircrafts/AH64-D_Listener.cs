@@ -1,4 +1,4 @@
-using WwDevicesDotNet;
+﻿using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Aircrafts;
 
@@ -37,8 +37,7 @@ internal class AH64D_Listener : AircraftListener
 
         // --- LEDs (PLT) ---
         // Note that they share the same Address but bit is different (10 and 11)
-        RegisterUInt("PLT_MASTER_CAUTION_L", v => SetCduLeds(fail: v == 1));
-        RegisterUInt("PLT_MASTER_WARNING_L", v => SetCduLeds(ind: v == 1));
+        // The two master lights are declared in LedDefaults.
 
         // --- PLT EUFD lines → DEFAULT_PAGE ---
         RegisterStr("PLT_EUFD_LINE14", s =>

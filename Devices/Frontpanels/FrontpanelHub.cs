@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -16,7 +16,13 @@ namespace WCtrlDcsBiosBridge.Devices.Frontpanels;
 /// </summary>
 public class FrontpanelHub : IDisposable
 {
-    private const double RenderIntervalMs = 100;
+    // LEDs are rendered at 30 Hz and displays every third tick (~10 Hz). DCS-BIOS exports on
+    // every rendered frame, so the render tick is the only thing quantizing a lamp: at 10 Hz a
+    // flashing caution comes out as a slower, uneven blink that does not match the cockpit.
+    // Displays gain nothing from the extra rate and cost four HID writes a frame, so they keep
+    // the old cadence; LED frames are only sent when they change, which usually means never.
+    private const double LedIntervalMs = 33;
+    private const int DisplayEveryNthTick = 3;
 
     private readonly List<IFrontpanelAdapter> _adapters;
     private readonly List<FrontpanelRenderer> _renderers = new();
@@ -24,6 +30,7 @@ public class FrontpanelHub : IDisposable
     private readonly object _renderLock = new();
 
     private FlightDeckState? _model;
+    private long _tick;
     private readonly bool _manageLighting;
     private bool _disposed;
 
@@ -53,7 +60,7 @@ public class FrontpanelHub : IDisposable
             App.Logger.Warn($"No renderer for frontpanel adapter type: {adapter.GetType().Name} ({adapter.DisplayName})");
         }
 
-        _renderTimer = new Timer(RenderIntervalMs);
+        _renderTimer = new Timer(LedIntervalMs);
         _renderTimer.Elapsed += (_, _) => RenderTick();
     }
 
@@ -116,6 +123,10 @@ public class FrontpanelHub : IDisposable
 
     private void InitializeDevices()
     {
+        // The renderers only send what changed, so anything that blanks the devices behind
+        // their back has to tell them, or the panels stay dark until a value happens to move.
+        foreach (var renderer in _renderers) renderer.Invalidate();
+
         if (!_manageLighting) return;
         lock (_renderLock)
         {
@@ -143,11 +154,16 @@ public class FrontpanelHub : IDisposable
             var model = _model;
             if (model == null) return;
 
+            // A skipped tick must not cost the display its turn, so count the ticks that ran.
+            _tick++;
+            var withDisplay = _tick % DisplayEveryNthTick == 0;
+
             foreach (var renderer in _renderers)
             {
                 try
                 {
-                    renderer.Render(model);
+                    renderer.RenderLeds(model);
+                    if (withDisplay) renderer.RenderDisplay(model);
                 }
                 catch (Exception ex)
                 {

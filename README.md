@@ -51,6 +51,10 @@ The **A-10C** drives the full set (flight data, gear LEDs, and the chrono/UTC/ET
 The **F-14B** drives the AGP32 gear lights and clock. The **OH-58D** drives the AGP32 UTC clock.
 See each aircraft's page for specifics.
 
+**LEDs** are yours to assign: on the **LEDs** tab, bind any DCS-BIOS indicator of the aircraft
+you fly to any LED on your panels — the FCU/EFIS and PAP3 legends (AP1, CMD A, …) light up only
+this way. See [LED mapping](docs/LED-Mapping.md).
+
 ## Installation
 
 ### DCS-BIOS Setup

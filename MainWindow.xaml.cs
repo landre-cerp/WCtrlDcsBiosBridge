@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Microsoft.UI;
@@ -97,8 +97,13 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             OptionsPanel.SetLightingManaged(IsLightingManaged);
         };
 
+        LedMappingPanel.MappingChanged += (sender, args) => SaveLedMappings();
+
         LoadConfig();
         LoadUserSettings();
+        LedMappingStore.Reload();
+        LedMappingPanel.Reload();
+        LedMappingPanel.JsonDirectory = config.DcsBiosJsonLocation;
         _currentTheme = userOptions.Theme;
         WindowRoot.RequestedTheme = ThemeManager.CurrentElementTheme;
         UpdateThemeToggleIcon();
@@ -110,6 +115,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         StatusControl.Retranslate();
         ConfigPanelControl.Retranslate();
         LogViewerPanelControl.Retranslate();
+        LedMappingPanel.Retranslate();
         OptionsPanel.SetLightingManaged(IsLightingManaged);
 
         _uiSettings.ColorValuesChanged += OnSystemPreferenceChanged;
@@ -409,6 +415,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
             if (result == true)
             {
                 config = ConfigPanelControl.Config;
+                LedMappingPanel.JsonDirectory = config.DcsBiosJsonLocation;
                 UpdateState();
 
                 if (IsConfigValid())
@@ -592,6 +599,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         _detectedAircraft = descriptor;
         OnPropertyChanged(nameof(DetectedAircraftName));
         OptionsPanel.SetDetectedAircraft(DetectedAircraftName);
+        LedMappingPanel.SetDetectedAircraft(DetectedAircraftName);
     }
 
     private void ResetStartButton()
@@ -645,6 +653,16 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         }
     }
     private void SaveUserSettings() => UserOptionsStorage.Save(userOptions);
+
+    private void SaveLedMappings()
+    {
+        var result = LedMappingStore.Save(LedMappingPanel.BuildMapping());
+        if (!result.IsSuccess)
+        {
+            Logger.Warn($"Failed to save LED mappings: {result.Error}");
+            ShowStatus(Strings.Get("LedMappingSaveFailed"), isError: true);
+        }
+    }
 
     private void ShowStatus(string message, bool isError)
     {
@@ -711,6 +729,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         StatusControl.Retranslate();
         ConfigPanelControl.Retranslate();
         LogViewerPanelControl.Retranslate();
+        LedMappingPanel.Retranslate();
     }
 
     private void UpdateLanguageToggleIcon()
@@ -742,6 +761,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
     {
         DashboardPivotItem.Header = Strings.Get("DashboardPivotItem");
         ConfigurationPivotItem.Header = Strings.Get("ConfigurationPivotItem");
+        LedMappingPivotItem.Header = Strings.Get("LedMappingPivotItem");
         HelpPivotItem.Header = Strings.Get("HelpPivotItem");
 
         DashboardDescriptionText.Text = Strings.Get("DashboardDescriptionText");
