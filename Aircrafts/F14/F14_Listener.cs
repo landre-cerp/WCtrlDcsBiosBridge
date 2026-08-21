@@ -1,4 +1,4 @@
-using WwDevicesDotNet;
+﻿using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Aircrafts.F14;
 
@@ -9,7 +9,6 @@ internal partial class F14_Listener : AircraftListener
     private readonly Key _rioDisplayKey;
     private readonly Key _radioDisplayKey;
 
-    private bool _gearLOff, _gearNoseOff, _gearROff;
 
     private string _clockH  = "00";
     private string _clockM  = "00";
@@ -59,13 +58,7 @@ internal partial class F14_Listener : AircraftListener
 
     protected override void RegisterFrontpanelControls()
     {
-        RegisterUInt("PLT_GEAR_L_IND_L",    v => FlightDeck.GearLeftDown  = v == 1);
-        RegisterUInt("PLT_GEAR_NOSE_IND_L", v => FlightDeck.GearNoseDown  = v == 1);
-        RegisterUInt("PLT_GEAR_R_IND_L",    v => FlightDeck.GearRightDown = v == 1);
-
-        RegisterUInt("PLT_GEAR_L_OFF_L",    v => { _gearLOff    = v == 1; FlightDeck.GearWarning = _gearLOff || _gearNoseOff || _gearROff; });
-        RegisterUInt("PLT_GEAR_NOSE_OFF_L", v => { _gearNoseOff = v == 1; FlightDeck.GearWarning = _gearLOff || _gearNoseOff || _gearROff; });
-        RegisterUInt("PLT_GEAR_R_OFF_L",    v => { _gearROff    = v == 1; FlightDeck.GearWarning = _gearLOff || _gearNoseOff || _gearROff; });
+        // The gear lights, warning included, are declared in LedDefaults.
 
         RegisterUInt("PLT_CLOCK_H",  (ctrl, v) => { _clockH  = ((int)(v * 12 / (ctrl.MaxValue + 1))).ToString("D2"); FlightDeck.ClockUtcTime = _clockH + _clockM + "00"; });
         RegisterUInt("PLT_CLOCK_M",  (ctrl, v) => { _clockM  = ((int)(v * 60 / (ctrl.MaxValue + 1))).ToString("D2"); FlightDeck.ClockUtcTime = _clockH + _clockM + "00"; });

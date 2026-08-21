@@ -228,4 +228,20 @@
   <data name="ShowDedKeyLabel" xml:space="preserve"><value>Touche Afficher DED :</value></data>
   <data name="ShowNavKeyLabel" xml:space="preserve"><value>Touche Afficher NAV :</value></data>
   <data name="ShowRwrKeyLabel" xml:space="preserve"><value>Touche Afficher RWR :</value></data>
+  <!-- LedMappingPanel -->
+  <data name="LedMappingPivotItem" xml:space="preserve"><value>LEDs</value></data>
+  <data name="LedMappingHeader" xml:space="preserve"><value>AFFECTATION DES LEDS</value></data>
+  <data name="LedMappingIntro" xml:space="preserve"><value>Choisissez un appareil et un panneau, puis associez n'importe quel indicateur DCS-BIOS à une LED. Vos associations remplacent celles d'origine ; les LEDs laissées vides gardent leur comportement par défaut.</value></data>
+  <data name="LedMappingAircraftLabel" xml:space="preserve"><value>Appareil :</value></data>
+  <data name="LedMappingDeviceLabel" xml:space="preserve"><value>Panneau :</value></data>
+  <data name="LedMappingAdvancedOption" xml:space="preserve"><value>Afficher toutes les sorties entières</value></data>
+  <data name="LedMappingLedHeader" xml:space="preserve"><value>LED</value></data>
+  <data name="LedMappingControlHeader" xml:space="preserve"><value>Contrôle DCS-BIOS</value></data>
+  <data name="LedMappingInUseBadge" xml:space="preserve"><value>En cours d'utilisation — arrêtez le pont pour modifier</value></data>
+  <data name="LedMappingRestartHint" xml:space="preserve"><value>Les modifications s'appliquent au prochain démarrage du pont.</value></data>
+  <data name="LedMappingNoControls" xml:space="preserve"><value>Aucun contrôle DCS-BIOS n'a pu être lu pour cet appareil. Vérifiez l'emplacement des fichiers JSON DCS-BIOS dans Configuration.</value></data>
+  <data name="LedMappingNoLamps" xml:space="preserve"><value>Ce module ne déclare aucun voyant : toutes les sorties entières sont listées.</value></data>
+  <data name="LedMappingSaveFailed" xml:space="preserve"><value>Impossible d'enregistrer le fichier d'affectation des LEDs.</value></data>
+  <data name="LedMappingBuiltInFormat" xml:space="preserve"><value>{0} (d'origine)</value></data>
+  <data name="LedMappingComputedFormat" xml:space="preserve"><value>d'origine, d'après {0}</value></data>
 </root>

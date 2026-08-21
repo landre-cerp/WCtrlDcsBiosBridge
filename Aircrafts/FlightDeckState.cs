@@ -1,3 +1,6 @@
+using System.Collections.Concurrent;
+using WCtrlDcsBiosBridge.Devices.Frontpanels;
+
 namespace WCtrlDcsBiosBridge.Aircrafts;
 
 /// <summary>
@@ -7,6 +10,77 @@ namespace WCtrlDcsBiosBridge.Aircrafts;
 /// </summary>
 internal class FlightDeckState
 {
+    // User LED bindings bypass the semantic properties below: the listener evaluates the
+    // user's condition when the DCS-BIOS value arrives and drops the resulting on/off here,
+    // keyed by device family and LED id. Concurrent because DCS-BIOS handlers write on the
+    // receive thread while the frontpanel hub reads on its 100 ms render timer.
+    private readonly ConcurrentDictionary<string, bool> _userLeds = new();
+
+    private static string UserLedKey(LedDeviceFamily family, string ledId) =>
+        $"{family}:{ledId.ToUpperInvariant()}";
+
+    /// <summary>Records the evaluated state of a user-bound LED.</summary>
+    public void SetUserLed(LedDeviceFamily family, string ledId, bool on) =>
+        _userLeds[UserLedKey(family, ledId)] = on;
+
+    /// <summary>
+    /// Reads a user-bound LED. False when the user did not bind it — the renderer then
+    /// leaves that LED to its built-in mapping.
+    /// </summary>
+    public bool TryGetUserLed(LedDeviceFamily family, string ledId, out bool on) =>
+        _userLeds.TryGetValue(UserLedKey(family, ledId), out on);
+
+    /// <summary>Whether any user binding writes here, so renderers can skip the overlay.</summary>
+    public bool HasUserLeds => !_userLeds.IsEmpty;
+
+    /// <summary>
+    /// Writes one of the LED signals by name, for the declared per-aircraft defaults. The
+    /// properties below stay the way listeners and renderers read them; this is only the door
+    /// that a table-driven default comes in through.
+    /// </summary>
+    public void SetSignal(FlightDeckSignal signal, bool on)
+    {
+        switch (signal)
+        {
+            case FlightDeckSignal.GearLeftDown: GearLeftDown = on; break;
+            case FlightDeckSignal.GearNoseDown: GearNoseDown = on; break;
+            case FlightDeckSignal.GearRightDown: GearRightDown = on; break;
+            case FlightDeckSignal.GearWarning: GearWarning = on; break;
+            case FlightDeckSignal.AutoBrkLoOn: LedAutoBrkLoOn = on; break;
+            case FlightDeckSignal.AutoBrkMedOn: LedAutoBrkMedOn = on; break;
+            case FlightDeckSignal.AutoBrkMaxOn: LedAutoBrkMaxOn = on; break;
+            case FlightDeckSignal.AutoBrkLoDecel: LedAutoBrkLoDecel = on; break;
+            case FlightDeckSignal.AutoBrkMedDecel: LedAutoBrkMedDecel = on; break;
+            case FlightDeckSignal.AutoBrkMaxDecel: LedAutoBrkMaxDecel = on; break;
+            case FlightDeckSignal.TerrOnNd: LedTerrOnNd = on; break;
+            case FlightDeckSignal.BrkFanOn: LedBrkFanOn = on; break;
+            case FlightDeckSignal.BrkFanHot: LedBrkFanHot = on; break;
+        }
+    }
+
+    /// <summary>
+    /// Reads a LED signal. Null means this aircraft does not publish it, which renderers show
+    /// as off.
+    /// </summary>
+    public bool? GetSignal(FlightDeckSignal signal) => signal switch
+    {
+        FlightDeckSignal.GearLeftDown => GearLeftDown,
+        FlightDeckSignal.GearNoseDown => GearNoseDown,
+        FlightDeckSignal.GearRightDown => GearRightDown,
+        FlightDeckSignal.GearWarning => GearWarning,
+        FlightDeckSignal.AutoBrkLoOn => LedAutoBrkLoOn,
+        FlightDeckSignal.AutoBrkMedOn => LedAutoBrkMedOn,
+        FlightDeckSignal.AutoBrkMaxOn => LedAutoBrkMaxOn,
+        FlightDeckSignal.AutoBrkLoDecel => LedAutoBrkLoDecel,
+        FlightDeckSignal.AutoBrkMedDecel => LedAutoBrkMedDecel,
+        FlightDeckSignal.AutoBrkMaxDecel => LedAutoBrkMaxDecel,
+        FlightDeckSignal.TerrOnNd => LedTerrOnNd,
+        FlightDeckSignal.BrkFanOn => LedBrkFanOn,
+        FlightDeckSignal.BrkFanHot => LedBrkFanHot,
+        _ => null,
+    };
+
+
     public int? Speed { get; set; }
     public int? Heading { get; set; }
     public int? Altitude { get; set; }

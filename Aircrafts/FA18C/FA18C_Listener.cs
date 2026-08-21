@@ -1,4 +1,4 @@
-using DCS_BIOS.EventArgs;
+﻿using DCS_BIOS.EventArgs;
 using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Aircrafts;
@@ -7,7 +7,6 @@ internal partial class FA18C_Listener : AircraftListener
 {
     private const string IFEI_PAGE = "IFEI";
 
-    uint _masterCaution = 0;
     uint _lightMode = 0; // 2=NVG, 1=NITE, 0=DAY
 
     private readonly Key _nextPageKey;
@@ -44,27 +43,13 @@ internal partial class FA18C_Listener : AircraftListener
         }
 
         RegisterUInt("COCKKPIT_LIGHT_MODE_SW", v => _lightMode = v);
-        RegisterUInt("MASTER_CAUTION_LT", v =>
-        {
-            if (_masterCaution != v)
-            {
-                _masterCaution = v;
-                SetCduLeds(fail: _masterCaution != 0);
-            }
-        });
-
         RegisterUfcControls();
         RegisterIfeiControls();
     }
 
     protected override void RegisterFrontpanelControls()
     {
-        RegisterUInt("FLP_LG_LEFT_GEAR_LT",    v => FlightDeck.GearLeftDown = v == 1);
-        RegisterUInt("FLP_LG_RIGHT_GEAR_LT",   v => FlightDeck.GearRightDown = v == 1);
-        RegisterUInt("FLP_LG_NOSE_GEAR_LT",    v => FlightDeck.GearNoseDown = v == 1);
-        RegisterUInt("LANDING_GEAR_HANDLE_LT", v => FlightDeck.GearWarning = v == 1);
-        RegisterUInt("FLP_LG_HALF_FLAPS_LT",   v => FlightDeck.LedAutoBrkLoDecel = v == 1);
-        RegisterUInt("FLP_LG_FULL_FLAPS_LT",   v => FlightDeck.LedAutoBrkMedDecel = v == 1);
+        // Gear and flap lights are declared in LedDefaults.
 
         RegisterIfeiFrontPanelControls();
     }

@@ -21,7 +21,7 @@ internal class FcuEfisRenderer : FrontpanelRenderer
     {
     }
 
-    public override void Render(FlightDeckState model)
+    public override void RenderDisplay(FlightDeckState model)
     {
         ApplyBrightness(model);
 
@@ -32,11 +32,14 @@ internal class FcuEfisRenderer : FrontpanelRenderer
         _state.LeftBaroPressure = model.BaroPressure;
         _state.RightBaroPressure = model.BaroPressure;
 
-        foreach (var adapter in adapters)
-        {
-            if (!adapter.IsConnected) continue;
-            adapter.UpdateDisplay(_state);
-            adapter.UpdateLeds(_leds);
-        }
+        SendDisplay(_state);
+    }
+
+    public override void RenderLeds(FlightDeckState model)
+    {
+        // As on the PAP3, the Airbus legends have no semantic equivalent: nothing in an A-10C
+        // means "AP1", so this panel lights only what the user bound.
+        var mask = BuildLeds(model, _leds, LedDeviceFamily.FcuEfis);
+        if (LedsChanged(mask)) SendLeds(_leds);
     }
 }

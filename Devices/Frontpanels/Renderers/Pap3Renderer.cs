@@ -18,7 +18,7 @@ internal class Pap3Renderer : FrontpanelRenderer
     {
     }
 
-    public override void Render(FlightDeckState model)
+    public override void RenderDisplay(FlightDeckState model)
     {
         ApplyBrightness(model);
 
@@ -29,11 +29,14 @@ internal class Pap3Renderer : FrontpanelRenderer
         _state.PltCourseValue = model.PltCourse;
         _state.CplCourseValue = model.CplCourse;
 
-        foreach (var adapter in adapters)
-        {
-            if (!adapter.IsConnected) continue;
-            adapter.UpdateDisplay(_state);
-            adapter.UpdateLeds(_leds);
-        }
+        SendDisplay(_state);
+    }
+
+    public override void RenderLeds(FlightDeckState model)
+    {
+        // The Boeing autopilot legends have no semantic equivalent — nothing in a DCS module
+        // means "CMD A" — so every lit LED here comes from a user binding.
+        var mask = BuildLeds(model, _leds, LedDeviceFamily.Pap3);
+        if (LedsChanged(mask)) SendLeds(_leds);
     }
 }

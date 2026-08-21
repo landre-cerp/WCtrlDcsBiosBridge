@@ -1,4 +1,4 @@
-using WwDevicesDotNet;
+﻿using WwDevicesDotNet;
 
 namespace WCtrlDcsBiosBridge.Aircrafts.UH1H;
 
@@ -62,7 +62,7 @@ internal class UH1H_Listener : AircraftListener
             CduDevice.KeyDown += HandleKeyDown;
         }
 
-        RegisterLight("MASTER_CAUTION_IND", v => SetCduLeds(fail: v == 1));
+        // The master caution is declared in LedDefaults.
 
         // ── VHF COMM (ARC-134) ────────────────────────────────────────────
         RegisterUInt("VHFCOMM_PWR", v =>

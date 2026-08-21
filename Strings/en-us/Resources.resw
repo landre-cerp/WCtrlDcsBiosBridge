@@ -228,4 +228,20 @@
   <data name="ShowDedKeyLabel" xml:space="preserve"><value>Show DED Key:</value></data>
   <data name="ShowNavKeyLabel" xml:space="preserve"><value>Show NAV Key:</value></data>
   <data name="ShowRwrKeyLabel" xml:space="preserve"><value>Show RWR Key:</value></data>
+  <!-- LedMappingPanel -->
+  <data name="LedMappingPivotItem" xml:space="preserve"><value>LEDs</value></data>
+  <data name="LedMappingHeader" xml:space="preserve"><value>LED MAPPING</value></data>
+  <data name="LedMappingIntro" xml:space="preserve"><value>Pick an aircraft and a panel, then bind any DCS-BIOS indicator to a LED. Your bindings override the built-in ones; LEDs you leave empty keep their default behaviour.</value></data>
+  <data name="LedMappingAircraftLabel" xml:space="preserve"><value>Aircraft:</value></data>
+  <data name="LedMappingDeviceLabel" xml:space="preserve"><value>Panel:</value></data>
+  <data name="LedMappingAdvancedOption" xml:space="preserve"><value>Show all integer outputs</value></data>
+  <data name="LedMappingLedHeader" xml:space="preserve"><value>LED</value></data>
+  <data name="LedMappingControlHeader" xml:space="preserve"><value>DCS-BIOS control</value></data>
+  <data name="LedMappingInUseBadge" xml:space="preserve"><value>In use — stop the bridge to change it</value></data>
+  <data name="LedMappingRestartHint" xml:space="preserve"><value>Changes apply the next time the bridge starts.</value></data>
+  <data name="LedMappingNoControls" xml:space="preserve"><value>No DCS-BIOS controls could be read for this aircraft. Check the DCS-BIOS JSON location in Configuration.</value></data>
+  <data name="LedMappingNoLamps" xml:space="preserve"><value>This module declares no indicator lamp, so every integer output is listed.</value></data>
+  <data name="LedMappingSaveFailed" xml:space="preserve"><value>Could not save the LED mapping file.</value></data>
+  <data name="LedMappingBuiltInFormat" xml:space="preserve"><value>{0} (built-in)</value></data>
+  <data name="LedMappingComputedFormat" xml:space="preserve"><value>built-in, from {0}</value></data>
 </root>

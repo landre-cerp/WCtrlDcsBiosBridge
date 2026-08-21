@@ -1,4 +1,4 @@
-using DCS_BIOS.Serialized;
+﻿using DCS_BIOS.Serialized;
 using WwDevicesDotNet;
 using System.Linq;
 
@@ -70,7 +70,7 @@ internal class CH47F_Listener : AircraftListener
     protected override void RegisterCduControls()
     {
         // --- LED ---
-        RegisterUInt("PLT_MASTER_CAUTION_LIGHT", v => SetCduLeds(fail: v != 0));
+        // The master caution is declared in LedDefaults.
 
         // --- Brightness (display step knob) ---
         RegisterLight("PLT_CDU_BRT", v =>

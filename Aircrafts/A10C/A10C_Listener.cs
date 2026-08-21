@@ -1,4 +1,4 @@
-using DCS_BIOS.Serialized;
+﻿using DCS_BIOS.Serialized;
 using WCtrlDcsBiosBridge.Services;
 using WwDevicesDotNet;
 
@@ -119,12 +119,6 @@ internal partial class A10C_Listener : AircraftListener
                 SetCduDisplayBrightnessPercent(Math.Min(100, currentBrightness + BRT_STEP));
         });
 
-        // --- LEDs ---
-        RegisterUInt("CANOPY_UNLOCKED",    v => SetCduLeds(fm2: v == 1));
-        RegisterUInt("NOSEWHEEL_STEERING", v => SetCduLeds(ind: v == 1));
-        RegisterUInt("GUN_READY",          v => SetCduLeds(fm1: v == 1));
-        RegisterUInt("MASTER_CAUTION",     v => SetCduLeds(fail: v == 1));
-
         // --- CDU display lines ---
         bool bottomAligned = options.A10C.DisplayBottomAligned;
         for (int i = 0; i < cduLines.Length; i++)
@@ -191,11 +185,6 @@ internal partial class A10C_Listener : AircraftListener
         }
 
         RegisterUInt("IAS_US_INT", v => FlightDeck.Speed = (int)v);
-
-        RegisterUInt("GEAR_L_SAFE", v => FlightDeck.GearLeftDown = v == 1);
-        RegisterUInt("GEAR_N_SAFE", v => FlightDeck.GearNoseDown = v == 1);
-        RegisterUInt("GEAR_R_SAFE", v => FlightDeck.GearRightDown = v == 1);
-        RegisterUInt("HANDLE_GEAR_WARNING", v => FlightDeck.GearWarning = v == 1);
 
         RegisterStr("CLOCK_ETC", s =>
         {
