@@ -109,6 +109,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         OptionsPanel.Retranslate();
         StatusControl.Retranslate();
         ConfigPanelControl.Retranslate();
+        LogViewerPanelControl.Retranslate();
         OptionsPanel.SetLightingManaged(IsLightingManaged);
 
         _uiSettings.ColorValuesChanged += OnSystemPreferenceChanged;
@@ -709,6 +710,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         OptionsPanel.Retranslate();
         StatusControl.Retranslate();
         ConfigPanelControl.Retranslate();
+        LogViewerPanelControl.Retranslate();
     }
 
     private void UpdateLanguageToggleIcon()
@@ -755,6 +757,7 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         HelpStep4Text.Text = Strings.Get("HelpStep4Text");
         SupportedAircraftLink.Text = Strings.Get("SupportedAircraftLink");
         TroubleshootingHeader.Text = Strings.Get("TroubleshootingHeader");
+        ViewLogLink.Text = Strings.Get("ViewLogLink");
 
         Trouble1Strong.Text = Strings.Get("Trouble1Strong");
         Trouble1Rest.Text = Strings.Get("Trouble1Rest");
@@ -879,5 +882,17 @@ public partial class MainWindow : Window, IDisposable, INotifyPropertyChanged
         {
             Logger.Warn(ex, "Failed to open docs URL");
         }
+    }
+
+    /// <summary>
+    /// Shows the log in an overlay rather than shell-executing log.txt: it keeps the app to a
+    /// single window (see ConfigPanel.xaml.cs), it works with no handler registered for .txt,
+    /// and it lets the user select the exception text and paste it straight into a report.
+    /// </summary>
+    private async void ViewLogLink_Click(Microsoft.UI.Xaml.Documents.Hyperlink sender, Microsoft.UI.Xaml.Documents.HyperlinkClickEventArgs args)
+    {
+        LogOverlay.Visibility = Visibility.Visible;
+        await LogViewerPanelControl.ShowAsync();
+        LogOverlay.Visibility = Visibility.Collapsed;
     }
 }

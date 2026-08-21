@@ -77,6 +77,7 @@
   <data name="HelpStep3Text" xml:space="preserve"><value>Cargue una misión en DCS World. El módulo de la aeronave se detecta automáticamente — no es necesaria selección manual.</value></data>
   <data name="HelpStep4Text" xml:space="preserve"><value>Su CDU o FCU/EFIS se sincronizará con la cabina del juego. La pestaña Panel muestra el estado en tiempo real.</value></data>
   <data name="SupportedAircraftLink" xml:space="preserve"><value>Aeronaves compatibles</value></data>
+  <data name="ViewLogLink" xml:space="preserve"><value>Ver archivo de registro</value></data>
   <data name="TroubleshootingHeader" xml:space="preserve"><value>Solución de problemas</value></data>
   <data name="Trouble1Strong" xml:space="preserve"><value>El dispositivo no aparece en el panel:</value></data>
   <data name="Trouble1Rest" xml:space="preserve"><value> desconecte y vuelva a conectar el cable USB, luego reinicie la aplicación.</value></data>
@@ -184,6 +185,17 @@
   <!-- StatusBarControl -->
   <data name="StatusLabel" xml:space="preserve"><value>Estado:</value></data>
   <data name="Status_Ready" xml:space="preserve"><value>Listo.</value></data>
+
+  <!-- LogViewerPanel -->
+  <data name="LogViewerHeader" xml:space="preserve"><value>Registro de la aplicación</value></data>
+  <data name="LogViewerErrorsOnlyButtonControl" xml:space="preserve"><value>Solo errores</value></data>
+  <data name="LogViewerCopyButtonControl" xml:space="preserve"><value>Copiar</value></data>
+  <data name="LogViewerCloseButtonControl" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="LogViewer_Empty" xml:space="preserve"><value>El archivo de registro está vacío.</value></data>
+  <data name="LogViewer_NoErrors" xml:space="preserve"><value>No hay errores en esta parte del registro.</value></data>
+  <data name="LogViewer_NotFound" xml:space="preserve"><value>No se encontró ningún archivo de registro.</value></data>
+  <data name="LogViewer_ReadFailedFormat" xml:space="preserve"><value>No se pudo leer el archivo de registro: {0}</value></data>
+  <data name="LogViewer_Copied" xml:space="preserve"><value>Copiado al portapapeles.</value></data>
 
   <!-- OptionsPanel -->
   <data name="GeneralHeader" xml:space="preserve"><value>GENERAL</value></data>

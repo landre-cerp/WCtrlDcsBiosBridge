@@ -77,6 +77,7 @@
   <data name="HelpStep3Text" xml:space="preserve"><value>Laden Sie eine Mission in DCS World. Das Flugzeugmodul wird automatisch erkannt — keine manuelle Auswahl nötig.</value></data>
   <data name="HelpStep4Text" xml:space="preserve"><value>Ihr CDU oder FCU/EFIS synchronisiert sich mit dem Cockpit im Spiel. Der Dashboard-Tab zeigt den Live-Status.</value></data>
   <data name="SupportedAircraftLink" xml:space="preserve"><value>Unterstützte Flugzeuge</value></data>
+  <data name="ViewLogLink" xml:space="preserve"><value>Protokolldatei anzeigen</value></data>
   <data name="TroubleshootingHeader" xml:space="preserve"><value>Fehlerbehebung</value></data>
   <data name="Trouble1Strong" xml:space="preserve"><value>Gerät wird nicht im Dashboard angezeigt:</value></data>
   <data name="Trouble1Rest" xml:space="preserve"><value> USB-Kabel abziehen und wieder anschließen, dann die App neu starten.</value></data>
@@ -184,6 +185,17 @@
   <!-- StatusBarControl -->
   <data name="StatusLabel" xml:space="preserve"><value>Status:</value></data>
   <data name="Status_Ready" xml:space="preserve"><value>Bereit.</value></data>
+
+  <!-- LogViewerPanel -->
+  <data name="LogViewerHeader" xml:space="preserve"><value>Anwendungsprotokoll</value></data>
+  <data name="LogViewerErrorsOnlyButtonControl" xml:space="preserve"><value>Nur Fehler</value></data>
+  <data name="LogViewerCopyButtonControl" xml:space="preserve"><value>Kopieren</value></data>
+  <data name="LogViewerCloseButtonControl" xml:space="preserve"><value>Schließen</value></data>
+  <data name="LogViewer_Empty" xml:space="preserve"><value>Die Protokolldatei ist leer.</value></data>
+  <data name="LogViewer_NoErrors" xml:space="preserve"><value>Keine Fehler in diesem Teil des Protokolls.</value></data>
+  <data name="LogViewer_NotFound" xml:space="preserve"><value>Keine Protokolldatei gefunden.</value></data>
+  <data name="LogViewer_ReadFailedFormat" xml:space="preserve"><value>Die Protokolldatei konnte nicht gelesen werden: {0}</value></data>
+  <data name="LogViewer_Copied" xml:space="preserve"><value>In die Zwischenablage kopiert.</value></data>
 
   <!-- OptionsPanel -->
   <data name="GeneralHeader" xml:space="preserve"><value>ALLGEMEIN</value></data>
