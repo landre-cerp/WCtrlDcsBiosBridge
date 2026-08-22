@@ -9,6 +9,10 @@
 
 ### Installing the Lua export script
 
+**Only needed for some aircraft.** Required for the **F-14B(U)** (CDNU) and the **C-130J**
+(CNI-MU), and optional for the **A-10C**, where it pre-fills wind and elevation on the
+performance pages. Every other aircraft works without it — skip this section.
+
 Follow **[docs/Export-Script-Setup.md](https://github.com/landre-cerp/WCtrlDcsBiosBridge/blob/{{TAG}}/docs/Export-Script-Setup.md)**.
 
 In short: extract `wctrl-export-scripts-{{TAG}}.zip` into `%USERPROFILE%\Saved Games\DCS\`,
