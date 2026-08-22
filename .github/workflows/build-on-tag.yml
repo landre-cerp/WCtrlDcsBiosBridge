@@ -149,10 +149,16 @@ jobs:
       # games, not next to the exe, so it ships separately. Zip root is Scripts/wctrl-export
       # so users extract straight into %USERPROFILE%\Saved Games\DCS\.
       - name: Package DCS export scripts
-        run: zip -r wctrl-export-scripts-${{ github.ref_name }}.zip Scripts/wctrl-export
+        env:
+          TAG: ${{ github.ref_name }}
+        run: zip -r "wctrl-export-scripts-${TAG}.zip" Scripts/wctrl-export
 
+      # TAG goes through the environment rather than ${{ }} interpolation: expanding it
+      # inline would splice the tag name straight into the shell command.
       - name: Render release notes from template
-        run: sed "s|{{TAG}}|${{ github.ref_name }}|g" .github/release-template.md > release-notes.md
+        env:
+          TAG: ${{ github.ref_name }}
+        run: sed "s|{{TAG}}|${TAG}|g" .github/release-template.md > release-notes.md
 
       - name: Create Release
         uses: softprops/action-gh-release@v3
