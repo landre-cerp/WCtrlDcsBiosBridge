@@ -20,7 +20,7 @@ namespace WCtrlDcsBiosBridge.UI;
 public sealed class LedRowViewModel : INotifyPropertyChanged
 {
     private string _control = string.Empty;
-    private LedCondition _condition = LedCondition.NotZero;
+    private LedCondition _condition = LedCondition.NotEquals;
     private double _value;
     private bool _needsCondition;
     private bool _isEnabled = true;
@@ -92,17 +92,24 @@ public sealed class LedRowViewModel : INotifyPropertyChanged
 
     public bool IsBound => !string.IsNullOrWhiteSpace(Control);
 
-    public IReadOnlyList<string> ConditionNames { get; } = LedMappingPanel.ConditionNames;
+    public IReadOnlyList<string> ConditionNames => LedMappingPanel.ConditionLabels;
 
-    /// <summary>The operator as a string, for the ComboBox.</summary>
+    /// <summary>The operator as its symbol, for the ComboBox.</summary>
     public string ConditionName
     {
-        get => Condition.ToString();
+        get => LedMappingPanel.LabelFor(Condition);
         set
         {
-            if (System.Enum.TryParse<LedCondition>(value, out var parsed))
+            if (LedMappingPanel.TryParseLabel(value, out var parsed))
                 Condition = parsed;
         }
+    }
+
+    /// <summary>Re-reads the operator symbols after a language change.</summary>
+    internal void RefreshConditionLabels()
+    {
+        OnPropertyChanged(nameof(ConditionNames));
+        OnPropertyChanged(nameof(ConditionName));
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -130,8 +137,28 @@ public sealed partial class LedMappingPanel : UserControl
     /// <summary>Raised when the user changed a binding and the file should be written.</summary>
     public event System.EventHandler? MappingChanged;
 
-    internal static IReadOnlyList<string> ConditionNames { get; } =
-        System.Enum.GetNames<LedCondition>();
+    /// <summary>The operators, in the order the ComboBox lists them.</summary>
+    private static readonly LedCondition[] Conditions = System.Enum.GetValues<LedCondition>();
+
+    /// <summary>
+    /// The operator labels, parallel to <see cref="Conditions"/>. Symbols rather than the
+    /// enum names: "≥" says what the row does where "AtLeast" had to be read, and each one
+    /// takes the threshold box beside it.
+    /// </summary>
+    internal static string[] ConditionLabels { get; private set; } = BuildConditionLabels();
+
+    private static string[] BuildConditionLabels() =>
+        Conditions.Select(c => Strings.Get("LedMappingOp" + c)).ToArray();
+
+    internal static string LabelFor(LedCondition condition) =>
+        ConditionLabels[System.Array.IndexOf(Conditions, condition)];
+
+    internal static bool TryParseLabel(string label, out LedCondition condition)
+    {
+        var index = System.Array.IndexOf(ConditionLabels, label);
+        condition = index < 0 ? LedCondition.NotEquals : Conditions[index];
+        return index >= 0;
+    }
 
     /// <summary>
     /// The aircraft that can be configured: those DCS-BIOS actually exports controls for.
@@ -216,6 +243,9 @@ public sealed partial class LedMappingPanel : UserControl
         ControlColumnHeader.Text = Strings.Get("LedMappingControlHeader");
         InUseBadgeText.Text = Strings.Get("LedMappingInUseBadge");
         RestartHint.Text = Strings.Get("LedMappingRestartHint");
+
+        ConditionLabels = BuildConditionLabels();
+        foreach (var row in _rows) row.RefreshConditionLabels();
 
         UpdateNotice();
     }
@@ -323,7 +353,10 @@ public sealed partial class LedMappingPanel : UserControl
                     row.Value = existing.Value;
                 }
 
-                row.NeedsCondition = FindControl(row.Control)?.NeedsCondition ?? (row.Condition != LedCondition.NotZero);
+                row.NeedsCondition = FindControl(row.Control)?.NeedsCondition
+                                     // Fallback for a control the catalog could not describe: show the
+                                     // operator whenever the binding says something other than "≠ 0".
+                                     ?? (row.Condition != LedCondition.NotEquals || row.Value != 0);
                 row.PropertyChanged += Row_PropertyChanged;
                 _rows.Add(row);
             }
@@ -458,7 +491,7 @@ public sealed partial class LedMappingPanel : UserControl
     private void SetRowControl(LedRowViewModel row, ControlChoice? choice)
     {
         row.NeedsCondition = choice?.NeedsCondition ?? false;
-        if (!row.NeedsCondition) row.Condition = LedCondition.NotZero;
+        if (!row.NeedsCondition) row.Condition = LedCondition.NotEquals;
         row.Control = choice?.Identifier ?? string.Empty;
     }
 

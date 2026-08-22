@@ -237,6 +237,10 @@
   <data name="LedMappingAdvancedOption" xml:space="preserve"><value>Mostrar todas las salidas enteras</value></data>
   <data name="LedMappingLedHeader" xml:space="preserve"><value>LED</value></data>
   <data name="LedMappingControlHeader" xml:space="preserve"><value>Control DCS-BIOS</value></data>
+  <data name="LedMappingOpNotEquals" xml:space="preserve"><value>≠</value></data>
+  <data name="LedMappingOpEquals" xml:space="preserve"><value>=</value></data>
+  <data name="LedMappingOpAtLeast" xml:space="preserve"><value>≥</value></data>
+  <data name="LedMappingOpAtMost" xml:space="preserve"><value>≤</value></data>
   <data name="LedMappingInUseBadge" xml:space="preserve"><value>En uso — detenga el puente para cambiarlo</value></data>
   <data name="LedMappingRestartHint" xml:space="preserve"><value>Los cambios se aplican al iniciar el puente la próxima vez.</value></data>
   <data name="LedMappingNoControls" xml:space="preserve"><value>No se pudieron leer controles DCS-BIOS para esta aeronave. Compruebe la ubicación de los JSON de DCS-BIOS en Configuración.</value></data>
