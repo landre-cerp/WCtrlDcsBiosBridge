@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using WCtrlDcsBiosBridge.Devices.Frontpanels;
 
 namespace WCtrlDcsBiosBridge.Config;
@@ -10,8 +12,9 @@ namespace WCtrlDcsBiosBridge.Config;
 /// </summary>
 public enum LedCondition
 {
-    /// <summary>Lit whenever the value is not zero. Right for every indicator lamp.</summary>
-    NotZero,
+    /// <summary>Lit when the value differs from <see cref="LedBinding.Value"/>. With the
+    /// default threshold of 0 this is the plain indicator-lamp test: lit when not zero.</summary>
+    NotEquals,
 
     /// <summary>Lit when the value equals <see cref="LedBinding.Value"/>.</summary>
     Equals,
@@ -21,6 +24,32 @@ public enum LedCondition
 
     /// <summary>Lit when the value is less than or equal to <see cref="LedBinding.Value"/>.</summary>
     AtMost,
+}
+
+/// <summary>
+/// Reads the operator by name, and accepts the "NotZero" of files written before the
+/// operator gained a threshold — mapping it to <see cref="LedCondition.NotEquals"/>, which
+/// with the threshold those files also carry (0) is the same test. Without this one alias a
+/// single old entry would fail the whole file's parse.
+/// </summary>
+public sealed class LedConditionConverter : JsonConverter<LedCondition>
+{
+    private const string LegacyNotZero = "NotZero";
+
+    public override LedCondition Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var name = reader.GetString();
+
+        if (string.Equals(name, LegacyNotZero, StringComparison.OrdinalIgnoreCase))
+            return LedCondition.NotEquals;
+
+        return Enum.TryParse<LedCondition>(name, ignoreCase: true, out var parsed)
+            ? parsed
+            : throw new JsonException($"Unknown LED condition '{name}'.");
+    }
+
+    public override void Write(Utf8JsonWriter writer, LedCondition value, JsonSerializerOptions options) =>
+        writer.WriteStringValue(value.ToString());
 }
 
 /// <summary>
@@ -42,15 +71,15 @@ public sealed class LedBinding
     public string Control { get; set; } = string.Empty;
 
     /// <summary>The test applied to the control's value.</summary>
-    public LedCondition Op { get; set; } = LedCondition.NotZero;
+    public LedCondition Op { get; set; } = LedCondition.NotEquals;
 
-    /// <summary>The threshold <see cref="Op"/> compares against. Ignored for <see cref="LedCondition.NotZero"/>.</summary>
+    /// <summary>The threshold <see cref="Op"/> compares against.</summary>
     public uint Value { get; set; }
 
     /// <summary>Whether the LED should be lit for <paramref name="value"/>.</summary>
     public bool IsOn(uint value) => Op switch
     {
-        LedCondition.NotZero => value != 0,
+        LedCondition.NotEquals => value != Value,
         LedCondition.Equals => value == Value,
         LedCondition.AtLeast => value >= Value,
         LedCondition.AtMost => value <= Value,

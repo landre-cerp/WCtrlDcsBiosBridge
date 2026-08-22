@@ -237,6 +237,10 @@
   <data name="LedMappingAdvancedOption" xml:space="preserve"><value>Show all integer outputs</value></data>
   <data name="LedMappingLedHeader" xml:space="preserve"><value>LED</value></data>
   <data name="LedMappingControlHeader" xml:space="preserve"><value>DCS-BIOS control</value></data>
+  <data name="LedMappingOpNotEquals" xml:space="preserve"><value>≠</value></data>
+  <data name="LedMappingOpEquals" xml:space="preserve"><value>=</value></data>
+  <data name="LedMappingOpAtLeast" xml:space="preserve"><value>≥</value></data>
+  <data name="LedMappingOpAtMost" xml:space="preserve"><value>≤</value></data>
   <data name="LedMappingInUseBadge" xml:space="preserve"><value>In use — stop the bridge to change it</value></data>
   <data name="LedMappingRestartHint" xml:space="preserve"><value>Changes apply the next time the bridge starts.</value></data>
   <data name="LedMappingNoControls" xml:space="preserve"><value>No DCS-BIOS controls could be read for this aircraft. Check the DCS-BIOS JSON location in Configuration.</value></data>

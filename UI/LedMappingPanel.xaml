@@ -103,7 +103,8 @@
                                                 SuggestionChosen="ControlBox_SuggestionChosen"
                                                 QuerySubmitted="ControlBox_QuerySubmitted"/>
 
-                                <ComboBox Grid.Column="2" MinWidth="96" Margin="8,0,0,0"
+                                <!-- Narrow: the widest label is now one glyph plus the chevron. -->
+                                <ComboBox Grid.Column="2" MinWidth="64" Margin="8,0,0,0"
                                           ItemsSource="{Binding ConditionNames}"
                                           SelectedItem="{Binding ConditionName, Mode=TwoWay}"
                                           Visibility="{Binding ConditionVisibility}"/>

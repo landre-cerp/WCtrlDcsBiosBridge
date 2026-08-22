@@ -23,7 +23,7 @@ public class LedMappingTests
         LedDeviceFamily device = LedDeviceFamily.FcuEfis,
         string led = "Ap1",
         string control = "MASTER_CAUTION",
-        LedCondition op = LedCondition.NotZero,
+        LedCondition op = LedCondition.NotEquals,
         uint value = 0) =>
         new() { Aircraft = aircraft, Device = device, Led = led, Control = control, Op = op, Value = value };
 
@@ -33,8 +33,15 @@ public class LedMappingTests
     [InlineData(0u, false)]
     [InlineData(1u, true)]
     [InlineData(65535u, true)]
-    public void NotZero_LightsOnAnyNonZeroValue(uint value, bool expected) =>
-        Assert.Equal(expected, Binding(op: LedCondition.NotZero).IsOn(value));
+    public void NotEquals_WithTheDefaultThreshold_LightsOnAnyNonZeroValue(uint value, bool expected) =>
+        Assert.Equal(expected, Binding(op: LedCondition.NotEquals).IsOn(value));
+
+    [Theory]
+    [InlineData(1u, true)]
+    [InlineData(2u, false)]
+    [InlineData(3u, true)]
+    public void NotEquals_ExcludesTheThreshold(uint value, bool expected) =>
+        Assert.Equal(expected, Binding(op: LedCondition.NotEquals, value: 2).IsOn(value));
 
     [Theory]
     [InlineData(1u, false)]
@@ -198,6 +205,42 @@ public class LedMappingTests
             Assert.Equal("CmdA", binding.Led);
             Assert.Equal(LedCondition.Equals, binding.Op);
             Assert.Equal(3u, binding.Value);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void LegacyNotZeroOperator_LoadsAsNotEquals()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"ledmappings-{Guid.NewGuid():N}.json");
+        File.WriteAllText(path, """
+            {
+              "Version": 1,
+              "Bindings": [
+                {
+                  "Aircraft": "A-10C",
+                  "Device": "Pap3",
+                  "Led": "CmdA",
+                  "Control": "MASTER_CAUTION",
+                  "Op": "NotZero",
+                  "Value": 0
+                }
+              ]
+            }
+            """);
+
+        try
+        {
+            var loaded = LedMappingStorage.TryLoad(path);
+
+            Assert.True(loaded.IsSuccess);
+            var binding = Assert.Single(loaded.Value!.Bindings);
+            Assert.Equal(LedCondition.NotEquals, binding.Op);
+            Assert.True(binding.IsOn(1));
+            Assert.False(binding.IsOn(0));
         }
         finally
         {

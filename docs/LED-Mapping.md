@@ -30,7 +30,9 @@ gauges. String outputs (CDU lines, counters) are never listed: there is no on/of
 them.
 
 A lamp is simply on or off. When you bind something with more than two positions, an operator
-and a value appear next to it, so you can say *lit when the gear lever is at least 1*.
+and a value appear next to it, so you can say *lit when the gear lever is ≥ 1*. The operators
+are `≠`, `=`, `≥` and `≤`, and each one tests against the value beside it — `≠ 0`, the default,
+is the plain "lit whenever it is not zero".
 
 ## What wins
 
@@ -73,7 +75,7 @@ that a mapping can be shared as it stands — post the file, drop it in, restart
       "Device": "FcuEfis",
       "Led": "Ap1",
       "Control": "MASTER_CAUTION",
-      "Op": "NotZero",
+      "Op": "NotEquals",
       "Value": 0
     }
   ]
@@ -83,8 +85,9 @@ that a mapping can be shared as it stands — post the file, drop it in, restart
 - `Aircraft` — the name as the app shows it (`A-10C`, `F/A-18C`, …).
 - `Device` — `FcuEfis`, `Pap3`, `Agp32` or `Mcdu`.
 - `Led` — the LED id, as the editor lists it.
-- `Op` — `NotZero` (the default), `Equals`, `AtLeast` or `AtMost`; `Value` is ignored by
-  `NotZero`.
+- `Op` — `NotEquals` (the default, shown as `≠`), `Equals` (`=`), `AtLeast` (`≥`) or
+  `AtMost` (`≤`). Each is tested against `Value`, so the default pair — `NotEquals` and 0 —
+  is the ordinary "lit when not zero".
 
 Only your own bindings are stored. The built-in defaults ship with the app, so an aircraft
 whose defaults are fixed or extended in a later release picks them up without you touching
@@ -92,4 +95,8 @@ the file.
 
 A file written for an older release, or for a module DCS-BIOS has since changed, still loads:
 entries naming an aircraft, a LED or a control that no longer exists are skipped with a line in
-`log.txt`, and everything else is applied.
+`log.txt`, and everything else is applied. The `NotZero` operator of earlier releases is read as
+`NotEquals`, which alongside the 0 those files carry is the same test.
+
+That compatibility runs one way only. A file this release writes says `NotEquals`, which an
+older build of the app does not know and will refuse to load.

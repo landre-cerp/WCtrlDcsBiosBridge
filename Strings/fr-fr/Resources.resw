@@ -237,6 +237,10 @@
   <data name="LedMappingAdvancedOption" xml:space="preserve"><value>Afficher toutes les sorties entières</value></data>
   <data name="LedMappingLedHeader" xml:space="preserve"><value>LED</value></data>
   <data name="LedMappingControlHeader" xml:space="preserve"><value>Contrôle DCS-BIOS</value></data>
+  <data name="LedMappingOpNotEquals" xml:space="preserve"><value>≠</value></data>
+  <data name="LedMappingOpEquals" xml:space="preserve"><value>=</value></data>
+  <data name="LedMappingOpAtLeast" xml:space="preserve"><value>≥</value></data>
+  <data name="LedMappingOpAtMost" xml:space="preserve"><value>≤</value></data>
   <data name="LedMappingInUseBadge" xml:space="preserve"><value>En cours d'utilisation — arrêtez le pont pour modifier</value></data>
   <data name="LedMappingRestartHint" xml:space="preserve"><value>Les modifications s'appliquent au prochain démarrage du pont.</value></data>
   <data name="LedMappingNoControls" xml:space="preserve"><value>Aucun contrôle DCS-BIOS n'a pu être lu pour cet appareil. Vérifiez l'emplacement des fichiers JSON DCS-BIOS dans Configuration.</value></data>

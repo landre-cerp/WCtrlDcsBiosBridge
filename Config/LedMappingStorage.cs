@@ -25,7 +25,9 @@ public static class LedMappingStorage
         WriteIndented = true,
         PropertyNameCaseInsensitive = true,
         // Enums as names: the file is meant to be read, edited and shared by hand.
-        Converters = { new JsonStringEnumConverter(allowIntegerValues: false) },
+        // The LED condition converter comes first so it, not the general one, reads the
+        // operator — it is the one that knows the pre-threshold "NotZero" spelling.
+        Converters = { new LedConditionConverter(), new JsonStringEnumConverter(allowIntegerValues: false) },
     };
 
     /// <summary>
