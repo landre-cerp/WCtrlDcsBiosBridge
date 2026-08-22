@@ -9,11 +9,15 @@ Three steps, and if you already set up the F-14B(U) the first two are done.
 
 ## 1. Install the export script
 
-Copy the `Scripts\wctrl-export` folder from the release zip into your DCS saved games:
+Extract the `wctrl-export-scripts-<version>.zip` asset of the release (the folder also ships
+inside the application zip) into your DCS saved games, so you end up with:
 
 ```
 %USERPROFILE%\Saved Games\DCS\Scripts\wctrl-export\
 ```
+
+Full details, including a DCS running on another PC and where to look when nothing shows up:
+[Lua export script setup](Export-Script-Setup.md).
 
 ## 2. Chain it from Export.lua
 

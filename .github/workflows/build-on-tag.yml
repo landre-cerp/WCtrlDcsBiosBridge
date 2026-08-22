@@ -144,10 +144,23 @@ jobs:
         with:
           name: wctrl-dcsbios-bridge-${{ github.ref_name }}-zip
           path: .
+
+      # Standalone asset for the F-14B(U)/C-130J export script: the Lua goes into DCS saved
+      # games, not next to the exe, so it ships separately. Zip root is Scripts/wctrl-export
+      # so users extract straight into %USERPROFILE%\Saved Games\DCS\.
+      - name: Package DCS export scripts
+        run: zip -r wctrl-export-scripts-${{ github.ref_name }}.zip Scripts/wctrl-export
+
+      - name: Render release notes from template
+        run: sed "s|{{TAG}}|${{ github.ref_name }}|g" .github/release-template.md > release-notes.md
+
       - name: Create Release
         uses: softprops/action-gh-release@v3
         with:
-          files: wctrl-dcsbios-bridge-${{ github.ref_name }}.zip
+          files: |
+            wctrl-dcsbios-bridge-${{ github.ref_name }}.zip
+            wctrl-export-scripts-${{ github.ref_name }}.zip
+          body_path: release-notes.md
           generate_release_notes: true
           draft: false
           prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
