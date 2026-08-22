@@ -75,6 +75,14 @@ this way. See [LED mapping](docs/LED-Mapping.md).
    
    ⚠️ **Important:** If you already have an Export.lua file, add the line above instead of overwriting it.
 
+### DCS export script (optional)
+
+An extra Lua script, shipped as the `wctrl-export-scripts-<version>.zip` asset of each
+release. It is **required** for the F-14B(U) CDNU and the C-130J CNI-MU, which DCS-BIOS does
+not carry at all, and **optional** for the A-10C, where it pre-fills live wind and field
+elevation on the takeoff performance page. See
+[Lua export script setup](docs/Export-Script-Setup.md).
+
 ### Application Setup
 
 1. **Extract** the application files to your chosen directory

@@ -8,11 +8,15 @@ it straight from the cockpit and sends it to the bridge over UDP. Three steps.
 
 ## 1. Install the export script
 
-Copy the `Scripts\wctrl-export` folder from the release zip into your DCS saved games:
+Extract the `wctrl-export-scripts-<version>.zip` asset of the release (the folder also ships
+inside the application zip) into your DCS saved games, so you end up with:
 
 ```
 %USERPROFILE%\Saved Games\DCS\Scripts\wctrl-export\
 ```
+
+Full details, including a DCS running on another PC and where to look when nothing shows up:
+[Lua export script setup](Export-Script-Setup.md).
 
 ## 2. Chain it from Export.lua
 
@@ -48,5 +52,6 @@ protocol version mismatch if the script is older than the app.
 
 ## Also in this release
 
-Live wind and field elevation pre-fill the A-10C takeoff performance page when the same
-export script is installed. Values you type over are left alone.
+The same export script pre-fills live wind and field elevation on the A-10C takeoff
+performance page. Values you type over are left alone. See
+[Lua export script setup](Export-Script-Setup.md#what-uses-the-feed).
