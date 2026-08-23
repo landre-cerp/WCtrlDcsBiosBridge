@@ -115,28 +115,6 @@ The only manual choice left is the **seat** for a dual-seat aircraft (AH-64D, CH
 
 ## Troubleshooting
 
-### Common Issues
-
-**"PLT_CDU_LINE1" does not exist (CH-47 Chinook)**
-- Wrong dcsbios version installed.
-- You need version 0.11.6 or later
-  
-**"Connection failed" or CDU not responding**
-- Ensure your Winctrl CDU is properly connected
-- Try unplugging and reconnecting the device
-- Restart the application ( application does not detect devices plugged after start )
-- Check that no other applications are using the CDU
-
-**"No data appearing on CDU"**
-- Start your aircraft in DCS (data appears after aircraft systems are powered)
-- Check that DCS-BIOS is working (look for network traffic) - you can use Bort tools from DCSSkunkworks to verify DCS-BIOS is sending data
-- Verify Export.lua is configured correctly
-
-**Aircraft not detected / stuck on "Waiting for DCS..."**
-- Make sure an aircraft is loaded in the cockpit and DCS-BIOS is exporting (check `Export.lua`)
-- Unsupported aircraft are shown in red as "Not supported" — the bridge keeps waiting for a supported one
-- You do **not** need to restart when switching aircraft; the bridge detects the change automatically
-
 ### Brightness Issues
 
 - **Mismatched brightness:** Use the aircraft's brightness controls first, then adjust MCDU
