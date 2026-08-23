@@ -23,7 +23,9 @@ This desktop application bridges DCS World with some of the WinCtrl hardware, en
 ## Requirements
 
 - DCS World
-- DCS-BIOS [v0.11.5](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.5) or later
+- DCS-BIOS [v0.11.6](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.6) or later
+  - **F-14B:** a [nightly build](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/latest) dated after 2026-08-22 is recommended — the latest F-14B
+    changes landed after v0.11.6 was cut.
 - .NET 8.0 runtime
 
 At least one of these devices.
@@ -59,8 +61,9 @@ this way. See [LED mapping](docs/LED-Mapping.md).
 
 ### DCS-BIOS Setup
 
-1. **Download** DCS-BIOS [v0.11.5](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.5) or later:
+1. **Download** DCS-BIOS [v0.11.6](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.6) or later:
    - Standard: https://github.com/DCS-Skunkworks/dcs-bios/releases
+   - **Flying the F-14B?** Take a [nightly build](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/latest) dated after 2026-08-22 instead.
 
 2. **Extract** the DCS-BIOS folder to your DCS saved games Scripts directory:
    ```
