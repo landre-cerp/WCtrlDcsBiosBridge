@@ -119,7 +119,7 @@ The only manual choice left is the **seat** for a dual-seat aircraft (AH-64D, CH
 
 **"PLT_CDU_LINE1" does not exist (CH-47 Chinook)**
 - Wrong dcsbios version installed.
-- You need version 0.11.0 or later
+- You need version 0.11.6 or later
   
 **"Connection failed" or CDU not responding**
 - Ensure your Winctrl CDU is properly connected
@@ -155,7 +155,7 @@ Report issues [here](https://github.com/landre-cerp/WctrlDcsBiosBridge/issues), 
 ## Known Limitations
 
 - **Cursor behavior:** May appear erratic during waypoint entry (reflects DCS-BIOS data)
-- **CH-47F support:** Requires DCS-BIOS 0.11.0 or later
+- **CH-47F support:** Requires DCS-BIOS 0.11.6 or later
 - **Brightness sync:** May not perfectly match aircraft state
 
 ## Development
