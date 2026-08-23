@@ -30,8 +30,9 @@ and tick **Use DCS live data export** under **GENERAL** in the app.
 ### Requirements
 
 - Windows x64
-- [DCS-BIOS v0.11.5](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.5) or later —
+- [DCS-BIOS v0.11.6](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.6) or later —
   see the [installation section of the README](https://github.com/landre-cerp/WCtrlDcsBiosBridge/blob/{{TAG}}/README.md#installation)
+  - **F-14B:** a [DCS-BIOS nightly build](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/latest) dated after 2026-08-22 is recommended
 
 ### Documentation
 
