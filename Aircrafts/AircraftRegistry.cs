@@ -46,52 +46,52 @@ public sealed record AircraftSelection(int AircraftId, bool IsPilot);
 internal static class AircraftRegistry
 {
     public static readonly AircraftDescriptor A10C = new(
-        5, "A-10C", "A-10C.json", "resources/a10c-font-21x31.json", false,
+        5, "A-10C", "A-10C.json", "Resources/a10c-font-21x31.json", false,
         new[] { "A-10C", "A-10C_2" },
         c => new A10C_Listener(c.Options));
 
     public static readonly AircraftDescriptor AH64D = new(
-        46, "AH-64D", "AH-64D.json", "resources/ah64d-font-21x31.json", true,
+        46, "AH-64D", "AH-64D.json", "Resources/ah64d-font-21x31.json", true,
         new[] { "AH-64D" },
         c => new AH64D_Listener(c.Options, c.IsPilot, c.SwitchWithSeat));
 
     public static readonly AircraftDescriptor FA18C = new(
-        20, "F/A-18C", "FA-18C_hornet.json", "resources/a10c-font-21x31.json", false,
+        20, "F/A-18C", "FA-18C_hornet.json", "Resources/a10c-font-21x31.json", false,
         new[] { "FA-18C" },
         c => new FA18C_Listener(c.Options));
 
     public static readonly AircraftDescriptor CH47 = new(
-        50, "CH-47F", "CH-47F.json", "resources/ch47f-font-21x31.json", true,
+        50, "CH-47F", "CH-47F.json", "Resources/ch47f-font-21x31.json", true,
         new[] { "CH-47F" },
         c => new CH47F_Listener(c.Options, c.IsPilot, c.SwitchWithSeat));
 
     public static readonly AircraftDescriptor F15E = new(
-        44, "F-15E", "F-15E.json", "resources/a10c-font-21x31.json", false,
+        44, "F-15E", "F-15E.json", "Resources/a10c-font-21x31.json", false,
         new[] { "F-15E" },
         c => new F15E_Listener(c.Options));
 
     public static readonly AircraftDescriptor M2000C = new(
-        27, "M-2000C", "M-2000C.json", "resources/ah64d-font-21x31.json", false,
+        27, "M-2000C", "M-2000C.json", "Resources/ah64d-font-21x31.json", false,
         new[] { "M-2000C" },
         c => new M2000C_Listener(c.Options));
 
     public static readonly AircraftDescriptor F16C = new(
-        17, "F-16C", "F-16C_50.json", "resources/ah64d-font-21x31.json", false,
+        17, "F-16C", "F-16C_50.json", "Resources/ah64d-font-21x31.json", false,
         new[] { "F-16C" },
         c => new F16C_Listener(c.Options));
 
     public static readonly AircraftDescriptor OH58D = new(
-        49, "OH-58D", "OH-58D.json", "resources/oh58d-font-21x31.json", false,
+        49, "OH-58D", "OH-58D.json", "Resources/oh58d-font-21x31.json", false,
         new[] { "OH58D" },
         c => new OH58D_Listener(c.Options));
 
     public static readonly AircraftDescriptor UH1H = new(
-        38, "UH-1H", "UH-1H.json", "resources/a10c-font-21x31.json", false,
+        38, "UH-1H", "UH-1H.json", "Resources/a10c-font-21x31.json", false,
         new[] { "UH-1H" },
         c => new UH1H_Listener(c.Options));
 
     public static readonly AircraftDescriptor F14B = new(
-        16, "F-14B", "F-14.json", "resources/a10c-font-21x31.json", false,
+        16, "F-14B", "F-14.json", "Resources/a10c-font-21x31.json", false,
         new[] { "F-14B", "F-14A-135-GR" },
         c => new F14_Listener(c.Options));
 
@@ -100,7 +100,7 @@ internal static class AircraftRegistry
     // comes from the wctrl-export.lua export instead. It borrows the F-14B DCS-BIOS id so the
     // control locator still has a real module to load.
     public static readonly AircraftDescriptor F14BU = new(
-        1016, "F-14B(U)", "F-14.json", "resources/f14bu-font-21x31.json", false,
+        1016, "F-14B(U)", "F-14.json", "Resources/f14bu-font-21x31.json", false,
         new[] { "F-14BU" },
         c => new F14BU_Listener(c.Options),
         DcsBiosModuleId: 16);
@@ -115,7 +115,7 @@ internal static class AircraftRegistry
     // which is what that aircraft wants there. The CNI uses the slot for an empty entry field
     // and wants a closed box, in both sizes.
     public static readonly AircraftDescriptor C130J = new(
-        1030, "C-130J", "A-10C.json", "resources/c130j-font-21x31.json", true,
+        1030, "C-130J", "A-10C.json", "Resources/c130j-font-21x31.json", true,
         new[] { "C-130J" },
         c => new C130J_Listener(c.Options, c.IsPilot),
         DcsBiosModuleId: 5);
