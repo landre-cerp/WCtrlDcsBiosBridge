@@ -151,6 +151,35 @@ public class LedDefaultsTests
         Assert.NotNull(LedDefaults.ForDisplayName("M-2000C").For(McduLed.Rdy).ComputedFrom);
     }
 
+    [Fact]
+    public void TheC130JDeclaresItsExecAnnunciatorComputed()
+    {
+        // No DCS-BIOS module, so there is no control to name: the listener works the lamp out
+        // from the CNI page title. Declared on both, because the panels disagree on which lamp
+        // they have — EXEC on the PFPs, RDY on the MCDU.
+        foreach (var led in new[] { McduLed.Exec, McduLed.Rdy })
+        {
+            var info = LedDefaults.ForDisplayName("C-130J").For(led);
+
+            Assert.Null(info.Controls);
+            Assert.NotNull(info.ComputedFrom);
+            Assert.True(info.Exists);
+        }
+    }
+
+    [Fact]
+    public void EveryCduAnnunciatorIsBindable()
+    {
+        // The catalog is the binding editor's list and McduLed is what the listener writes;
+        // a lamp in one and not the other is bindable to nothing, or drivable by nobody.
+        var bindable = LedCatalog.For(LedDeviceFamily.Mcdu)
+            .Select(d => LedCatalog.ParseMcduLed(d.Id))
+            .ToList();
+
+        Assert.All(bindable, led => Assert.NotNull(led));
+        Assert.Equal(Enum.GetValues<McduLed>().OrderBy(l => l), bindable.OfType<McduLed>().OrderBy(l => l));
+    }
+
     // ── Applying them ────────────────────────────────────────────────────────
 
     [Fact]

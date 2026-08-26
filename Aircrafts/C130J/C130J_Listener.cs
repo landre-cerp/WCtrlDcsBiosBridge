@@ -19,6 +19,11 @@ namespace WCtrlDcsBiosBridge.Aircrafts.C130J;
 /// The indication carries element names and values and nothing else — no position, no font
 /// size, no highlight. The layout comes from <c>Resources/c130j-cni-pages.json</c>, extracted
 /// offline from the module's own page scripts by <c>tools/cni-schema</c>.
+///
+/// One lamp comes off the same feed: the CNI-MU's EXEC annunciator, which no argument and no
+/// cockpit parameter reports. <see cref="CniExecLamp"/> works it out from the page title and
+/// the EXEC keypresses, and holds it — the marker is only on the modified page, so a lamp
+/// recomputed from whatever page is on screen would go out the moment the crew turned away.
 /// </summary>
 internal sealed class C130J_Listener : AircraftListener
 {
@@ -48,6 +53,12 @@ internal sealed class C130J_Listener : AircraftListener
     /// starts empty and is worth nothing to anyone else, this aircraft's other seat included.
     /// </summary>
     private readonly CniSessionMap _session = new();
+
+    /// <summary>
+    /// The EXEC annunciator. Per listener rather than shared: each seat sees its own pages, so
+    /// each keeps its own account of what it has been shown.
+    /// </summary>
+    private readonly CniExecLamp _execLamp = new();
 
     /// <summary>
     /// The CNI is 25 characters across. It was squeezed into 24 for as long as that was
@@ -106,6 +117,16 @@ internal sealed class C130J_Listener : AircraftListener
         // Both seats arrive on the same feed, one page per packet. Anything but this CDU's
         // own seat belongs to another panel.
         if (!string.Equals(cni.Seat, _seat, StringComparison.OrdinalIgnoreCase)) return;
+
+        // Both annunciators for one lamp: EXEC is the PFP's, silkscreened for exactly this, and
+        // RDY stands in on the MCDU, which has no EXEC. A panel ignores the one it does not
+        // carry, so each lights a single lamp.
+        //
+        // Fed before the page is resolved, and from the title rather than the layout: a page the
+        // schema does not know still carries the marker, and every packet has to reach the lamp
+        // for it to know what it has and has not been shown.
+        var exec = _execLamp.Update(cni.Title, cni.ExecPresses);
+        SetCduLeds(rdy: exec, exec: exec);
 
         var page = _resolver.Resolve(cni);
         if (page is null)

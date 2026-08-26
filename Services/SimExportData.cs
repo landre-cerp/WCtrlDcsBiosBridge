@@ -51,7 +51,18 @@ internal record CniData(
     /// draws its own INAV number in the top-left corner and boxes it when the two agree, which
     /// is why the pilot's 1 and the copilot's 2 are never both boxed.
     /// </summary>
-    [property: JsonProperty("soln")] int? ShipSolution);
+    [property: JsonProperty("soln")] int? ShipSolution,
+
+    /// <summary>
+    /// How many times an EXEC key has been pressed this mission, counted across all three CNIs
+    /// by the export script. The lamp it drives belongs to the aircraft and not to a seat, so
+    /// this is one count and not one per station.
+    ///
+    /// A count rather than a state because a keypress lasts a few frames and this feed runs at
+    /// 10 Hz: what matters is that a press happened between two packets, which a counter says
+    /// and a level does not.
+    /// </summary>
+    [property: JsonProperty("exec")] int? ExecPresses);
 
 /// <summary>
 /// One radio, read from its device rather than from the display.

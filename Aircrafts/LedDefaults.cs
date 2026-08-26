@@ -226,6 +226,19 @@ public static class LedDefaults
             },
         },
 
+        // C-130J — DCS-BIOS has no module for this aircraft, so nothing here can name a control.
+        // The CNI-MU's EXEC annunciator is read off the page title instead (see CniExecLamp),
+        // and it is declared on both lamps because the panels disagree on which one exists:
+        // EXEC on the PFPs, RDY on the MCDU.
+        [1030] = new AircraftLedDefaults
+        {
+            ComputedMcduLeds = new Dictionary<McduLed, string>
+            {
+                [McduLed.Exec] = "CNI page title (MOD prefix)",
+                [McduLed.Rdy] = "CNI page title (MOD prefix)",
+            },
+        },
+
         // F-14B — the warning lights when any leg reports itself not locked down.
         [16] = new AircraftLedDefaults
         {

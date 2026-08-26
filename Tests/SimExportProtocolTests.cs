@@ -32,7 +32,7 @@ public class SimExportProtocolTests
     public void CniPacketNamesTheSeatItIsFor()
     {
         var packet = JsonConvert.DeserializeObject<SimExportData>(
-            """{"ver":3,"cni":{"seat":"copilot","idx":9,"title":"INDEX","n":27}}""");
+            """{"ver":4,"cni":{"seat":"copilot","idx":9,"title":"INDEX","n":27}}""");
 
         Assert.NotNull(packet?.Cni);
         Assert.Equal("copilot", packet.Cni.Seat);
