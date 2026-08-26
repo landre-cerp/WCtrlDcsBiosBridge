@@ -45,6 +45,34 @@ Pages are recognised by the title they draw, so the CDU follows whatever the CNI
 page the app does not recognise leaves the screen as it was rather than drawing it against the
 wrong layout.
 
+## The EXEC lamp
+
+The CDU's **EXEC** annunciator follows the CNI-MU's EXEC light. On an MCDU, which has no EXEC
+lamp, **RDY** shows it instead: the bridge drives both, and each panel lights the one it has.
+
+Nothing in the sim reports that lamp. It is not a cockpit animation argument — a sweep of every
+argument across a full EXEC cycle shows the key's own press pulse and nothing that stays lit —
+and it is not in `list_cockpit_params` either. So it is put together from two things that *are*
+readable, and then held.
+
+The first is the page title. The module builds the titles of its nineteen modifiable pages from
+a format with a leading marker, and the sim fills that in with `MOD ` while a change is waiting
+to be executed, then `ACT ` once it has been. Enter a route change and the title goes from
+`RTE 1` to `MOD RTE 1`; press EXEC and it becomes `ACT RTE 1`.
+
+That marker is only ever on the modified page, so the lamp is **latched**: turn to any other
+page with the change still pending and it stays lit, as it does in the cockpit. Only evidence
+puts it out — the same page coming back without its marker, which is what ERASE and an EXEC
+pressed while watching both look like.
+
+The second is the EXEC key itself. Press it from a page that is not the modified one and nothing
+on screen moves, so there would be nothing to see. The key is readable even though the lamp is
+not, so the export script counts presses across all three CNIs and the bridge takes each one as
+the change having gone through. This is why the script and the app must come from the same
+release: the count arrives on protocol version 4.
+
+Either lamp is left alone if you have bound it to something of your own in LED mapping.
+
 ## Pilot and copilot
 
 Both CNIs are read and sent. Which one reaches a CDU depends on how many are plugged in:

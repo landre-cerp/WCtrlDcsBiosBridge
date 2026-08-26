@@ -18,6 +18,14 @@ public bool BrightnessDirty { get; set; } = false;
     public bool LedFm { get; set; }
     public bool LedInd { get; set; }
     public bool LedRdy { get; set; }
+
+    /// <summary>
+    /// The PFP's EXEC annunciator. The MCDU has no such lamp and the PFPs have no RDY, so an
+    /// aircraft with something to say about execution sets both and each panel lights the one
+    /// it carries — writing a LED a panel does not have costs nothing, the device ignores it.
+    /// </summary>
+    public bool LedExec { get; set; }
+
     public bool LedsDirty { get; set; } = true;
 
     /// <summary>
@@ -28,7 +36,7 @@ public bool BrightnessDirty { get; set; } = false;
     /// </summary>
     public void ForgetLeds()
     {
-        LedFail = LedFm1 = LedFm2 = LedFm = LedInd = LedRdy = false;
+        LedFail = LedFm1 = LedFm2 = LedFm = LedInd = LedRdy = LedExec = false;
         LedsDirty = true;
     }
 
@@ -62,6 +70,7 @@ internal sealed class CduRenderer
             _device.Leds.Fm = state.LedFm;
             _device.Leds.Ind = state.LedInd;
             _device.Leds.Rdy = state.LedRdy;
+            _device.Leds.Exec = state.LedExec;
             _device.RefreshLeds();
             state.LedsDirty = false;
         }

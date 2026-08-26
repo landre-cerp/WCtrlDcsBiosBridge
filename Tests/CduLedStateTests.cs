@@ -21,6 +21,7 @@ public class CduLedStateTests
             LedFm = true,
             LedInd = true,
             LedRdy = true,
+            LedExec = true,
             LedsDirty = false,
         };
 
@@ -32,6 +33,7 @@ public class CduLedStateTests
         Assert.False(state.LedFm);
         Assert.False(state.LedInd);
         Assert.False(state.LedRdy);
+        Assert.False(state.LedExec);
 
         // Without this, a device blanked behind the state's back stays blank until some value
         // happens to change.

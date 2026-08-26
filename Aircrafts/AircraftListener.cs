@@ -431,7 +431,8 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         bool? fm2 = null,
         bool? fm = null,
         bool? ind = null,
-        bool? rdy = null)
+        bool? rdy = null,
+        bool? exec = null)
     {
         if (fail.HasValue) SetDefaultCduLed(McduLed.Fail, fail.Value);
         if (fm1.HasValue) SetDefaultCduLed(McduLed.Fm1, fm1.Value);
@@ -439,6 +440,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
         if (fm.HasValue) SetDefaultCduLed(McduLed.Fm, fm.Value);
         if (ind.HasValue) SetDefaultCduLed(McduLed.Ind, ind.Value);
         if (rdy.HasValue) SetDefaultCduLed(McduLed.Rdy, rdy.Value);
+        if (exec.HasValue) SetDefaultCduLed(McduLed.Exec, exec.Value);
     }
 
     /// <summary>Writes an annunciator the aircraft owns, unless the user took it over.</summary>
@@ -471,6 +473,7 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
                 case McduLed.Fm: changed = state.LedFm != on; state.LedFm = on; break;
                 case McduLed.Ind: changed = state.LedInd != on; state.LedInd = on; break;
                 case McduLed.Rdy: changed = state.LedRdy != on; state.LedRdy = on; break;
+                case McduLed.Exec: changed = state.LedExec != on; state.LedExec = on; break;
                 default: changed = false; break;
             }
 

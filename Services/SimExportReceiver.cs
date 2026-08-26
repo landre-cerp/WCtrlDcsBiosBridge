@@ -34,7 +34,7 @@ internal sealed class SimExportReceiver : IDisposable
     /// PROTOCOL_VERSION in wctrl-export.lua: the check is an equality, so a script and an app
     /// from different releases talk past each other and show nothing.
     /// </summary>
-    public const int SupportedVersion = 3;
+    public const int SupportedVersion = 4;
 
     public event Action<SimExportData>? DataReceived;
 

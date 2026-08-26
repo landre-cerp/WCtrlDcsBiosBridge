@@ -21,7 +21,10 @@ public enum LedDeviceFamily
     Mcdu,
 }
 
-/// <summary>The six MCDU annunciators, as named on the CDU state.</summary>
+/// <summary>
+/// The CDU annunciators, as named on the CDU state. Not every panel carries every one: RDY is
+/// an MCDU lamp and EXEC a PFP one, and a panel silently ignores a LED it does not have.
+/// </summary>
 public enum McduLed
 {
     Fail,
@@ -30,6 +33,7 @@ public enum McduLed
     Fm,
     Ind,
     Rdy,
+    Exec,
 }
 
 /// <summary>
@@ -144,6 +148,7 @@ public static class LedCatalog
         new LedDescriptor("Fm",   "FM"),
         new LedDescriptor("Ind",  "IND"),
         new LedDescriptor("Rdy",  "RDY"),
+        new LedDescriptor("Exec", "EXEC"),
     };
 
     /// <summary>The LEDs a user can bind on <paramref name="family"/>, in panel order.</summary>
