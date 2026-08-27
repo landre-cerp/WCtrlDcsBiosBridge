@@ -282,6 +282,14 @@ internal static class CniBlockMatcher
     /// replaces, and both blocks arrive. What marks a size pair is the module's own naming -
     /// legs_speed against legs_speed_ord, the ordinary field and the one it draws large.
     /// Which of the two sizes to use is settled by CniVariants, on the slot that survives here.
+    ///
+    /// HOLD spells the same pairing _sf rather than _ord, on the two soft-key labels of its
+    /// bottom line, and reading only the one suffix cost that line both of its labels: with
+    /// hold_l6_sf still standing between hold_l6 and hold_r6, DELETE HOLD took it - the nearer
+    /// slot, and no worse a fit - and was drawn at column 0 on top of the ERASE beside it,
+    /// where the cockpit has it against the right margin. What the panel showed was ERASE
+    /// buried under DELETE HOLD, and once the hold was executed the LEGS 1 underneath it
+    /// surfaced through the label's one space: DELETE1HOLD.
     /// </summary>
     private static IReadOnlyList<CniSlot> OnePerCell(IReadOnlyList<CniSlot> slots)
     {
@@ -304,11 +312,19 @@ internal static class CniBlockMatcher
         return kept ?? slots;
     }
 
+    /// <summary>
+    /// The two names the module gives the second half of a size pair: <c>_ord</c> on the leg
+    /// fields, <c>_sf</c> on the soft-key labels HOLD builds at both sizes. Nothing but the
+    /// suffix separates the two conventions — same cell, same anchor, one of them drawn.
+    /// </summary>
+    private static readonly string[] SizeSuffixes = { "_ord", "_sf" };
+
     private static bool SameCell(CniSlot a, CniSlot b) =>
         a.Line is not null
         && a.Line == b.Line && a.Col == b.Col && a.Anchor == b.Anchor
         && a.Value is null && b.Value is null
-        && a.Source is { } source && b.Source == source + "_ord";
+        && a.Source is { } source
+        && SizeSuffixes.Any(suffix => b.Source == source + suffix);
 
     /// <summary>
     /// What it is worth to pair this block with this slot.
