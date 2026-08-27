@@ -53,6 +53,33 @@ public class CniGridTests
         Assert.Equal("RW31           210/ 01574", lines[8].TrimEnd());
     }
 
+    /// <summary>
+    /// HOLD's bottom line is a soft-key label at each margin, and the page carries both of them
+    /// twice: hold_l6 against hold_l6_sf, hold_r6 against hold_r6_sf, one cell drawn at one of
+    /// two sizes. Reading the small half as a cell of its own left it standing between the two
+    /// margins, and the right-hand label — no worse a fit there than in its own slot, and nearer
+    /// — took it and was drawn at column 0 on top of the left-hand one.
+    ///
+    /// What the panel showed was ERASE buried under DELETE HOLD, and an executed hold reading
+    /// DELETE1HOLD where the 1 of LEGS 1 came through the label's one space. All four states the
+    /// page has here, because it is the pairing and not the words that was wrong.
+    /// </summary>
+    [Theory]
+    [InlineData("hold-mod-1", "ERASE", "DELETE HOLD")]
+    [InlineData("hold-mod-deleted", "ERASE", "DELETED")]
+    [InlineData("hold-act", "NOW---EXIT", "HOLD ARM")]
+    [InlineData("hold-legs", "<LEGS 1", null)]
+    public void HoldDrawsASoftKeyLabelAtEachMargin(string fixture, string left, string? right)
+    {
+        var row = Render(fixture)[12];
+
+        Assert.StartsWith(left, row);
+        if (right is null)
+            Assert.Equal(left, row.TrimEnd());
+        else
+            Assert.EndsWith(right, row);
+    }
+
     [Theory]
     [MemberData(nameof(FixtureNames))]
     public void GridIsAlwaysFourteenByTwentyFive(string fixture)
