@@ -88,6 +88,30 @@ public class CniExecLampTests
     }
 
     /// <summary>
+    /// Two CDUs, one lamp. The aircraft holds the modification once for all of its CNIs — a
+    /// change entered at either station lights both annunciators, and executing it at either
+    /// puts both out — which is why the listener feeds this every packet the export carries
+    /// rather than its own seat's alone. Seated as pilot and copilot, filtering first left each
+    /// panel lit by its own station and blind to the other's.
+    ///
+    /// Both seats' titles therefore run through one lamp, interleaved as the feed sends them.
+    /// </summary>
+    [Fact]
+    public void EitherStationsChangeLightsItAndEitherStationsPressPutsItOut()
+    {
+        var lamp = new CniExecLamp();
+
+        // The copilot enters a route change while the pilot's CNI is on a page of its own.
+        Assert.True(lamp.Update("MOD RTE 1", 4));
+        Assert.True(lamp.Update("COMM TUNE INDEX", 4));
+
+        // The pilot executes it from that page: the count is the aircraft's, taken across the
+        // CNIs, so the press lands whichever station made it.
+        Assert.False(lamp.Update("COMM TUNE INDEX", 5));
+        Assert.False(lamp.Update("ACT RTE 1", 5));
+    }
+
+    /// <summary>
     /// A mission restart takes the script's counter back to zero. Read as an increase only,
     /// that press would be missed and the lamp would stay lit with nothing left to clear it.
     /// </summary>

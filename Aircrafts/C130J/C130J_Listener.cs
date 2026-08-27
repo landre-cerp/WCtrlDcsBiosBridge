@@ -24,6 +24,8 @@ namespace WCtrlDcsBiosBridge.Aircrafts.C130J;
 /// cockpit parameter reports. <see cref="CniExecLamp"/> works it out from the page title and
 /// the EXEC keypresses, and holds it — the marker is only on the modified page, so a lamp
 /// recomputed from whatever page is on screen would go out the moment the crew turned away.
+/// That lamp is the aircraft's rather than the seat's, so it is fed both seats' packets while
+/// the screen is fed only this one's.
 /// </summary>
 internal sealed class C130J_Listener : AircraftListener
 {
@@ -55,8 +57,11 @@ internal sealed class C130J_Listener : AircraftListener
     private readonly CniSessionMap _session = new();
 
     /// <summary>
-    /// The EXEC annunciator. Per listener rather than shared: each seat sees its own pages, so
-    /// each keeps its own account of what it has been shown.
+    /// The EXEC annunciator, which the aircraft holds once for all of its CNIs: a change entered
+    /// at either station lights both, and executing it at either puts both out. One instance per
+    /// listener all the same, because it is fed every packet the feed carries rather than this
+    /// seat's alone — two lamps reading the same evidence stay in step, and neither owns state
+    /// the other has to be told about.
     /// </summary>
     private readonly CniExecLamp _execLamp = new();
 
@@ -112,21 +117,28 @@ internal sealed class C130J_Listener : AircraftListener
     {
         // The export only sends a page when it changed, plus a heartbeat. A packet without
         // one carries no news, and clearing on it would make the display flicker.
-        if (data.Cni is not { } cni || _resolver is null) return;
-
-        // Both seats arrive on the same feed, one page per packet. Anything but this CDU's
-        // own seat belongs to another panel.
-        if (!string.Equals(cni.Seat, _seat, StringComparison.OrdinalIgnoreCase)) return;
+        if (data.Cni is not { } cni) return;
 
         // Both annunciators for one lamp: EXEC is the PFP's, silkscreened for exactly this, and
         // RDY stands in on the MCDU, which has no EXEC. A panel ignores the one it does not
         // carry, so each lights a single lamp.
+        //
+        // Ahead of the seat filter, and deliberately: the lamp belongs to the aircraft and not
+        // to a station. A change entered on either CNI lights both annunciators, and executing
+        // it from either puts both out — which is what the aircraft does, checked on a pair of
+        // CDUs seated pilot and copilot. Filtering first left each panel lit by its own seat
+        // alone, so the copilot's change never reached the pilot's lamp.
         //
         // Fed before the page is resolved, and from the title rather than the layout: a page the
         // schema does not know still carries the marker, and every packet has to reach the lamp
         // for it to know what it has and has not been shown.
         var exec = _execLamp.Update(cni.Title, cni.ExecPresses);
         SetCduLeds(rdy: exec, exec: exec);
+
+        // The screen, unlike the lamp, is one seat's. Both arrive on the same feed, one page per
+        // packet, and anything but this CDU's own belongs to another panel.
+        if (_resolver is null) return;
+        if (!string.Equals(cni.Seat, _seat, StringComparison.OrdinalIgnoreCase)) return;
 
         var page = _resolver.Resolve(cni);
         if (page is null)
