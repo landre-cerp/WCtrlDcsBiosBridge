@@ -22,8 +22,9 @@ public enum LedDeviceFamily
 }
 
 /// <summary>
-/// The CDU annunciators, as named on the CDU state. Not every panel carries every one: RDY is
-/// an MCDU lamp and EXEC a PFP one, and a panel silently ignores a LED it does not have.
+/// The CDU annunciators, as named on the CDU state. Not every panel carries every one: RDY,
+/// STATUS, MCDU and MENU are MCDU lamps and CALL/DSPY, MSG, OFST and EXEC PFP ones, and a panel silently ignores a
+/// LED it does not have.
 /// </summary>
 public enum McduLed
 {
@@ -34,6 +35,24 @@ public enum McduLed
     Ind,
     Rdy,
     Exec,
+
+    /// <summary>The unlabelled bar between RDY and FM2 above the MCDU screen.</summary>
+    Status,
+
+    /// <summary>The MCDU annunciator by the MCDU MENU key.</summary>
+    Mcdu,
+
+    /// <summary>The MENU annunciator by the MCDU MENU key.</summary>
+    Menu,
+
+    /// <summary>The PFPs' first lamp: CALL on the PFP3N, DSPY on the Boeing-style panels.</summary>
+    Dspy,
+
+    /// <summary>The PFP MSG annunciator.</summary>
+    Msg,
+
+    /// <summary>The PFP OFST annunciator.</summary>
+    Ofst,
 }
 
 /// <summary>
@@ -140,15 +159,24 @@ public static class LedCatalog
         Agp("TerrOnNdOn",      "TERR ON ND",         Agp32State.Agp32Led.TerrOnNdOn, FlightDeckSignal.TerrOnNd),
     };
 
+    // The MCDU's row above the screen first, then the lamps around its keypad, then the PFP
+    // row. The list is shared by both panels; FAIL is the only lamp they have in common, so
+    // the PFP-only ones carry a tag.
     private static readonly IReadOnlyList<LedDescriptor> _mcdu = new[]
     {
-        new LedDescriptor("Fail", "FAIL"),
-        new LedDescriptor("Fm1",  "FM1"),
-        new LedDescriptor("Fm2",  "FM2"),
-        new LedDescriptor("Fm",   "FM"),
-        new LedDescriptor("Ind",  "IND"),
-        new LedDescriptor("Rdy",  "RDY"),
-        new LedDescriptor("Exec", "EXEC"),
+        new LedDescriptor("Fm1",    "FM1"),
+        new LedDescriptor("Ind",    "IND"),
+        new LedDescriptor("Rdy",    "RDY"),
+        new LedDescriptor("Status", "STATUS"),
+        new LedDescriptor("Fm2",    "FM2"),
+        new LedDescriptor("Fail",   "FAIL"),
+        new LedDescriptor("Mcdu",   "MCDU"),
+        new LedDescriptor("Menu",   "MENU"),
+        new LedDescriptor("Fm",     "FM"),
+        new LedDescriptor("Dspy",   "CALL / DSPY (PFP)"),
+        new LedDescriptor("Msg",    "MSG (PFP)"),
+        new LedDescriptor("Ofst",   "OFST (PFP)"),
+        new LedDescriptor("Exec",   "EXEC (PFP)"),
     };
 
     /// <summary>The LEDs a user can bind on <paramref name="family"/>, in panel order.</summary>

@@ -25,6 +25,12 @@ public bool BrightnessDirty { get; set; } = false;
     /// it carries — writing a LED a panel does not have costs nothing, the device ignores it.
     /// </summary>
     public bool LedExec { get; set; }
+    public bool LedStatus { get; set; }
+    public bool LedMcdu { get; set; }
+    public bool LedMenu { get; set; }
+    public bool LedDspy { get; set; }
+    public bool LedMsg { get; set; }
+    public bool LedOfst { get; set; }
 
     public bool LedsDirty { get; set; } = true;
 
@@ -36,7 +42,7 @@ public bool BrightnessDirty { get; set; } = false;
     /// </summary>
     public void ForgetLeds()
     {
-        LedFail = LedFm1 = LedFm2 = LedFm = LedInd = LedRdy = LedExec = false;
+        LedFail = LedFm1 = LedFm2 = LedFm = LedInd = LedRdy = LedExec = LedStatus = LedMcdu = LedMenu = LedDspy = LedMsg = LedOfst = false;
         LedsDirty = true;
     }
 
@@ -71,6 +77,12 @@ internal sealed class CduRenderer
             _device.Leds.Ind = state.LedInd;
             _device.Leds.Rdy = state.LedRdy;
             _device.Leds.Exec = state.LedExec;
+            _device.Leds.Line = state.LedStatus;
+            _device.Leds.Mcdu = state.LedMcdu;
+            _device.Leds.Menu = state.LedMenu;
+            _device.Leds.Dspy = state.LedDspy;
+            _device.Leds.Msg = state.LedMsg;
+            _device.Leds.Ofst = state.LedOfst;
             _device.RefreshLeds();
             state.LedsDirty = false;
         }

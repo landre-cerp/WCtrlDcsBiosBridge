@@ -201,7 +201,7 @@ e.g. `options.F15E.ShowXxxKey`.
 | `RegisterLight(output, v => ...)` | Same, for a pre-resolved output. |
 | `RegisterRaw(address, v => ...)` | Low-level handler for raw bitfield registers when named DCS-BIOS outputs are unavailable or have incorrect mask/shift definitions (M-2000C uses this). `v` is the raw unmasked 16-bit register value; apply bitmasks manually. Also handles the address whitelist registration required by the protocol parser — no extra setup needed. |
 | `GetCompositor(DEFAULT_PAGE).Line(n)...` | Write a CDU line (`.Green()`, `.White()`, `.WriteLine(...)`, ...). |
-| `SetCduLeds(fail:, fm1:, fm2:, fm:, ind:, rdy:)` | Set CDU status LEDs. |
+| `SetCduLeds(fail:, fm1:, fm2:, fm:, ind:, rdy:, exec:)` | Set CDU status LEDs. STATUS, MCDU, MENU, CALL/DSPY, MSG and OFST are not in it: they light from user bindings only. |
 | `SetDisplayBrightnessPercent` / `SetBacklightBrightnessPercent` / `SetLedBrightnessPercent` | CDU brightness (0-100). |
 | `FlightDeck` | Semantic front-panel state — see table below. |
 | `HasCdu`, `CduDevice` | Whether a CDU is connected / the underlying device. |

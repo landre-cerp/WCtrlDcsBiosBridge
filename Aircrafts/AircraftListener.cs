@@ -474,6 +474,12 @@ internal abstract class AircraftListener : IDcsBiosListener, IDisposable
                 case McduLed.Ind: changed = state.LedInd != on; state.LedInd = on; break;
                 case McduLed.Rdy: changed = state.LedRdy != on; state.LedRdy = on; break;
                 case McduLed.Exec: changed = state.LedExec != on; state.LedExec = on; break;
+                case McduLed.Status: changed = state.LedStatus != on; state.LedStatus = on; break;
+                case McduLed.Mcdu: changed = state.LedMcdu != on; state.LedMcdu = on; break;
+                case McduLed.Menu: changed = state.LedMenu != on; state.LedMenu = on; break;
+                case McduLed.Dspy: changed = state.LedDspy != on; state.LedDspy = on; break;
+                case McduLed.Msg: changed = state.LedMsg != on; state.LedMsg = on; break;
+                case McduLed.Ofst: changed = state.LedOfst != on; state.LedOfst = on; break;
                 default: changed = false; break;
             }
 

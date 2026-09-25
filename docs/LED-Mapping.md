@@ -54,9 +54,13 @@ built-in defaults are unaffected by that setting, as they always have been.
 | FCU / EFIS | LOC, AP1, AP2, A/THR, EXPED, APPR, and FD / LS / CSTR / WPT / VOR.D / NDB / ARPT on each side |
 | PAP-3 | N1, SPEED, VNAV, LVL CHG, HDG SEL, LNAV, VOR LOC, APP, ALT HOLD, V/S, CMD A, CWS A, CMD B, CWS B, A/T ARM, FD (L), FD (R) |
 | AGP-32 | the three gear DOWN and UNLK lights, GEAR DOWN (red), BRK FAN HOT / ON, the six AUTO BRK lights, TERR ON ND |
-| MCDU / PFP | FAIL, FM1, FM2, FM, IND, RDY |
+| MCDU | FM1, IND, RDY, STATUS, FM2 (the row above the screen), FAIL, MCDU, MENU, FM |
+| PFP3N / PFP4 / PFP7 | CALL (DSPY on the PFP4 and PFP7), FAIL, MSG, OFST, EXEC |
 
 The PDC-3 has no LEDs of its own and is not listed.
+
+The editor lists the MCDU and the PFPs together, under **MCDU / PFP**; the lamps only a PFP
+carries are tagged *(PFP)*.
 
 ## The file
 
