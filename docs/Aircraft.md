@@ -9,7 +9,7 @@ Per-aircraft documentation has moved to the [project wiki](https://github.com/la
 | AH-64D | https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/AH-64D |
 | CH-47F | https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/CH-47F |
 | F-14B | https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/F-14B |
-| F-14B(U) | [F-14BU-Setup.md](F-14BU-Setup.md) — the F-14B's pages plus the CDNU; needs a DCS-BIOS nightly |
+| F-14B(U) | [F-14BU-Setup.md](F-14BU-Setup.md) — the F-14B's pages plus the CDNU; needs DCS-BIOS v0.11.8 or later |
 | F-15E | https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/F-15E |
 | F-16C | https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/F-16C |
 | F/A-18C | https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/FA-18C |

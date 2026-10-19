@@ -24,9 +24,7 @@ This desktop application bridges DCS World with some of the WinCtrl hardware, en
 
 - DCS World
 - DCS-BIOS [v0.11.7](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.7) or later
-  - **F-14B(U):** the CDNU needs a [nightly build](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/latest)
-    dated 2026-09-11 or later — the `RIO_CDNU_LINE1..8` rows landed after v0.11.7 was cut. The
-    rest of the aircraft works on v0.11.7.
+  - **F-14B(U):** the CDNU needs [v0.11.8](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.8) or later
 - .NET 8.0 runtime
 
 At least one of these devices.
@@ -44,8 +42,8 @@ brightness, and any front-panel output. Click an aircraft for details.
 [A-10C](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/A-10C) | [AH-64D](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/AH-64D) | [F/A-18C](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/FA-18C) | [CH-47F](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/CH-47F) | [OH-58D](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/OH-58D) | [F-14B](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/F-14B) | [F-15E](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/F-15E) | [F-16C](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/F-16C) | [M-2000C](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/M-2000C) | [UH-1H](https://github.com/landre-cerp/WCtrlDcsBiosBridge/wiki/UH-1H)
 
 Also supported: the **F-14B(U)** ([setup](docs/F-14BU-Setup.md)), which is the F-14B plus the
-CDNU — same RIO, radio and front-panel output, with the CDNU on top, and a DCS-BIOS nightly
-needed for that page. And the **C-130J** ([setup](docs/C-130J-Setup.md)), whose CNI-MU display
+CDNU — same RIO, radio and front-panel output, with the CDNU on top, and DCS-BIOS v0.11.8
+or later needed. And the **C-130J** ([setup](docs/C-130J-Setup.md)), whose CNI-MU display
 is the one thing DCS-BIOS does not carry, so it comes from the live data export.
 
 Contributions: Smreki F15E , Mustang038 M200C, F16C Poussedebamboo, F18 Iefi pages Martin Javorek
