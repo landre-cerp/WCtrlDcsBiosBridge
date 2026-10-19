@@ -3,9 +3,7 @@
 Nothing to install. The F-14B(U) is the F-14B plus the CDNU, and all of it comes off DCS-BIOS.
 The export script is **no longer needed** for this aircraft.
 
-> **DCS-BIOS: a [nightly build](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/latest)
-> dated 2026-09-11 or later.** The variant itself is in v0.11.7, but the CDNU rows
-> (`RIO_CDNU_LINE1..8`) landed on 2026-09-08, after that release was cut.
+> **DCS-BIOS [v0.11.8](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.8) or later**, for the CDNU rows (`RIO_CDNU_LINE1..8`).
 
 Load the F-14B(U) in DCS and the CDNU appears on the CDU.
 
@@ -26,8 +24,8 @@ All three keys are yours to change, in the **F-14B / F-14B(U)** section of the o
 
 ## If the CDNU page is empty
 
-It reads `CDNU NOT IN DCS-BIOS` when the installed module does not declare the rows: take a
-nightly dated 2026-09-11 or later. The rest of the aircraft keeps working meanwhile — the page
+It reads `CDNU NOT IN DCS-BIOS` when the installed module does not declare the rows: update
+DCS-BIOS to v0.11.8 or later. The rest of the aircraft keeps working meanwhile — the page
 is disabled, not the listener, and the log says the same thing in one line.
 
 `WAITING FOR CDNU DATA` means the rows are declared but nothing has arrived yet. Check the CDNU
