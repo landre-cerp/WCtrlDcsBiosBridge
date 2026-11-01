@@ -10,7 +10,7 @@ We welcome all contributions, whether it’s bug reports, feature requests, code
 ### Prerequisites
 - Ensure you have Git installed on your machine.
 - Visual Studio
-- .NET 8 SDK
+- .NET 10 SDK
 - DCS-BIOS installed in your DCS World Saved Games folder. ( check project README for details)
 
 ### Recommended Tools
@@ -48,7 +48,7 @@ or commitize style like:
 ### 3. Make Changes
 - Make your changes in the appropriate files.
 - Follow the existing coding style and conventions.
-- For C# code, target `.NET 8`
+- For C# code, target `.NET 10`
 - **Naming convention for private fields:** prefix private `DCSBIOSOutput?` fields with `_` (e.g. `_CDU_BRT`, `_IAS`). This distinguishes them from local variables and matches the convention used across all aircraft listeners.
 
 ### Add a new Aircraft

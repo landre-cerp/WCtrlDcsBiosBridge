@@ -25,7 +25,7 @@ This desktop application bridges DCS World with some of the WinCtrl hardware, en
 - DCS World
 - DCS-BIOS [v0.11.7](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.7) or later
   - **F-14B(U):** the CDNU needs [v0.11.8](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.8) or later
-- .NET 8.0 runtime
+- [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) (x64)
 
 At least one of these devices.
 - Winctrl CDU hardware (MCDU / PFP3N / PFP7 / PFP4)
@@ -137,7 +137,7 @@ Report issues [here](https://github.com/landre-cerp/WctrlDcsBiosBridge/issues), 
 
 ## Development
 
-This project is written in C# and targets .NET 8.0. It uses:
+This project is written in C# and targets .NET 10. It uses:
 - **DCS-BIOS** for DCS communication
 - **ww-devices-dotnet** for Winctrl hardware interface
 - **NLog** for logging
