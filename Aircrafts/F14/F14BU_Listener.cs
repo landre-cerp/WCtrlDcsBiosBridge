@@ -140,8 +140,12 @@ internal sealed class F14BU_Listener : F14_Listener
 
     private void RenderCdnuPage()
     {
-        var c = GetCompositor(CDNU_PAGE);
-        c.Clear();
+        // Composed off-screen and copied over in one go. Clearing the live page first leaves it
+        // blank until the eight rows are rewritten, and the display tick can catch it like that —
+        // which shows as flicker, every row update.
+        var page = pages[CDNU_PAGE];
+        var scratch = new Screen(page.LineCount, page.ColumnCount);
+        var c = new Compositor(scratch);
 
         // Off by default, the compositor renders lowercase as small uppercase. The CDNU
         // font carries real lowercase, so ask for it — a fresh compositor each time means
@@ -154,6 +158,8 @@ internal sealed class F14BU_Listener : F14_Listener
              .Line(CDNU_FIRST_LINE + row)
              .Column(CDNU_FIRST_COLUMN)
              .Write(MapGlyphs(_cdnuRows[row]));
+
+        page.CopyFrom(scratch);
     }
 
     /// <summary>
