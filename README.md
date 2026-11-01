@@ -25,7 +25,6 @@ This desktop application bridges DCS World with some of the WinCtrl hardware, en
 - DCS World
 - DCS-BIOS [v0.11.7](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.7) or later
   - **F-14B(U):** the CDNU needs [v0.11.8](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.8) or later
-- [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) (x64)
 
 At least one of these devices.
 - Winctrl CDU hardware (MCDU / PFP3N / PFP7 / PFP4)
