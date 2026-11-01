@@ -45,20 +45,24 @@ internal partial class FA18C_Listener
 
     private void RenderUfc()
     {
-        const string filler = "                   ";
-        var output = GetCompositor(DEFAULT_PAGE);
+        lock (_renderLock)
+        {
+            const string filler = "                   ";
+            var output = GetCompositor(DEFAULT_PAGE);
 
-        output.Line(0).ClearRow().Yellow().Centered("F/A-18C UFC").Column(21).Write("1/2");
-        output.Line(1).WriteLine(string.Format("{0,2}{1,2}{2,8}", _scratchPad1, _scratchPad2, _scratchPadNumber));
-        output.Line(2).WriteLine(string.Format("{2,19}{0,1}{1,4}", _cue1, _option1, filler));
-        output.Line(3).ClearRow();
-        output.Line(4).WriteLine(string.Format("{2,19}{0,1}{1,4}", _cue2, _option2, filler));
-        output.Line(5).ClearRow();
-        output.Line(6).WriteLine(string.Format("{2,19}{0,1}{1,4}", _cue3, _option3, filler));
-        output.Line(7).ClearRow();
-        output.Line(8).WriteLine(string.Format("{2,19}{0,1}{1,4}", _cue4, _option4, filler));
-        output.Line(9).ClearRow();
-        output.Line(10).WriteLine(string.Format("{2,19}{0,1}{1,4}", _cue5, _option5, filler));
-        output.Line(11).ClearRow();
+            var title = output.Line(0).ClearRow();
+            (_useGreen ? title.Green() : title.Yellow()).Centered("F/A-18C UFC").Column(21).Write("1/2");
+            output.Line(1).WriteLine(string.Format("{0,2}{1,2}{2,8}", _scratchPad1, _scratchPad2, _scratchPadNumber));
+            output.Line(2).WriteLine(string.Format("{2,19}{0,1}{1,4}", _cue1, _option1, filler));
+            output.Line(3).ClearRow();
+            output.Line(4).WriteLine(string.Format("{2,19}{0,1}{1,4}", _cue2, _option2, filler));
+            output.Line(5).ClearRow();
+            output.Line(6).WriteLine(string.Format("{2,19}{0,1}{1,4}", _cue3, _option3, filler));
+            output.Line(7).ClearRow();
+            output.Line(8).WriteLine(string.Format("{2,19}{0,1}{1,4}", _cue4, _option4, filler));
+            output.Line(9).ClearRow();
+            output.Line(10).WriteLine(string.Format("{2,19}{0,1}{1,4}", _cue5, _option5, filler));
+            output.Line(11).ClearRow();
+        }
     }
 }

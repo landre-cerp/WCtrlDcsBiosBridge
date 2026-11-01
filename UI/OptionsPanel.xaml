@@ -139,6 +139,10 @@
                               SelectedValue="{Binding FA18C.ShowUfcKey, Mode=TwoWay}"
                               SelectionChanged="ComboBox_Changed" Width="150"/>
                 </StackPanel>
+                <CheckBox x:Name="UseGreenOption" x:Uid="UseGreenOption" Content="Green instead of yellow on UFC and IFEI pages"
+                          IsChecked="{Binding FA18C.UseGreen, Mode=TwoWay}"
+                          Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+                          Margin="0,4"/>
             </StackPanel>
         </ContentControl>
 

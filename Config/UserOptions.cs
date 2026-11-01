@@ -92,6 +92,9 @@ public class FA18COptions
 
     /// <summary>MCDU key that shows the UFC page.</summary>
     public string ShowUfcKey { get; set; } = "PrevPage";
+
+    /// <summary>Use green instead of yellow on the UFC title and the IFEI night/NVG text.</summary>
+    public bool UseGreen { get; set; }
 }
 
 /// <summary>F-16C DED/NAV/RWR page options.</summary>

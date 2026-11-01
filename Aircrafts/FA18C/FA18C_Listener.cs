@@ -11,10 +11,17 @@ internal partial class FA18C_Listener : AircraftListener
 
     private readonly Key _nextPageKey;
     private readonly Key _prevPageKey;
+    private readonly bool _useGreen;
+
+    // RenderUfc/RenderIfei run on the DCS-BIOS receive thread and on the MCDU key thread, and a
+    // page's Screen keeps a shared cursor/colour. Unserialised, a fast page switch interleaves
+    // them and writes one page's title onto another's row.
+    private readonly object _renderLock = new();
 
     public FA18C_Listener(UserOptions options)
         : base(AircraftRegistry.FA18C, options)
     {
+        _useGreen = options.FA18C.UseGreen;
         _nextPageKey = Enum.TryParse<Key>(options.FA18C.ShowIfeiKey, out var nextKey)
             ? nextKey
             : Key.NextPage;

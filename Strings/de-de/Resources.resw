@@ -221,6 +221,7 @@
   <data name="IfeiPageNavHeader" xml:space="preserve"><value>IFEI-Seitennavigationstasten</value></data>
   <data name="ShowIfeiKeyLabel" xml:space="preserve"><value>Taste IFEI anzeigen:</value></data>
   <data name="ShowUfcKeyLabel" xml:space="preserve"><value>Taste UFC anzeigen:</value></data>
+  <data name="UseGreenOption" xml:space="preserve"><value>Grün statt Gelb auf den UFC- und IFEI-Seiten</value></data>
   <data name="RioCapRadioHeader" xml:space="preserve"><value>Tasten RIO CAP / Funk / CDNU-Seite</value></data>
   <data name="ShowRioKeyLabel" xml:space="preserve"><value>Taste RIO anzeigen:</value></data>
   <data name="ShowRadioKeyLabel" xml:space="preserve"><value>Taste Funk anzeigen:</value></data>

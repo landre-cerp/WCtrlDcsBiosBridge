@@ -221,6 +221,7 @@
   <data name="IfeiPageNavHeader" xml:space="preserve"><value>IFEI page navigation keys</value></data>
   <data name="ShowIfeiKeyLabel" xml:space="preserve"><value>Show IFEI Key:</value></data>
   <data name="ShowUfcKeyLabel" xml:space="preserve"><value>Show UFC Key:</value></data>
+  <data name="UseGreenOption" xml:space="preserve"><value>Green instead of yellow on UFC and IFEI pages</value></data>
   <data name="RioCapRadioHeader" xml:space="preserve"><value>RIO CAP / Radio / CDNU page keys</value></data>
   <data name="ShowRioKeyLabel" xml:space="preserve"><value>Show RIO Key:</value></data>
   <data name="ShowRadioKeyLabel" xml:space="preserve"><value>Show Radio Key:</value></data>
