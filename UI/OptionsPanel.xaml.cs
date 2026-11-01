@@ -123,6 +123,7 @@ public partial class OptionsPanel : UserControl
         IfeiPageNavHeader.Text = Strings.Get("IfeiPageNavHeader");
         ShowIfeiKeyLabel.Text = Strings.Get("ShowIfeiKeyLabel");
         ShowUfcKeyLabel.Text = Strings.Get("ShowUfcKeyLabel");
+        UseGreenOption.Content = Strings.Get("UseGreenOption");
 
         DisabledWhileInUseF14Badge.Text = Strings.Get("DisabledWhileInUseF14Badge");
         RioCapRadioHeader.Text = Strings.Get("RioCapRadioHeader");

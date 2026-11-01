@@ -221,6 +221,7 @@
   <data name="IfeiPageNavHeader" xml:space="preserve"><value>Teclas de navegación de páginas IFEI</value></data>
   <data name="ShowIfeiKeyLabel" xml:space="preserve"><value>Tecla Mostrar IFEI:</value></data>
   <data name="ShowUfcKeyLabel" xml:space="preserve"><value>Tecla Mostrar UFC:</value></data>
+  <data name="UseGreenOption" xml:space="preserve"><value>Verde en lugar de amarillo en las páginas UFC e IFEI</value></data>
   <data name="RioCapRadioHeader" xml:space="preserve"><value>Teclas página RIO CAP / Radio / CDNU</value></data>
   <data name="ShowRioKeyLabel" xml:space="preserve"><value>Tecla Mostrar RIO:</value></data>
   <data name="ShowRadioKeyLabel" xml:space="preserve"><value>Tecla Mostrar Radio:</value></data>

@@ -55,33 +55,36 @@ internal partial class FA18C_Listener
 
     private void RenderIfei()
     {
-        var output = GetCompositor(IFEI_PAGE);
-        bool isDay = _lightMode == 0;
+        lock (_renderLock)
+        {
+            var output = GetCompositor(IFEI_PAGE);
+            bool isDay = _lightMode == 0;
 
-        if (isDay) output.White(); else output.Yellow();
-        output.Line(0).Centered("F/A-18C IFEI").Column(21).Write("2/2");
+            if (isDay) output.White(); else if (_useGreen) output.Green(); else output.Yellow();
+            output.Line(0).Centered("F/A-18C IFEI").Column(21).Write("2/2");
 
-        output.Line(1).ClearRow();
+            output.Line(1).ClearRow();
 
-        output.Line(2).WriteLine(string.Format("{0,24}", _fuelUp));
-        output.Line(3).WriteLine(string.Format("{0,24}", _fuelDown));
-        output.Line(4).WriteLine(string.Format("{0,24}", _bingo));
+            output.Line(2).WriteLine(string.Format("{0,24}", _fuelUp));
+            output.Line(3).WriteLine(string.Format("{0,24}", _fuelDown));
+            output.Line(4).WriteLine(string.Format("{0,24}", _bingo));
 
-        output.Line(5).ClearRow();
+            output.Line(5).ClearRow();
 
-        output.Line(6).Centered(string.Format("{0}:{1}:{2}", _clockH, _clockM, _clockS));
-        if (string.IsNullOrWhiteSpace(_timerH) && string.IsNullOrWhiteSpace(_timerM) && string.IsNullOrWhiteSpace(_timerS))
-            output.Line(7).ClearRow();
-        else
-            output.Line(7).Centered(string.Format("{0}:{1}:{2}", _timerH, _timerM, _timerS));
+            output.Line(6).Centered(string.Format("{0}:{1}:{2}", _clockH, _clockM, _clockS));
+            if (string.IsNullOrWhiteSpace(_timerH) && string.IsNullOrWhiteSpace(_timerM) && string.IsNullOrWhiteSpace(_timerS))
+                output.Line(7).ClearRow();
+            else
+                output.Line(7).Centered(string.Format("{0}:{1}:{2}", _timerH, _timerM, _timerS));
 
-        output.Line(8).ClearRow();
+            output.Line(8).ClearRow();
 
-        output.Line(9).WriteLine("              LEFT  RIGHT");
-        output.Line(10).WriteLine(string.Format("RPM            {0,3}   {1,3}", _rpmL, _rpmR));
-        output.Line(11).WriteLine(string.Format("TEMP           {0,3}   {1,3}", _tempL, _tempR));
-        output.Line(12).WriteLine(string.Format("FF             {0,3}   {1,3}", _ffL, _ffR));
-        output.Line(13).WriteLine(string.Format("OIL            {0,3}   {1,3}", _oilPressL, _oilPressR));
+            output.Line(9).WriteLine("              LEFT  RIGHT");
+            output.Line(10).WriteLine(string.Format("RPM            {0,3}   {1,3}", _rpmL, _rpmR));
+            output.Line(11).WriteLine(string.Format("TEMP           {0,3}   {1,3}", _tempL, _tempR));
+            output.Line(12).WriteLine(string.Format("FF             {0,3}   {1,3}", _ffL, _ffR));
+            output.Line(13).WriteLine(string.Format("OIL            {0,3}   {1,3}", _oilPressL, _oilPressR));
+        }
     }
 
     private void CombineIFEIClock()
