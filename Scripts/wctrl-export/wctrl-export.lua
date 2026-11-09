@@ -341,51 +341,6 @@ local function read_ship_solution(model_time, force)
     return nil
 end
 
--- ---------------------------------------------------------------------------
--- The EXEC key
---
--- The CNI's EXEC annunciator is not exported: not an animation argument — a sweep of every
--- argument across a full EXEC cycle shows the key's own press pulse and nothing that stays lit
--- — and not in list_cockpit_params either. The page title carries it instead, marked "MOD "
--- while a change waits and "ACT " once it has gone through, which is what the app reads.
---
--- That leaves one hole the title cannot fill: executing from a page that is not the modified
--- one. The lamp goes out in the cockpit and nothing on the page being watched says so. The key
--- itself is readable though — any argument is, whether or not anything declares it — so the
--- press is counted here, and the app takes it as the lamp going out.
---
--- Counted rather than sent as a level: a press lasts a few frames at most, and a level sampled
--- at the send rate misses it — the probe that found these arguments missed one at 4 Hz. A
--- counter can be read late but not missed.
---
--- All three keys feed one counter. The modification belongs to the aircraft and not to a crew
--- station, so whoever executes it puts the lamp out on every CNI; a per-seat count would leave
--- the other seat's CDU lit.
--- ---------------------------------------------------------------------------
-
--- Pilot, copilot and augmented crew, from the module's clickabledata.lua.
-local EXEC_ARGS = { 1122, 1187, 1262 }
-
-local exec_presses = 0
-local exec_down    = {}
-
---- Counts rising edges. Called every frame rather than on the send tick, which is the whole
---- point: a key held for two frames is invisible at 10 Hz.
-local function poll_exec_keys()
-    local ok, panel = pcall(GetDevice, 0)
-    if not ok or type(panel) ~= "table" or not panel.get_argument_value then return end
-
-    for i = 1, #EXEC_ARGS do
-        local got, value = pcall(panel.get_argument_value, panel, EXEC_ARGS[i])
-        local down = got and type(value) == "number" and value > 0.5
-
-        if down and not exec_down[i] then
-            exec_presses = exec_presses + 1
-        end
-        exec_down[i] = down
-    end
-end
-
 local function radio_signature(radios)
     if not radios then return "" end
 
@@ -448,7 +403,6 @@ local function read_cni(model_time, radios)
     -- changing a single element on it: the highlight moves from ON to OFF and the indication
     -- reads the same either way.
     local tail = "\3" .. radio_signature(radios) .. "\4" .. tostring(soln)
-                 .. "\5" .. tostring(exec_presses)
 
     for step = 0, #cni_indicators - 1 do
         local seat  = (cni_next_seat + step - 1) % #cni_indicators + 1
@@ -474,7 +428,6 @@ local function read_cni(model_time, radios)
                     blocks = page.nodes,
                     radios = radios,
                     soln   = soln,
-                    exec   = exec_presses,
                 }
             end
         end
@@ -484,13 +437,6 @@ local function read_cni(model_time, radios)
 end
 
 -- ---------------------------------------------------------------------------
-
---- Runs every frame, unlike M.update. Only the EXEC keys need that, and only once the CNI has
---- been found: before that the aircraft is either not a C-130J or not powered up, and the three
---- reads would be spent on nothing.
-function M.poll()
-    if cni_resolved then pcall(poll_exec_keys) end
-end
 
 local next_send = 0
 
@@ -584,7 +530,6 @@ function M.stop()
     cni_indicators, cni_resolved, cni_resolve_wait = {}, false, 0
     cni_next_seat = 1
     cni_state = { {}, {} }
-    exec_presses, exec_down = 0, {}
     radio_ids = nil
     soln_value, soln_next = nil, 0
 end
@@ -600,7 +545,6 @@ function LuaExportStart()
 end
 
 function LuaExportAfterNextFrame()
-    M.poll()
     M.update()
     if _prev_frame then _prev_frame() end
 end

@@ -56,29 +56,12 @@ LED you like. The EXEC annunciator is the exception, and has its own section bel
 
 ## The EXEC lamp
 
-The CDU's **EXEC** annunciator follows the CNI-MU's EXEC light. On an MCDU, which has no EXEC
-lamp, **RDY** shows it instead: the bridge drives both, and each panel lights the one it has.
+The CDU's **EXEC** annunciator follows the CNI-MU's EXEC light, from the DCS-BIOS control
+`PLT_CNI_EXEC_LED`. On an MCDU, which has no EXEC lamp, **RDY** shows it instead: the bridge
+drives both, and each panel lights the one it has.
 
-Nothing in the sim reports that lamp. DCS-BIOS appears to — it declares `PLT_CNI_EXEC_LED` on
-cockpit argument 3390 — but that argument never leaves zero: bound to the annunciator, the lamp
-stayed dark through a full EXEC cycle. It is not in `list_cockpit_params` either. So it is put
-together from two things that *are* readable, and then held.
-
-The first is the page title. The module builds the titles of its nineteen modifiable pages from
-a format with a leading marker, and the sim fills that in with `MOD ` while a change is waiting
-to be executed, then `ACT ` once it has been. Enter a route change and the title goes from
-`RTE 1` to `MOD RTE 1`; press EXEC and it becomes `ACT RTE 1`.
-
-That marker is only ever on the modified page, so the lamp is **latched**: turn to any other
-page with the change still pending and it stays lit, as it does in the cockpit. Only evidence
-puts it out — the same page coming back without its marker, which is what ERASE and an EXEC
-pressed while watching both look like.
-
-The second is the EXEC key itself. Press it from a page that is not the modified one and nothing
-on screen moves, so there would be nothing to see. The key is readable even though the lamp is
-not, so the export script counts presses across all three CNIs and the bridge takes each one as
-the change having gone through. This is why the script and the app must come from the same
-release: the count arrives on protocol version 4 and later.
+This needs **DCS-BIOS v0.11.9 or later**, which fixed the control (it used to sit on an argument
+that never left zero). On older versions the lamp stays dark.
 
 Either lamp is left alone if you have bound it to something of your own in LED mapping.
 
