@@ -20,14 +20,8 @@ namespace WCtrlDcsBiosBridge.Aircrafts.C130J;
 /// size, no highlight. The layout comes from <c>Resources/c130j-cni-pages.json</c>, extracted
 /// offline from the module's own page scripts by <c>tools/cni-schema</c>.
 ///
-/// One lamp comes off the same feed: the CNI-MU's EXEC annunciator, which nothing readable
-/// reports. DCS-BIOS declares it as PLT_CNI_EXEC_LED on cockpit argument 3390, but that
-/// argument never leaves zero — tried, and the lamp stayed dark. <see cref="CniExecLamp"/>
-/// works it out from the page title and the EXEC keypresses instead, and holds it — the marker
-/// is only on the modified page, so a lamp recomputed from whatever page is on screen would go
-/// out the moment the crew turned away.
-/// That lamp is the aircraft's rather than the seat's, so it is fed both seats' packets while
-/// the screen is fed only this one's.
+/// The CNI-MU's EXEC annunciator is not drawn from this feed: DCS-BIOS v0.11.9 fixed
+/// PLT_CNI_EXEC_LED, so it is an ordinary named control in <c>LedDefaults</c>.
 /// </summary>
 internal sealed class C130J_Listener : AircraftListener
 {
@@ -57,15 +51,6 @@ internal sealed class C130J_Listener : AircraftListener
     /// starts empty and is worth nothing to anyone else, this aircraft's other seat included.
     /// </summary>
     private readonly CniSessionMap _session = new();
-
-    /// <summary>
-    /// The EXEC annunciator, which the aircraft holds once for all of its CNIs: a change entered
-    /// at either station lights both, and executing it at either puts both out. One instance per
-    /// listener all the same, because it is fed every packet the feed carries rather than this
-    /// seat's alone — two lamps reading the same evidence stay in step, and neither owns state
-    /// the other has to be told about.
-    /// </summary>
-    private readonly CniExecLamp _execLamp = new();
 
     /// <summary>
     /// The CNI is 25 characters across. It was squeezed into 24 for as long as that was
@@ -120,22 +105,6 @@ internal sealed class C130J_Listener : AircraftListener
         // The export only sends a page when it changed, plus a heartbeat. A packet without
         // one carries no news, and clearing on it would make the display flicker.
         if (data.Cni is not { } cni) return;
-
-        // Both annunciators for one lamp: EXEC is the PFP's, silkscreened for exactly this, and
-        // RDY stands in on the MCDU, which has no EXEC. A panel ignores the one it does not
-        // carry, so each lights a single lamp.
-        //
-        // Ahead of the seat filter, and deliberately: the lamp belongs to the aircraft and not
-        // to a station. A change entered on either CNI lights both annunciators, and executing
-        // it from either puts both out — which is what the aircraft does, checked on a pair of
-        // CDUs seated pilot and copilot. Filtering first left each panel lit by its own seat
-        // alone, so the copilot's change never reached the pilot's lamp.
-        //
-        // Fed before the page is resolved, and from the title rather than the layout: a page the
-        // schema does not know still carries the marker, and every packet has to reach the lamp
-        // for it to know what it has and has not been shown.
-        var exec = _execLamp.Update(cni.Title, cni.ExecPresses);
-        SetCduLeds(rdy: exec, exec: exec);
 
         // The screen, unlike the lamp, is one seat's. Both arrive on the same feed, one page per
         // packet, and anything but this CDU's own belongs to another panel.

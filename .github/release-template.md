@@ -33,6 +33,7 @@ and tick **Use DCS live data export** under **GENERAL** in the app.
 - [DCS-BIOS v0.11.7](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.7) or later —
   see the [installation section of the README](https://github.com/landre-cerp/WCtrlDcsBiosBridge/blob/{{TAG}}/README.md#installation)
   - **F-14B(U):** the CDNU page needs [DCS-BIOS v0.11.8](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.8) or later
+  - **C-130J:** the EXEC lamp needs [DCS-BIOS v0.11.9](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.9) or later
 
 ### Documentation
 

@@ -25,6 +25,7 @@ This desktop application bridges DCS World with some of the WinCtrl hardware, en
 - DCS World
 - DCS-BIOS [v0.11.7](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.7) or later
   - **F-14B(U):** the CDNU needs [v0.11.8](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.8) or later
+  - **C-130J:** the EXEC lamp needs [v0.11.9](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.9) or later
 
 At least one of these devices.
 - Winctrl CDU hardware (MCDU / PFP3N / PFP7 / PFP4)
@@ -60,7 +61,7 @@ this way. See [LED mapping](docs/LED-Mapping.md).
 
 ### DCS-BIOS Setup
 
-1. **Download** DCS-BIOS [v0.11.7](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.7) or later:
+1. **Download** DCS-BIOS [v0.11.9](https://github.com/DCS-Skunkworks/dcs-bios/releases/tag/v0.11.9) or later:
    - Standard: https://github.com/DCS-Skunkworks/dcs-bios/releases
 
 2. **Extract** the DCS-BIOS folder to your DCS saved games Scripts directory:

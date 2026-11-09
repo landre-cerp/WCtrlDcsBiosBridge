@@ -36,19 +36,19 @@ public class C130JRegistryTests
     }
 
     /// <summary>
-    /// The gear and the master caution are named controls now that DCS-BIOS carries the module.
-    /// The EXEC annunciator is not, and cannot be: PLT_CNI_EXEC_LED sits on an argument that
-    /// never moves, so it stays something the listener works out.
+    /// The gear, the master caution and, since DCS-BIOS v0.11.9, the EXEC annunciator are named
+    /// controls. EXEC feeds both lamps: EXEC on the PFPs, RDY on the MCDU.
     /// </summary>
     [Fact]
-    public void LightsWhatItCanFromNamedControls()
+    public void LightsFromNamedControls()
     {
         var defaults = LedDefaults.For(AircraftRegistry.C130J);
 
         Assert.NotEmpty(defaults.Signals);
         Assert.Contains(defaults.McduLeds, l => l.Led == McduLed.Fail);
-        Assert.DoesNotContain(defaults.McduLeds, l => l.Led == McduLed.Exec);
-        Assert.Contains(McduLed.Exec, defaults.ComputedMcduLeds.Keys);
+        Assert.Contains(defaults.McduLeds, l => l.Led == McduLed.Exec && l.Control == "PLT_CNI_EXEC_LED");
+        Assert.Contains(defaults.McduLeds, l => l.Led == McduLed.Rdy && l.Control == "PLT_CNI_EXEC_LED");
+        Assert.DoesNotContain(McduLed.Exec, defaults.ComputedMcduLeds.Keys);
     }
 
     /// <summary>
