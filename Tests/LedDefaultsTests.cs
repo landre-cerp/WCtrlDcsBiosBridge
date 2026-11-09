@@ -152,17 +152,17 @@ public class LedDefaultsTests
     }
 
     [Fact]
-    public void TheC130JDeclaresItsExecAnnunciatorComputed()
+    public void TheC130JBindsItsExecAnnunciatorToTheNamedControl()
     {
-        // No DCS-BIOS module, so there is no control to name: the listener works the lamp out
-        // from the CNI page title. Declared on both, because the panels disagree on which lamp
-        // they have — EXEC on the PFPs, RDY on the MCDU.
+        // Since DCS-BIOS v0.11.9 the CNI-MU's EXEC light is a working control. Declared on
+        // both, because the panels disagree on which lamp they have — EXEC on the PFPs, RDY
+        // on the MCDU.
         foreach (var led in new[] { McduLed.Exec, McduLed.Rdy })
         {
             var info = LedDefaults.ForDisplayName("C-130J").For(led);
 
-            Assert.Null(info.Controls);
-            Assert.NotNull(info.ComputedFrom);
+            Assert.Equal(new[] { "PLT_CNI_EXEC_LED" }, info.Controls);
+            Assert.Null(info.ComputedFrom);
             Assert.True(info.Exists);
         }
     }
