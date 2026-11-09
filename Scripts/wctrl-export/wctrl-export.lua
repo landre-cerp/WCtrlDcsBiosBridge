@@ -8,7 +8,7 @@ local socket = require("socket") --[[@as Socket]]
 local json = loadfile("Scripts\\JSON.lua")()
 local udp = nil
 
-local PROTOCOL_VERSION = 5
+local PROTOCOL_VERSION = 6
 local SEND_INTERVAL = 0.1
 
 local log_file_path = lfs.writedir() .. "Logs/wctrl-export.log"
