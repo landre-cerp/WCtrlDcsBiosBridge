@@ -6,6 +6,7 @@ using WwDevicesDotNet;
 using WwDevicesDotNet.Winctrl.Agp32;
 using WwDevicesDotNet.Winctrl.FcuAndEfis;
 using WwDevicesDotNet.Winctrl.Pap3;
+using WwDevicesDotNet.Winctrl.Rmp32;
 
 namespace WCtrlDcsBiosBridge.Devices.Frontpanels;
 
@@ -19,6 +20,7 @@ public enum LedDeviceFamily
     Pap3,
     Agp32,
     Mcdu,
+    Rmp32,
 }
 
 /// <summary>
@@ -94,6 +96,9 @@ public static class LedCatalog
     private static LedDescriptor Agp(string id, string label, Agp32State.Agp32Led led, FlightDeckSignal signal) =>
         new(id, label, (leds, on) => { if (leds is Agp32State.Agp32Leds l) l.Set(led, on); }, signal);
 
+    private static LedDescriptor Rmp(string id, string label, Rmp32Led led) =>
+        new(id, label, (leds, on) => { if (leds is Rmp32Leds l) l.Set(led, on); });
+
     private static readonly IReadOnlyList<LedDescriptor> _fcuEfis = new[]
     {
         Fcu("Loc",       "LOC",       (l, v) => l.Loc = v),
@@ -159,6 +164,26 @@ public static class LedCatalog
         Agp("TerrOnNdOn",      "TERR ON ND",         Agp32State.Agp32Led.TerrOnNdOn, FlightDeckSignal.TerrOnNd),
     };
 
+    // The SEL lamp, then the triangle above each key, in panel order. No aircraft drives them on
+    // its own, so they stay dark until bound.
+    private static readonly IReadOnlyList<LedDescriptor> _rmp32 = new[]
+    {
+        Rmp("Sel",  "SEL",  Rmp32Led.Sel),
+        Rmp("Vhf1", "VHF1", Rmp32Led.Vhf1),
+        Rmp("Vhf2", "VHF2", Rmp32Led.Vhf2),
+        Rmp("Vhf3", "VHF3", Rmp32Led.Vhf3),
+        Rmp("Load", "LOAD", Rmp32Led.Load),
+        Rmp("Hf1",  "HF1",  Rmp32Led.Hf1),
+        Rmp("Hf2",  "HF2",  Rmp32Led.Hf2),
+        Rmp("Am",   "AM",   Rmp32Led.Am),
+        Rmp("Nav",  "NAV",  Rmp32Led.Nav),
+        Rmp("Vor",  "VOR",  Rmp32Led.Vor),
+        Rmp("Ils",  "ILS",  Rmp32Led.Ils),
+        Rmp("Gls",  "GLS",  Rmp32Led.Gls),
+        Rmp("Mls",  "MLS",  Rmp32Led.Mls),
+        Rmp("Adf",  "ADF",  Rmp32Led.Adf),
+    };
+
     // The MCDU's row above the screen first, then the lamps around its keypad, then the PFP
     // row. The list is shared by both panels; FAIL is the only lamp they have in common, so
     // the PFP-only ones carry a tag.
@@ -186,6 +211,7 @@ public static class LedCatalog
         LedDeviceFamily.Pap3 => _pap3,
         LedDeviceFamily.Agp32 => _agp32,
         LedDeviceFamily.Mcdu => _mcdu,
+        LedDeviceFamily.Rmp32 => _rmp32,
         _ => Array.Empty<LedDescriptor>(),
     };
 

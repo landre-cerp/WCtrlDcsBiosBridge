@@ -3,6 +3,7 @@ using WCtrlDcsBiosBridge.Config;
 using WCtrlDcsBiosBridge.Devices.Frontpanels;
 using WwDevicesDotNet;
 using WwDevicesDotNet.Winctrl.Agp32;
+using WwDevicesDotNet.Winctrl.Rmp32;
 using WwDevicesDotNet.Winctrl.FcuAndEfis;
 using WwDevicesDotNet.Winctrl.Pap3;
 using Xunit;
@@ -312,6 +313,20 @@ public class LedMappingTests
             LedDeviceFamily.Agp32,
             () => new Agp32State.Agp32Leds(),
             leds => ((Agp32State.Agp32Leds)leds).States.Where(s => s.Value).Select(s => s.Key.ToString()));
+
+    [Fact]
+    public void Rmp32SettersEachReachTheirOwnLed() =>
+        AssertSettersAreDistinct(
+            LedDeviceFamily.Rmp32,
+            () => new Rmp32Leds(),
+            leds => ((Rmp32Leds)leds).States.Where(s => s.Value).Select(s => s.Key.ToString()));
+
+    [Fact]
+    public void Rmp32CatalogCoversEveryLed() =>
+        Assert.Equal(
+            Enum.GetValues<Rmp32Led>().Select(l => l.ToString()).Order(),
+            LedCatalog.For(LedDeviceFamily.Rmp32).Select(d => d.Id).Order(),
+            StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// A catalog entry is only useful if it lights exactly one LED, and a different one from

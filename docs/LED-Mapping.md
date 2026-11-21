@@ -56,6 +56,7 @@ built-in defaults are unaffected by that setting, as they always have been.
 | AGP-32 | the three gear DOWN and UNLK lights, GEAR DOWN (red), BRK FAN HOT / ON, the six AUTO BRK lights, TERR ON ND |
 | MCDU | FM1, IND, RDY, STATUS, FM2 (the row above the screen), FAIL, MCDU, MENU, FM |
 | PFP3N / PFP4 / PFP7 | CALL (DSPY on the PFP4 and PFP7), FAIL, MSG, OFST, EXEC |
+| RMP-32 | SEL, and the triangle above VHF1, VHF2, VHF3, LOAD, HF1, HF2, AM, NAV, VOR, ILS, GLS, MLS, ADF |
 
 The PDC-3 has no LEDs of its own and is not listed.
 
@@ -84,7 +85,7 @@ that a mapping can be shared as it stands — post the file, drop it in, restart
 ```
 
 - `Aircraft` — the name as the app shows it (`A-10C`, `F/A-18C`, …).
-- `Device` — `FcuEfis`, `Pap3`, `Agp32` or `Mcdu`.
+- `Device` — `FcuEfis`, `Pap3`, `Agp32`, `Mcdu` or `Rmp32`.
 - `Led` — the LED id, as the editor lists it.
 - `Op` — `NotEquals` (the default, shown as `≠`), `Equals` (`=`), `AtLeast` (`≥`) or
   `AtMost` (`≤`). Each is tested against `Value`, so the default pair — `NotEquals` and 0 —

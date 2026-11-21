@@ -534,6 +534,7 @@ public sealed partial class LedMappingPanel : UserControl
         LedDeviceFamily.Pap3 => "PAP-3",
         LedDeviceFamily.Agp32 => "AGP-32",
         LedDeviceFamily.Mcdu => "MCDU / PFP",
+        LedDeviceFamily.Rmp32 => "RMP-32",
         _ => family.ToString(),
     };
 }
