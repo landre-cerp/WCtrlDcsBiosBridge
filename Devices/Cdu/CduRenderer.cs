@@ -143,9 +143,11 @@ internal sealed class AircraftCduContext
 
     public void Reset()
     {
-        Device.Reset();
+        // Under the same lock as Render and Cleanup: Reset re-declares the grid and clears the
+        // shared screen, and a render landing in the middle paints on a layout about to change.
         lock (State.SyncRoot)
         {
+            Device.Reset();
             State.ForgetLeds();
         }
     }
