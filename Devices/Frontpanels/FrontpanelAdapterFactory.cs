@@ -4,6 +4,7 @@ using WwDevicesDotNet.Winctrl.Agp32;
 using WwDevicesDotNet.Winctrl.FcuAndEfis;
 using WwDevicesDotNet.Winctrl.Pap3;
 using WwDevicesDotNet.Winctrl.Pdc3nm;
+using WwDevicesDotNet.Winctrl.Rmp32;
 
 namespace WCtrlDcsBiosBridge.Devices.Frontpanels;
 
@@ -29,6 +30,7 @@ public static class FrontpanelAdapterFactory
             Pap3Device pap3Device => new Pap3Adapter(pap3Device, displayName),
             Pdc3Device pdc3Device => new Pdc3Adapter(pdc3Device, displayName),
             Agp32Device agp32Device => new Agp32Adapter(agp32Device, displayName),
+            Rmp32Device rmp32Device => new Rmp32Adapter(rmp32Device, displayName),
             _ => null
         };
     }

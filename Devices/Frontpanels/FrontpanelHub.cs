@@ -53,8 +53,9 @@ public class FrontpanelHub : IDisposable
         CreateRenderer<Pap3Adapter>(a => new Pap3Renderer(a, manageLighting));
         CreateRenderer<Agp32Adapter>(a => new Agp32Renderer(a, manageLighting));
         CreateRenderer<Pdc3Adapter>(a => new Pdc3Renderer(a, manageLighting));
+        CreateRenderer<Rmp32Adapter>(a => new Rmp32Renderer(a, manageLighting));
 
-        var unhandled = _adapters.Where(a => a is not (FcuEfisAdapter or Pap3Adapter or Agp32Adapter or Pdc3Adapter)).ToList();
+        var unhandled = _adapters.Where(a => a is not (FcuEfisAdapter or Pap3Adapter or Agp32Adapter or Pdc3Adapter or Rmp32Adapter)).ToList();
         foreach (var adapter in unhandled)
         {
             App.Logger.Warn($"No renderer for frontpanel adapter type: {adapter.GetType().Name} ({adapter.DisplayName})");
