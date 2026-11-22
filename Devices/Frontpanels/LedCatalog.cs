@@ -96,8 +96,8 @@ public static class LedCatalog
     private static LedDescriptor Agp(string id, string label, Agp32State.Agp32Led led, FlightDeckSignal signal) =>
         new(id, label, (leds, on) => { if (leds is Agp32State.Agp32Leds l) l.Set(led, on); }, signal);
 
-    private static LedDescriptor Rmp(string id, string label, Rmp32Led led) =>
-        new(id, label, (leds, on) => { if (leds is Rmp32Leds l) l.Set(led, on); });
+    private static LedDescriptor Rmp(string id, string label, Rmp32Led led, FlightDeckSignal? signal = null) =>
+        new(id, label, (leds, on) => { if (leds is Rmp32Leds l) l.Set(led, on); }, signal);
 
     private static readonly IReadOnlyList<LedDescriptor> _fcuEfis = new[]
     {
@@ -164,14 +164,15 @@ public static class LedCatalog
         Agp("TerrOnNdOn",      "TERR ON ND",         Agp32State.Agp32Led.TerrOnNdOn, FlightDeckSignal.TerrOnNd),
     };
 
-    // The SEL lamp, then the triangle above each key, in panel order. No aircraft drives them on
-    // its own, so they stay dark until bound.
+    // The SEL lamp, then the triangle above each key, in panel order. The three communication
+    // keys and ADF are lit by an aircraft that drives its radio panel; the rest stay dark until
+    // bound.
     private static readonly IReadOnlyList<LedDescriptor> _rmp32 = new[]
     {
         Rmp("Sel",  "SEL",  Rmp32Led.Sel),
-        Rmp("Vhf1", "VHF1", Rmp32Led.Vhf1),
-        Rmp("Vhf2", "VHF2", Rmp32Led.Vhf2),
-        Rmp("Vhf3", "VHF3", Rmp32Led.Vhf3),
+        Rmp("Vhf1", "VHF1", Rmp32Led.Vhf1, FlightDeckSignal.RadioSlot1),
+        Rmp("Vhf2", "VHF2", Rmp32Led.Vhf2, FlightDeckSignal.RadioSlot2),
+        Rmp("Vhf3", "VHF3", Rmp32Led.Vhf3, FlightDeckSignal.RadioSlot3),
         Rmp("Load", "LOAD", Rmp32Led.Load),
         Rmp("Hf1",  "HF1",  Rmp32Led.Hf1),
         Rmp("Hf2",  "HF2",  Rmp32Led.Hf2),
@@ -181,7 +182,7 @@ public static class LedCatalog
         Rmp("Ils",  "ILS",  Rmp32Led.Ils),
         Rmp("Gls",  "GLS",  Rmp32Led.Gls),
         Rmp("Mls",  "MLS",  Rmp32Led.Mls),
-        Rmp("Adf",  "ADF",  Rmp32Led.Adf),
+        Rmp("Adf",  "ADF",  Rmp32Led.Adf, FlightDeckSignal.RadioAdf),
     };
 
     // The MCDU's row above the screen first, then the lamps around its keypad, then the PFP

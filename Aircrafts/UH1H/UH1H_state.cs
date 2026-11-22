@@ -17,6 +17,9 @@ internal class UH1H_State
     public const int BrtStep = 5;
     public int BrightnessPercent = 100;
 
+    // Intercom mode selector: 0 PVT, 1 INT, 2 VHF FM, 3 UHF, 4 VHF AM, 5 unused
+    public int IntMode = 0;
+
     // VHF COMM (ARC-134)
     public string VhfFreq  = "-------";
     public bool   VhfPwr   = true;
@@ -46,21 +49,11 @@ internal class UH1H_State
     public ADFBand adfBand = ADFBand.Low;
     public int     adfFreqPos = 0;
 
-    private static readonly (double Min, double Max)[] BandRanges =
-    [
-        (190, 400),
-        (400, 850),
-        (850, 1800),
-    ];
-
-    public double AdfFrequency
-    {
-        get
-        {
-            var (min, max) = BandRanges[(int)adfBand];
-            return min + (max - min) * adfFreqPos / 65535.0;
-        }
-    }
+    /// <summary>
+    /// The tuned frequency in kHz. The dial's scale is not linear and differs per band, so the
+    /// raw position goes through <see cref="UH1H_AdfScale"/>.
+    /// </summary>
+    public double AdfFrequency => UH1H_AdfScale.ToKhz((int)adfBand, adfFreqPos);
 
     // IFF
     public IffMaster IffMaster = IffMaster.STBY;

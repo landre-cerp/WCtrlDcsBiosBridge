@@ -106,6 +106,7 @@ public class FrontpanelHub : IDisposable
             }
 
             _model = null;
+            foreach (var renderer in _renderers) renderer.OnDetach();
         }
     }
 
@@ -115,6 +116,12 @@ public class FrontpanelHub : IDisposable
     internal void Attach(FlightDeckState model)
     {
         _model = model ?? throw new ArgumentNullException(nameof(model));
+        foreach (var renderer in _renderers)
+        {
+            renderer.OnDetach();
+            renderer.OnAttach(model);
+        }
+
         if (_renderers.Count > 0)
         {
             InitializeDevices();

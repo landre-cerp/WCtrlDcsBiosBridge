@@ -55,6 +55,10 @@ internal class FlightDeckState
             case FlightDeckSignal.TerrOnNd: LedTerrOnNd = on; break;
             case FlightDeckSignal.BrkFanOn: LedBrkFanOn = on; break;
             case FlightDeckSignal.BrkFanHot: LedBrkFanHot = on; break;
+            case FlightDeckSignal.RadioSlot1: RadioSlot1 = on; break;
+            case FlightDeckSignal.RadioSlot2: RadioSlot2 = on; break;
+            case FlightDeckSignal.RadioSlot3: RadioSlot3 = on; break;
+            case FlightDeckSignal.RadioAdf: RadioAdf = on; break;
         }
     }
 
@@ -77,9 +81,19 @@ internal class FlightDeckState
         FlightDeckSignal.TerrOnNd => LedTerrOnNd,
         FlightDeckSignal.BrkFanOn => LedBrkFanOn,
         FlightDeckSignal.BrkFanHot => LedBrkFanHot,
+        FlightDeckSignal.RadioSlot1 => RadioSlot1,
+        FlightDeckSignal.RadioSlot2 => RadioSlot2,
+        FlightDeckSignal.RadioSlot3 => RadioSlot3,
+        FlightDeckSignal.RadioAdf => RadioAdf,
         _ => null,
     };
 
+
+    /// <summary>
+    /// The active and standby frequencies for radio panels (RMP32), and where their keys go.
+    /// Null when the aircraft does not drive one; the panel's displays then stay blank.
+    /// </summary>
+    public RadioPanelState? RadioPanel { get; set; }
 
     public int? Speed { get; set; }
     public int? Heading { get; set; }
@@ -110,6 +124,11 @@ internal class FlightDeckState
 
     public bool? LedBrkFanOn { get; set; }
     public bool? LedBrkFanHot { get; set; }
+
+    public bool? RadioSlot1 { get; set; }
+    public bool? RadioSlot2 { get; set; }
+    public bool? RadioSlot3 { get; set; }
+    public bool? RadioAdf { get; set; }
 
     /// <summary>Gear handle warning light (red).</summary>
     public bool? GearWarning { get; set; }

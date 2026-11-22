@@ -25,6 +25,17 @@ public enum FlightDeckSignal
     TerrOnNd,
     BrkFanOn,
     BrkFanHot,
+
+    /// <summary>
+    /// The radio shown on a radio panel's first, second and third communication key (VHF1, VHF2
+    /// and VHF3 on the RMP32) is the one the aircraft has selected.
+    /// </summary>
+    RadioSlot1,
+    RadioSlot2,
+    RadioSlot3,
+
+    /// <summary>A radio panel is showing the ADF.</summary>
+    RadioAdf,
 }
 
 /// <summary>
@@ -220,6 +231,15 @@ public static class LedDefaults
         // UH-1H
         [38] = new AircraftLedDefaults
         {
+            // The RMP32's keys follow what the intercom selector and the ADF key show: VHF1 is
+            // the VHF AM radio, VHF2 the UHF and VHF3 the FM.
+            ComputedSignals = new Dictionary<FlightDeckSignal, string>
+            {
+                [FlightDeckSignal.RadioSlot1] = "intercom selector",
+                [FlightDeckSignal.RadioSlot2] = "intercom selector",
+                [FlightDeckSignal.RadioSlot3] = "intercom selector",
+                [FlightDeckSignal.RadioAdf] = "RMP ADF key",
+            },
             McduLeds = new[]
             {
                 new McduLedDefault(McduLed.Fail, "MASTER_CAUTION_IND"),
