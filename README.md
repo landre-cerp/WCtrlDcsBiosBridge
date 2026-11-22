@@ -32,6 +32,7 @@ At least one of these devices.
 - Winctrl FCU and EFIS ( tested with Left Efis )
 - Winctrl PAP3 (or PAP3Mag )
 - Winctrl AGP32 Metal
+- Winctrl RMP32 (L, R or C configuration)
 
 
 ## Supported Aircraft
@@ -48,9 +49,11 @@ is the one thing DCS-BIOS does not carry, so it comes from the live data export.
 
 Contributions: Smreki F15E , Mustang038 M200C, F16C Poussedebamboo, F18 Iefi pages Martin Javorek
 
-**Front panels** (FCU/EFIS, PAP3, AGP32) render whatever the active aircraft publishes.
+**Front panels** (FCU/EFIS, PAP3, AGP32, RMP32) render whatever the active aircraft publishes.
 The **A-10C** drives the full set (flight data, gear LEDs, and the chrono/UTC/ET clock on the AGP32).
 The **F-14B** drives the AGP32 gear lights and clock. The **OH-58D** drives the AGP32 UTC clock.
+The **UH-1H** drives the RMP32 radio panel: the radio picked on the intercom selector, with
+its active and standby frequencies, and the ADF.
 See each aircraft's page for specifics.
 
 **LEDs** are yours to assign: on the **LEDs** tab, bind any DCS-BIOS indicator of the aircraft
