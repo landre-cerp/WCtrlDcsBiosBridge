@@ -18,10 +18,26 @@ public class UH1HAdfScaleTests
     [Theory]
     [InlineData(0, 5510, 200)]       // start of a segment
     [InlineData(0, 8658, 210)]       // end of that segment
-    [InlineData(1, 12988, 450)]      // the segments widen from 10 to 25 kHz
+    [InlineData(1, 16235, 475)]      // the segments widen from 10 to 25 kHz
     [InlineData(2, 6198, 900)]       // and from 25 to 50 kHz
     public void SegmentEdgesLandOnTheMeasuredFrequencies(int band, int raw, int expectedKhz) =>
         Assert.Equal(expectedKhz, UH1H_AdfScale.ToKhz(band, raw));
+
+    [Theory]
+    [InlineData(12222, 443)]         // a 443 kHz beacon is heard here
+    [InlineData(2450, 408)]          // and a 408 kHz one here
+    public void MidBandReadsTheBeaconsCheckedInTheSimulator(int raw, int expectedKhz) =>
+        Assert.Equal(expectedKhz, UH1H_AdfScale.ToKhz(1, raw));
+
+    [Fact]
+    public void MidBandReadsEveryWholeKilohertzAroundTheRefit()
+    {
+        // The refit must not squeeze a frequency out of the scale (no kink): every kHz from
+        // 420 to 475 has raw positions that read it.
+        var seen = new HashSet<int>();
+        for (var raw = 6200; raw <= 16234; raw++) seen.Add(UH1H_AdfScale.ToKhz(1, raw));
+        for (var khz = 420; khz <= 475; khz++) Assert.Contains(khz, seen);
+    }
 
     [Fact]
     public void ReadingsRiseWithTheDialInsideASegment()
@@ -63,8 +79,8 @@ public class UH1HAdfScaleTests
     [Fact]
     public void StateReadsTheFrequencyThroughTheScale()
     {
-        var state = new UH1H_State { adfBand = ADFBand.Mid, adfFreqPos = 12988 };
+        var state = new UH1H_State { adfBand = ADFBand.Mid, adfFreqPos = 12222 };
 
-        Assert.Equal(450, state.AdfFrequency);
+        Assert.Equal(443, state.AdfFrequency);
     }
 }

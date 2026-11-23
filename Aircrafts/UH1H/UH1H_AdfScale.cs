@@ -26,10 +26,16 @@ internal static class UH1H_AdfScale
     ];
 
     // ADF_BAND 1: 400-850 kHz.
+    //
+    // 420-475 is refitted on a point checked in the simulator by ear: a 443 kHz beacon is
+    // heard at raw 12222, where the measured 420-435-450-475 segments read 446. With 420
+    // (6200) and 475 (16234) kept, that point fixes the dial at ~262 raw per kHz below 443 and
+    // ~125 above it - close to the ~130 the table already had past 450 - so the two runs replace
+    // the three segments without a kink. 408 kHz, also checked, is in the untouched 400-410.
     private static readonly Segment[] Mid =
     [
-        new(0, 3050, 400, 410), new(3051, 6199, 410, 420), new(6200, 9544, 420, 435),
-        new(9545, 12987, 435, 450), new(12988, 16234, 450, 475), new(16235, 19481, 475, 500),
+        new(0, 3050, 400, 410), new(3051, 6199, 410, 420),
+        new(6200, 12222, 420, 443), new(12223, 16234, 443, 475), new(16235, 19481, 475, 500),
         new(19482, 22728, 500, 525), new(22729, 26270, 525, 550), new(26271, 29518, 550, 575),
         new(29519, 32666, 575, 600), new(32667, 35913, 600, 625), new(35914, 38963, 625, 650),
         new(38964, 42505, 650, 675), new(42506, 45850, 675, 700), new(45851, 49392, 700, 725),

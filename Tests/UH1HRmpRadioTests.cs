@@ -223,7 +223,7 @@ public class UH1HRmpRadioTests
     {
         state.adfMode = mode;
         state.adfBand = ADFBand.Mid;
-        state.adfFreqPos = 12988;                           // 450 kHz on the mid band
+        state.adfFreqPos = 12222;                           // 443 kHz on the mid band (beacon checked in the simulator)
     }
 
     [Fact]
@@ -235,7 +235,7 @@ public class UH1HRmpRadioTests
 
         panel.Press(RadioPanelKey.ShowAdf);
 
-        Assert.Equal("450", panel.Active);
+        Assert.Equal("443", panel.Active);
         Assert.Equal("ANT", panel.Standby);
     }
 
@@ -278,7 +278,7 @@ public class UH1HRmpRadioTests
         panel.Press(RadioPanelKey.Sync);
 
         Assert.Empty(sent);
-        Assert.Equal("450", panel.Active);
+        Assert.Equal("443", panel.Active);
 
         panel.Press(RadioPanelKey.ShowComm);                // the VHF AM standby was never touched
         Assert.Equal("123.450", panel.Standby);
@@ -389,7 +389,7 @@ public class UH1HRmpRadioTests
         state.VhfFreq = "130.000";                          // a radio value moves, the selector does not
         radio.Refresh();
 
-        Assert.Equal("450", panel.Active);
+        Assert.Equal("443", panel.Active);
     }
 
     private static (bool? Vhf1, bool? Vhf2, bool? Vhf3, bool? Adf) Keys(FlightDeckState deck) =>
