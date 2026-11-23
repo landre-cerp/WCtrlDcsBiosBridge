@@ -34,8 +34,10 @@ internal sealed class UH1H_RmpRadio
 
     // One detent of the coarse ring on the ADF TUNE knob, out of its 65535 travel. The knob
     // takes relative steps (DCS-BIOS variable_step) and there is no frequency to aim for, so
-    // this is a feel setting, not a derived value.
-    private const int AdfTuneStep = 655;
+    // this is a feel setting, not a derived value. 200 is about 1 kHz per detent on the low and
+    // mid bands (the dial runs 130-330 raw per kHz there), enough to land on any whole kHz; the
+    // high band's 50 kHz segments make it about 3 kHz there.
+    private const int AdfTuneStep = 200;
 
     private const int AdfBandCount = 3;
 
