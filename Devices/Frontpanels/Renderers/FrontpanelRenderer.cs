@@ -41,11 +41,24 @@ internal abstract class FrontpanelRenderer
     public abstract void RenderLeds(FlightDeckState model);
 
     /// <summary>
+    /// Called when a flight deck model is attached, before the render loop starts. Renderers
+    /// whose panel has keys hook them up here. A model attached earlier is detached first.
+    /// </summary>
+    public virtual void OnAttach(FlightDeckState model)
+    {
+    }
+
+    /// <summary>Called when the model is detached, so a renderer can let go of the keys.</summary>
+    public virtual void OnDetach()
+    {
+    }
+
+    /// <summary>
     /// Forgets what was last sent, so the next render pushes everything again. Call after the
     /// devices have been reset behind the renderer's back: they are dark, while the caches
     /// below still describe the frame before the reset, and "unchanged" would keep them dark.
     /// </summary>
-    public void Invalidate()
+    public virtual void Invalidate()
     {
         _lastBrightness = null;
         _lastLedMask = null;

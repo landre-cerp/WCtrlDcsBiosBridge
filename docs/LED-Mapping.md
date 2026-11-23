@@ -58,6 +58,10 @@ built-in defaults are unaffected by that setting, as they always have been.
 | PFP3N / PFP4 / PFP7 | CALL (DSPY on the PFP4 and PFP7), FAIL, MSG, OFST, EXEC |
 | RMP-32 | SEL, and the triangle above VHF1, VHF2, VHF3, LOAD, HF1, HF2, AM, NAV, VOR, ILS, GLS, MLS, ADF |
 
+The RMP-32 lights nothing on most aircraft until you bind it. The **UH-1H** is the exception:
+the VHF1, VHF2 and VHF3 triangles show which radio the intercom selector points at (VHF AM, UHF
+and FM), and the ADF triangle lights while the panel shows the ADF.
+
 The PDC-3 has no LEDs of its own and is not listed.
 
 The editor lists the MCDU and the PFPs together, under **MCDU / PFP**; the lamps only a PFP

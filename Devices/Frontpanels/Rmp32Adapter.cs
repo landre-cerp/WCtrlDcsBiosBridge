@@ -20,7 +20,14 @@ public class Rmp32Adapter : IFrontpanelAdapter
     {
         _device = device ?? throw new ArgumentNullException(nameof(device));
         DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
+        _device.ControlActivated += (_, e) => ControlActivated?.Invoke(e.ControlId);
     }
+
+    /// <summary>
+    /// Raised on the device's input thread when a button is pressed or a ring detent turns,
+    /// with the name of the control as it appears in <c>WwDevicesDotNet.Winctrl.Rmp32.Control</c>.
+    /// </summary>
+    public event Action<string>? ControlActivated;
 
     public void Reset()
     {
