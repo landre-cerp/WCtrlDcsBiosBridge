@@ -144,15 +144,19 @@ internal sealed class UH1H_RmpRadio
     /// switch, one position per detent and stopping at the first and last. The other keys have no
     /// meaning for the ADF, which has no standby.
     /// </summary>
+    /// <remarks>
+    /// The signs look backwards but are right: ADF_TUNE hands its value straight to the cockpit
+    /// knob, and on the UH-1H a positive step lowers the frequency (checked in the simulator).
+    /// </remarks>
     private void OnAdfKey(RadioPanelKey key)
     {
         switch (key)
         {
             case RadioPanelKey.CoarseUp:
-                _send("ADF_TUNE", $"+{AdfTuneStep}");
+                _send("ADF_TUNE", $"-{AdfTuneStep}");
                 break;
             case RadioPanelKey.CoarseDown:
-                _send("ADF_TUNE", $"-{AdfTuneStep}");
+                _send("ADF_TUNE", $"+{AdfTuneStep}");
                 break;
             case RadioPanelKey.FineUp:
                 StepAdfBand(+1);

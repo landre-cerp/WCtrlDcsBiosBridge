@@ -295,7 +295,8 @@ public class UH1HRmpRadioTests
         panel.Press(RadioPanelKey.CoarseUp);
         panel.Press(RadioPanelKey.CoarseDown);
 
-        Assert.Equal(new[] { ("ADF_TUNE", "+655"), ("ADF_TUNE", "-655") }, sent);
+        // A positive ADF_TUNE step lowers the UH-1H's frequency, so raising it sends a negative one.
+        Assert.Equal(new[] { ("ADF_TUNE", "-655"), ("ADF_TUNE", "+655") }, sent);
     }
 
     [Fact]
